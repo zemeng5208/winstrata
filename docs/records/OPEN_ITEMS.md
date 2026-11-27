@@ -27,9 +27,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-013](#oi-013) | Untested | 016 |
 | [OI-014](#oi-014) | Unaccepted | 008 follow-up |
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
-| [OI-016](#oi-016) | Partly tested | 021 |
+| [OI-016](#oi-016) | Closed | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
-| [OI-018](#oi-018) | Untested | 021 |
+| [OI-018](#oi-018) | Closed | 021 |
 | [OI-019](#oi-019) | Partly tested | 015 |
 | [OI-020](#oi-020) | Untested | 015, 048 |
 | [OI-021](#oi-021) | Known limitation | 050 |
@@ -50,7 +50,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
-| [OI-039](#oi-039) | Untested | 022 |
+| [OI-039](#oi-039) | Untested on the authoring host | 020 |
+| [OI-040](#oi-040) | Untested | 022 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -258,7 +259,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Source PR: plan 010. Sampling does not emit an event for a process that starts and exits between samples. Exit time is the sample time. ETW, kernel callbacks, command lines, and service stop records are not part of plan 010.
 - Current state: known limitation
 - Reason it is incomplete: Plan 018 presents the plan 010 sample through `strata.process`, including real process, thread, module, tree, and provenance events, and it joins the sampler on disable. The service stop record is now `service.stopped` in plan 022 and is covered by the tracker test. A live Service Control Manager transition into stopped was not observed on this Linux host. ETW, kernel callbacks, command lines, and processes that exist only between samples stay open and are not plan 022.
-- Responsible PR: Plan 022 records `service.stopped`, and the tracker test covers that record. A live Service Control Manager transition into stopped was not observed on this Linux host ([OI-039](#oi-039)). ETW, command lines, kernel callbacks, and processes that exist only between samples stay open and are not plan 022. They stay open until the owner confirms they remain outside plan 018 or a later plan tests them.
+- Responsible PR: Plan 022 records `service.stopped`, and the tracker test covers that record. A live Service Control Manager transition into stopped was not observed on this Linux host ([OI-040](#oi-040)). ETW, command lines, kernel callbacks, and processes that exist only between samples stay open and are not plan 022. They stay open until the owner confirms they remain outside plan 018 or a later plan tests them.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with the source that plan 018 or 022 actually implements
 - Acceptance criteria: the deferred source is tested, or the owner confirms it stays out of those plans
@@ -270,13 +271,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
-- Current state: partly tested
-- Reason it is incomplete: plan 019 records user-mode before/after values for current-user and local-machine keys. `precision_ns` and the acting process are still omitted. A signed registry callback was not loaded. Plan 021 still owns the file side.
+- Current state: closed
+- Reason it is incomplete: the live Windows result is now recorded. The evidence is user-mode size and permission metadata. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution.
 - Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows file watch or a later approved kernel callback
 - Acceptance criteria: plan 021 tests its before/after attribution, or the omitted fields stay documented
-- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution.
+- Close conditions: met on `dc9d9e378f9f585929f6acfc18944411f1bbcc75`. Windows Server 2022 passed `windows_trace_records_metadata_without_content`: a real create, size change, and removal were observed, the secret file bytes were absent, `precision_ns` was omitted, and the process field was omitted. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512). Not closed by plan 019. Not kernel attribution. [ERR-019](ERRORS.md#err-019) is the failed run that preceded this result.
 
 <a id="oi-017"></a>
 
@@ -298,13 +299,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: plan 009 file-watch behavior
 - Source PR: plan 009. A live overflow of the 16 KiB file buffer was not forced.
-- Current state: untested
-- Reason it is incomplete: the overflow path was not driven
+- Current state: closed
+- Reason it is incomplete: the live overflow has now been recorded. The production buffer stayed 16 KiB.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows file watch with a change larger than the 16 KiB buffer
+- Verification environment: Windows Server 2022, GitHub Actions `windows-2022`
 - Acceptance criteria: the test forces the overflow and records the gap behavior
-- Close conditions: that result is recorded. Not marked passed.
+- Close conditions: met. On head `0b46a2edba97a587d774d1b721f714dde840f6a6`, `windows_file_watch_overflow_records_a_lost_gap` passed. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687). The same job later failed [ERR-019](ERRORS.md#err-019) in the trace plugin. That failure does not reopen this overflow result.
 
 <a id="oi-019"></a>
 
@@ -565,7 +566,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - Source PR: plans 009 and 010 record that E2E-02 was not run
 - Current state: not done
-- Reason it is incomplete: user-mode watches and process samples are not the GUI query over a chosen disk, other users, and the broader scenario
+- Reason it is incomplete: plan 020 watches user and system environment and PATH. Plan 021 adds the file plugin and an exact-path history projection. This scenario still needs the GUI query, a chosen disk, and other users. That run was not done. Not marked passed.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with a chosen disk and test keys
@@ -814,10 +815,24 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 ## OI-039
 
+- Related requirement: [REQ-06.03](../roadmap/REQUIREMENTS.md) and [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
+- Source PR: plan 020
+- Current state: untested on the authoring host
+- Reason it is incomplete: the Linux authoring host cannot open `HKCU\Environment` or `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`. The Windows test `environment_is_in_process_and_linux_does_not_publish` writes one probe variable and appends one PATH segment on both real stores, then restores the previous bytes. That test has not run here.
+- Responsible PR: 020
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
+- Acceptance criteria: that test passes on the review head. It must show user and system before/after values for the probe, a PATH event whose evidence contains the appended segment, a paused gap that does not publish the hidden value, and no replay of a change made while stopped. The previous PATH bytes are restored.
+- Close conditions: the Windows workspace log for this plan's review head shows that test passed, and this row is updated with that result. A Linux run does not close it. Passing it does not close E2E-02.
+
+<a id="oi-040"></a>
+
+## OI-040
+
 - Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - Source PR: plan 022
 - Current state: untested
-- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. Windows Server 2022 did run the plan 022 probe on `20b7bb1502fafde469dbec45d02294ecd1d21d0a`: creation, start-type change, a failed start of the missing image, and deletion passed. The restricted-token capture returned Win32 error 5 before the manager was opened, so the access-denied enumeration was not recorded. That defect is [ERR-019](modules/strata-services.md#err-019). The fix is not retested.
+- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. Windows Server 2022 did run the plan 022 probe on `20b7bb1502fafde469dbec45d02294ecd1d21d0a`: creation, start-type change, a failed start of the missing image, and deletion passed. The restricted-token capture returned Win32 error 5 before the manager was opened, so the access-denied enumeration was not recorded. That defect is [ERR-020](modules/strata-services.md#err-020). The fix is not retested.
 - Responsible PR: 022 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows Server 2022 Service Control Manager running the plan 022 plugin tests

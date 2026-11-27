@@ -123,7 +123,9 @@ dependencies = [
  "windows-sys",
  "winstrata-kernel",
  "winstrata-protocols",
+ "winstrata-strata-env",
  "winstrata-strata-registry",
+ "winstrata-strata-trace",
 ]
 
 [[package]]
@@ -185,6 +187,14 @@ name = "winstrata-shim"
 version = "0.1.0"
 
 [[package]]
+name = "winstrata-strata-env"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-strata-process"
 version = "0.1.0"
 dependencies = [
@@ -209,6 +219,14 @@ dependencies = [
  "serde_json",
  "windows-sys",
  "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
+name = "winstrata-strata-trace"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
  "winstrata-protocols",
 ]
 

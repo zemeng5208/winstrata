@@ -4,11 +4,11 @@
 
 Authoritative error records for `plugins/strata-services`.
 
-<a id="err-019"></a>
+<a id="err-020"></a>
 
-## ERR-019
+## ERR-020
 
-- Error ID: ERR-019
+- Error ID: ERR-020
 - Discovery time: 2026-11-27T20:37:52Z
 - Related PR: GitHub PR #30, plan 022, head `20b7bb1502fafde469dbec45d02294ecd1d21d0a`
 - Environment: GitHub Actions `windows-2022`, Windows Server 2022

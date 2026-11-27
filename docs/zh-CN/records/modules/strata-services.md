@@ -4,11 +4,11 @@
 
 `plugins/strata-services` 的权威错误记录。
 
-<a id="err-019"></a>
+<a id="err-020"></a>
 
-## ERR-019
+## ERR-020
 
-- Error ID: ERR-019
+- Error ID: ERR-020
 - 发现时间: 2026-11-27T20:37:52Z
 - 关联 PR: GitHub PR #30，计划 022，头 `20b7bb1502fafde469dbec45d02294ecd1d21d0a`
 - 环境: GitHub Actions `windows-2022`，Windows Server 2022
