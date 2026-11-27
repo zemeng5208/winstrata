@@ -185,42 +185,61 @@ fn os_code(error: &io::Error) -> CollectError {
     CollectError::Os(error.raw_os_error().unwrap_or(-1))
 }
 
+struct DirectoryIo {
+    overlapped: OVERLAPPED,
+    // 系统在重叠完成时写入这个地址。完成字节数以 GetOverlappedResult 为准。
+    #[allow(dead_code)]
+    transferred: u32,
+    buffer: Vec<u32>,
+}
+
 fn watch_directory(
     root: &Path,
     mut publisher: Publisher,
     stop: &StopFlag,
     ready: Sender<Result<(), CollectError>>,
 ) {
-    let opened = (|| {
-        let directory = open_directory(root)?;
-        let event = WinHandle(event_handle(true).map_err(|error| os_code(&error))?);
-        let mut overlapped = overlapped(event.0);
-        let mut buffer = vec![0u32; 4096];
-        issue_read(&directory, &mut overlapped, &mut buffer)?;
-        Ok((directory, event, overlapped, buffer))
-    })();
-    let (directory, event, mut overlapped, mut buffer) = match opened {
-        Ok(ready_state) => ready_state,
+    // 重叠结构、字节数和缓冲区必须留在第一次 ReadDirectoryChangesW 之后的地址上。
+    // 系统把完成状态写回这个地址；移动它们会让随后的 GetOverlappedResult 读到空副本。
+    let directory = match open_directory(root) {
+        Ok(directory) => directory,
         Err(error) => {
             let _ = ready.send(Err(error));
             return;
         }
     };
+    let event = match event_handle(true) {
+        Ok(event) => WinHandle(event),
+        Err(error) => {
+            let _ = ready.send(Err(os_code(&error)));
+            return;
+        }
+    };
+    let mut io = DirectoryIo {
+        overlapped: overlapped(event.0),
+        transferred: 0,
+        buffer: vec![0u32; 4096],
+    };
+    if let Err(error) = issue_read(&directory, &mut io) {
+        let _ = ready.send(Err(error));
+        return;
+    }
     if ready.send(Ok(())).is_err() {
+        cancel(&directory, &io.overlapped);
         return;
     }
     loop {
         match wait_pair(event.0, stop.event) {
             Wait::Stop => {
-                cancel(&directory, &overlapped);
+                cancel(&directory, &io.overlapped);
                 break;
             }
             Wait::Failed(code) => {
-                cancel(&directory, &overlapped);
+                cancel(&directory, &io.overlapped);
                 publisher.fail(CollectError::Os(code));
                 break;
             }
-            Wait::Ready => match read_result(&directory, &overlapped, buffer.len()) {
+            Wait::Ready => match read_result(&directory, &io) {
                 NotifyRead::Aborted => break,
                 NotifyRead::Lost => {
                     if !publisher.send_gap(GapReason::Lost) {
@@ -233,10 +252,12 @@ fn watch_directory(
                     break;
                 }
                 NotifyRead::Ready(size) => {
-                    let bytes = buffer_bytes(&buffer, size);
+                    let bytes = buffer_bytes(&io.buffer, size);
                     let continued = match decode_file_notifications(bytes) {
                         Ok(notices) => emit_files(&mut publisher, &notices, root),
                         Err(decode::DecodeError::Truncated) => {
+                            publisher
+                                .fail(CollectError::fault("directory notification was truncated"));
                             publisher.send_gap(GapReason::SourceFailure)
                         }
                     };
@@ -246,7 +267,7 @@ fn watch_directory(
                 }
             },
         }
-        if issue_read(&directory, &mut overlapped, &mut buffer).is_err() {
+        if issue_read(&directory, &mut io).is_err() {
             publisher.fail(CollectError::fault("directory read was not rearmed"));
             break;
         }
@@ -436,29 +457,28 @@ fn overlapped(event: HANDLE) -> OVERLAPPED {
     overlapped
 }
 
-fn issue_read(
-    directory: &WinHandle,
-    overlapped: &mut OVERLAPPED,
-    buffer: &mut [u32],
-) -> Result<(), CollectError> {
-    unsafe { ResetEvent(overlapped.hEvent) };
+fn issue_read(directory: &WinHandle, io: &mut DirectoryIo) -> Result<(), CollectError> {
+    let event = io.overlapped.hEvent;
+    io.overlapped = unsafe { zeroed() };
+    io.overlapped.hEvent = event;
+    io.transferred = 0;
+    unsafe { ResetEvent(event) };
     let filter = FILE_NOTIFY_CHANGE_FILE_NAME
         | FILE_NOTIFY_CHANGE_DIR_NAME
         | FILE_NOTIFY_CHANGE_ATTRIBUTES
         | FILE_NOTIFY_CHANGE_SIZE
         | FILE_NOTIFY_CHANGE_LAST_WRITE
         | FILE_NOTIFY_CHANGE_SECURITY;
-    // 重叠读取完成时才会写字节数。这里传空指针，改由 GetOverlappedResult 读取，
-    // 避免系统在函数返回后写到已经失效的栈变量。
+    let byte_len = u32::try_from(io.buffer.len() * 4).unwrap_or(u32::MAX);
     let ok = unsafe {
         ReadDirectoryChangesW(
             directory.0,
-            buffer.as_mut_ptr().cast(),
-            u32::try_from(buffer.len() * 4).unwrap_or(u32::MAX),
+            io.buffer.as_mut_ptr().cast(),
+            byte_len,
             0,
             filter,
-            null_mut(),
-            overlapped,
+            &mut io.transferred,
+            &mut io.overlapped,
             None,
         )
     };
@@ -471,16 +491,16 @@ fn issue_read(
     Ok(())
 }
 
-fn read_result(directory: &WinHandle, overlapped: &OVERLAPPED, words: usize) -> NotifyRead {
+fn read_result(directory: &WinHandle, io: &DirectoryIo) -> NotifyRead {
     let mut transferred = 0u32;
-    let ok = unsafe { GetOverlappedResult(directory.0, overlapped, &mut transferred, 0) };
+    let ok = unsafe { GetOverlappedResult(directory.0, &io.overlapped, &mut transferred, 0) };
     if ok == 0 {
         let code = unsafe { GetLastError() } as i32;
         return classify_notify(code, 0);
     }
-    let limit = u32::try_from(words * 4).unwrap_or(u32::MAX);
+    let limit = u32::try_from(io.buffer.len() * 4).unwrap_or(u32::MAX);
     if transferred > limit {
-        return NotifyRead::Failed(-1);
+        return NotifyRead::Failed(transferred as i32);
     }
     classify_notify(0, transferred)
 }
@@ -790,6 +810,13 @@ mod tests {
         }
     }
 
+    fn collector_error(watch: &mut FileRegistry) -> String {
+        match &watch.view()[Channel::Files.index()].failure {
+            Some(error) => format!("{} ({})", error.code(), error.detail()),
+            None => "no collector error".into(),
+        }
+    }
+
     fn summarize(events: &[Event]) -> String {
         if events.is_empty() {
             return "no events".into();
@@ -850,8 +877,9 @@ mod tests {
             added
                 .iter()
                 .any(|event| event_type(event) == Some("file.added")),
-            "create was not observed; saw {}",
-            summarize(&added)
+            "create was not observed; saw {}; {}",
+            summarize(&added),
+            collector_error(&mut harness.watch)
         );
         let created = added
             .iter()
@@ -1020,8 +1048,9 @@ mod tests {
         let seen = harness.until(|event| has_subject(event, "alive.txt"));
         assert!(
             seen.iter().any(|event| has_subject(event, "alive.txt")),
-            "file watch stopped when the registry key was missing; saw {}",
-            summarize(&seen)
+            "file watch stopped when the registry key was missing; saw {}; {}",
+            summarize(&seen),
+            collector_error(&mut harness.watch)
         );
         let burst: Vec<_> = (0..40).map(|index| format!("n{index}.txt")).collect();
         for name in &burst {
