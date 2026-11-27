@@ -7,10 +7,13 @@ use std::ffi::c_void;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
 use std::path::Path;
 use std::ptr::{null, null_mut};
+use std::sync::{Mutex, MutexGuard};
 use std::thread;
 
 use winstrata_protocols::Record;
-use winstrata_strata_services::{Kind, RunState, ServiceTracker, capture};
+use winstrata_strata_services::{
+    Kind, RunState, ServiceSnapshot, ServiceTracker, StartType, capture,
+};
 
 use windows_sys::Win32::Foundation::{
     ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_SERVICE_DOES_NOT_EXIST, ERROR_SERVICE_EXISTS,
@@ -24,9 +27,9 @@ use windows_sys::Win32::Security::{
 use windows_sys::Win32::System::Services::{
     ChangeServiceConfigW, CloseServiceHandle, CreateServiceW, DeleteService, OpenSCManagerW,
     OpenServiceW, QueryServiceConfigW, SC_MANAGER_CONNECT, SC_MANAGER_CREATE_SERVICE,
-    SERVICE_AUTO_START, SERVICE_CHANGE_CONFIG, SERVICE_DEMAND_START,
-    SERVICE_ERROR_IGNORE, SERVICE_NO_CHANGE, SERVICE_QUERY_CONFIG, SERVICE_QUERY_STATUS,
-    SERVICE_START, SERVICE_WIN32_OWN_PROCESS, StartServiceW,
+    SERVICE_AUTO_START, SERVICE_CHANGE_CONFIG, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
+    SERVICE_NO_CHANGE, SERVICE_QUERY_CONFIG, SERVICE_QUERY_STATUS, SERVICE_START,
+    SERVICE_WIN32_OWN_PROCESS, StartServiceW,
 };
 use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
@@ -43,8 +46,14 @@ impl Drop for Service {
     }
 }
 
+fn scm_tests_lock() -> MutexGuard<'static, ()> {
+    static LOCK: Mutex<()> = Mutex::new(());
+    LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 #[test]
 fn service_control_manager_observes_a_driver_and_denies_a_restricted_token() {
+    let _lock = scm_tests_lock();
     let live = capture().expect("unrestricted SCM capture");
     assert_eq!(live.evidence, "scm");
     assert!(
@@ -106,6 +115,7 @@ fn service_control_manager_observes_a_driver_and_denies_a_restricted_token() {
 
 #[test]
 fn missing_image_probe_records_creation_start_type_and_deletion() {
+    let _lock = scm_tests_lock();
     assert!(!Path::new(IMAGE).exists(), "probe image must not exist");
     let manager = open_manager(SC_MANAGER_CONNECT | SC_MANAGER_CREATE_SERVICE);
     let name = wide(PROBE);
@@ -117,10 +127,7 @@ fn missing_image_probe_records_creation_start_type_and_deletion() {
     let before = capture().expect("baseline");
     let _ = tracker.observe(&before).expect("baseline events");
     assert!(
-        before
-            .facts
-            .iter()
-            .all(|fact| fact.name.as_str() != PROBE),
+        before.facts.iter().all(|fact| fact.name.as_str() != PROBE),
         "{PROBE} already exists"
     );
 
@@ -137,6 +144,12 @@ fn missing_image_probe_records_creation_start_type_and_deletion() {
     if probe.state == RunState::Stopped {
         assert_eq!(named(&events, "service.stopped", PROBE), 0);
     }
+    assert_ne!(
+        probe.start_type,
+        StartType::Auto,
+        "created probe start type is already auto; config_error={:?}",
+        probe.config_error
+    );
 
     let changed = unsafe {
         ChangeServiceConfigW(
@@ -156,7 +169,7 @@ fn missing_image_probe_records_creation_start_type_and_deletion() {
     assert_ne!(changed, 0, "ChangeServiceConfigW failed: {}", unsafe {
         GetLastError()
     });
-    let configured = capture().expect("capture after start-type change");
+    let configured = capture_until_probe_start(StartType::Auto);
     let events = tracker.observe(&configured).expect("start-type events");
     assert_eq!(named(&events, "service.start-type", PROBE), 1);
 
@@ -211,10 +224,7 @@ impl Drop for ProbeGuard {
     }
 }
 
-fn create_probe(
-    manager: windows_sys::Win32::System::Services::SC_HANDLE,
-    name: &[u16],
-) -> Service {
+fn create_probe(manager: windows_sys::Win32::System::Services::SC_HANDLE, name: &[u16]) -> Service {
     let path = wide(IMAGE);
     let access = SERVICE_QUERY_CONFIG
         | SERVICE_CHANGE_CONFIG
@@ -242,8 +252,17 @@ fn create_probe(
         return Service(created);
     }
     let error = unsafe { GetLastError() };
-    assert_eq!(error, ERROR_SERVICE_EXISTS, "CreateServiceW failed: {error}");
-    let existing = unsafe { OpenServiceW(manager, name.as_ptr(), SERVICE_QUERY_CONFIG | SERVICE_DELETE) };
+    assert_eq!(
+        error, ERROR_SERVICE_EXISTS,
+        "CreateServiceW failed: {error}"
+    );
+    let existing = unsafe {
+        OpenServiceW(
+            manager,
+            name.as_ptr(),
+            SERVICE_QUERY_CONFIG | SERVICE_DELETE,
+        )
+    };
     assert!(!existing.is_null(), "probe exists but cannot be opened");
     let configured = service_binary_path(existing);
     if configured.eq_ignore_ascii_case(IMAGE) {
@@ -275,23 +294,62 @@ fn create_probe(
     Service(created)
 }
 
+fn capture_until_probe_start(expected: StartType) -> ServiceSnapshot {
+    let mut last = String::new();
+    for attempt in 0..40 {
+        let snapshot = capture().expect("capture while waiting for the probe start type");
+        if snapshot.permission_denied {
+            last = "permission_denied".to_owned();
+        } else if let Some(reason) = &snapshot.source_failure {
+            last = format!("source_failure={reason}");
+        } else if let Some(fact) = snapshot
+            .facts
+            .iter()
+            .find(|fact| fact.name.as_str() == PROBE)
+        {
+            if fact.start_type == expected && fact.config_error.is_none() {
+                return snapshot;
+            }
+            last = format!(
+                "start={:?} config_error={:?}",
+                fact.start_type, fact.config_error
+            );
+        } else {
+            last = format!(
+                "probe missing; facts={} truncated={}",
+                snapshot.facts.len(),
+                snapshot.truncated
+            );
+        }
+        if attempt == 39 {
+            break;
+        }
+        thread::sleep(std::time::Duration::from_millis(50));
+    }
+    panic!("{PROBE} did not report {expected:?} within 2s; last sample: {last}");
+}
+
 fn service_binary_path(service: windows_sys::Win32::System::Services::SC_HANDLE) -> String {
     let mut needed = 0u32;
     unsafe { QueryServiceConfigW(service, null_mut(), 0, &mut needed) };
     assert!(needed > 0, "QueryServiceConfigW returned no size");
-    let mut buffer = vec![0u8; needed as usize];
+    let mut buffer = vec![0u64; (needed as usize).div_ceil(8)];
     let ok = unsafe {
         QueryServiceConfigW(
             service,
             buffer.as_mut_ptr().cast(),
-            needed,
+            (buffer.len() * 8) as u32,
             &mut needed,
         )
     };
     assert_ne!(ok, 0, "QueryServiceConfigW failed: {}", unsafe {
         GetLastError()
     });
-    let config = unsafe { &*buffer.as_ptr().cast::<windows_sys::Win32::System::Services::QUERY_SERVICE_CONFIGW>() };
+    let config = unsafe {
+        &*buffer
+            .as_ptr()
+            .cast::<windows_sys::Win32::System::Services::QUERY_SERVICE_CONFIGW>()
+    };
     wide_string(config.lpBinaryPathName)
 }
 

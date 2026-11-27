@@ -237,15 +237,17 @@ fn with_config(manager: SC_HANDLE, kind: Kind, entry: RawEntry) -> Fact {
 fn query_config(service: SC_HANDLE) -> Result<(StartType, Option<String>), i32> {
     let mut needed = 0u32;
     unsafe { QueryServiceConfigW(service, null_mut(), 0, &mut needed) };
-    if needed == 0 || needed as usize > BUFFER_CAP {
+    let bytes = needed as usize;
+    // 结构里有指针。按 u8 分配时起始地址可能不对齐，读 dwStartType 是未定义行为。
+    if bytes < std::mem::size_of::<QUERY_SERVICE_CONFIGW>() || bytes > BUFFER_CAP {
         return Err(unsafe { GetLastError() } as i32);
     }
-    let mut buffer = vec![0u8; needed as usize];
+    let mut buffer = vec![0u64; bytes.div_ceil(std::mem::size_of::<u64>())];
     let ok = unsafe {
         QueryServiceConfigW(
             service,
             buffer.as_mut_ptr().cast(),
-            buffer.len() as u32,
+            (buffer.len() * std::mem::size_of::<u64>()) as u32,
             &mut needed,
         )
     };
@@ -282,10 +284,7 @@ fn start_type(value: u32) -> StartType {
 }
 
 fn machine_identity() -> io::Result<(String, String)> {
-    let device = registry_sz(
-        "SOFTWARE\\Microsoft\\Cryptography\0",
-        "MachineGuid\0",
-    )?;
+    let device = registry_sz("SOFTWARE\\Microsoft\\Cryptography\0", "MachineGuid\0")?;
     let boot = registry_dword(
         "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\0",
         "BootId\0",
