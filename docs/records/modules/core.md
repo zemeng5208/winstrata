@@ -132,3 +132,19 @@ Authoritative error records for `core`. [AG-63](../../../AGENTS.md#ag-63) requir
 - Fix plan: compare the current profile's long name and 8.3 short name, and expand an existing ancestor of the candidate path. A different user's private profile stays excluded. A selected scope with no matching files stores the baseline object and does not write an empty snapshot. The tests are unchanged.
 - Retest result: `f4c95f2d0e0077d765ede17278348a679c75e165` passed Windows workspace checks. The pull request job checked out merge `5d8e81711740c84fab7d32bdc5270a5cdd5e89aa`. Its parents are `ad10523d81870d106eeef553a426beeb250e94ff` and `f4c95f2d0e0077d765ede17278348a679c75e165`, and its tree `89b473da381c91a748bfa01e025b394650d87326` equals that head. Windows Server 2022 ran `cargo test --locked --workspace` and passed 66 Core tests, including the three tests named above, 24 kernel tests, 14 protocol library tests, 2 protocol integration tests, 1 live system-event test, 1 Windows language test, 5 runtime lifecycle tests, 7 service tests, and 5 desktop tests. [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708786928). Linux workspace checks and Workspace checks on that head also passed. This job is Windows Server 2022. It is not a Windows 10/11 client or a WebView2 session.
 - Current state: resolved
+
+<a id="err-020"></a>
+
+## ERR-020
+
+- Error ID: ERR-020
+- Discovery time: 2026-11-27T21:04:07Z
+- Related PR: GitHub PR #33, plan 024, head `a2606194d44534b1e9f0791711e5fc93c6c1704f`
+- Environment: GitHub Actions `windows-2022`, Windows Server 2022
+- Reproduction method: `cargo test --locked --workspace` reached `counters_history_and_unsupported_readings_survive_pause_and_disable`
+- Evidence: the sample document had `store` equal to `failed` after CPU and memory were measured. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46067628416/job/140736681773). Linux workspace checks on that head passed. The published `winstrata/merge-policy` status failed with “Plan 022 must merge before plan 024”. That order result is expected and is not this defect.
+- Root cause: `commit_plugin_metrics` passed the canonical state path to `Anchor::open`. On Windows that path begins with `\\?\`, and the anchor accepts only a drive path, so every metric commit failed.
+- Impact: Windows history stayed in the private files, and the plan 012 series was not written. Windows workspace checks failed, so Workspace checks failed.
+- Fix plan: drop a canonical `\\?\` drive prefix before opening the anchor. The directory-shape check stays. The pulse observe test stays.
+- Retest result: not recorded yet. The Windows workspace job on the commit that contains this fix is the retest.
+- Current state: open

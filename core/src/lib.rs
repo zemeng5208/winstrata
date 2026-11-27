@@ -755,7 +755,30 @@ fn plugin_workspace(state: &Path) -> io::Result<Anchor> {
             "plugin state is not inside the user plugin directory",
         ));
     }
-    Anchor::open(user)
+    Anchor::open(&drive_path(user))
+}
+
+/// `canonicalize` on Windows returns a `\\?\` path. The anchor accepts a drive path.
+fn drive_path(path: &Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        let wide: Vec<u16> = path.as_os_str().encode_wide().collect();
+        let prefix = [
+            u16::from(b'\\'),
+            u16::from(b'\\'),
+            u16::from(b'?'),
+            u16::from(b'\\'),
+        ];
+        if wide.starts_with(&prefix)
+            && wide.len() >= prefix.len() + 3
+            && wide[prefix.len() + 1] == u16::from(b':')
+        {
+            return PathBuf::from(OsString::from_wide(&wide[prefix.len()..]));
+        }
+    }
+    path.to_path_buf()
 }
 
 struct BackupIdentity {

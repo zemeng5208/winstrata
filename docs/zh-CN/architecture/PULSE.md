@@ -36,7 +36,7 @@ Windows 用 `GetSystemTimes`、`GlobalMemoryStatusEx`、`CallNtPowerInformation`
 
 每次保留的采样都往私有状态目录的 `history.jsonl` 追加一个 JSON 对象，并替换 `latest.json`。达到 16 MiB 时，下一次追加前把日志改名为 `history.prev.jsonl`，只保留上一代。`peaks.json` 保存每个序列测得值的最大值。不支持和基线不推动峰值。`samples` 是已保留的采样次数。暂停停止新采样并保持进程运行。禁用和停止会等待 `ws-pulse` 线程结束，把 `joined` 写入 `released`，并以 0 退出。
 
-测得的值还通过 `Core::commit_plugin_metrics` 提交到计划 012 的指标存储。序列 id 是 `pulse.` 加读数 id，例如 `pulse.memory.total.bytes` 和 `pulse.cpu.usage.ppm`。状态目录必须是 `<用户>/plugins/state/strata.pulse`。存在 `vault.wsv` 时提交被拒绝，采样把 `store` 记为 `locked`，私有历史仍然写入。没有测得值的采样记为 `private_only`，并且不打开存储。这些观察不通过 `emit` 发布。对 `pulse.observe` 的 `invoke` 返回最近一次采样数、测得数和不支持数。
+测得的值还通过 `Core::commit_plugin_metrics` 提交到计划 012 的指标存储。Windows 上会先去掉规范化路径的 `\\?\` 前缀，再打开工作区锚点。序列 id 是 `pulse.` 加读数 id，例如 `pulse.memory.total.bytes` 和 `pulse.cpu.usage.ppm`。状态目录必须是 `<用户>/plugins/state/strata.pulse`。存在 `vault.wsv` 时提交被拒绝，采样把 `store` 记为 `locked`，私有历史仍然写入。没有测得值的采样记为 `private_only`，并且不打开存储。这些观察不通过 `emit` 发布。对 `pulse.observe` 的 `invoke` 返回最近一次采样数、测得数和不支持数。
 
 官方外壳已经列出这个插件。本计划不新增页面、图表、主题或视觉体系。[GUI_SOURCES.md](../records/GUI_SOURCES.md) 不变。首次启用仍属于计划 017。StrataHealth 和 StrataBudget 仍属于计划 025 和 026。
 
