@@ -13,8 +13,10 @@ use super::{
     Batch, CAPTURES, CaptureWrite, Confidence, DataClass, Hybrid, INDEXES, METRICS, ObjectRecord,
     Point, RecordRef, Relation, RiskTag, STRUCTURED, Snapshot, SnapshotEntry,
 };
+#[cfg(target_os = "linux")]
+use crate::StorageState;
 use crate::platform::Anchor;
-use crate::{Core, Filter, Limits, RunState, Runtime, Settings, StorageState};
+use crate::{Core, Filter, Limits, RunState, Runtime, Settings};
 
 struct Temp(PathBuf);
 
