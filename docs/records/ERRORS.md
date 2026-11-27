@@ -32,6 +32,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-019 | Resolved | This file |
 | ERR-020 | Resolved | [Services plugin](modules/strata-services.md#err-020) |
 | ERR-021 | Open | [Services plugin](modules/strata-services.md#err-021) |
+| ERR-023 | Resolved | [Core](modules/core.md#err-023) |
 
 Plan 023 keeps its module register at [Startup plugin](modules/strata-startup.md). That file records no error yet. [OI-049](OPEN_ITEMS.md#oi-049) is the Windows startup gap and is not an error id.
 
