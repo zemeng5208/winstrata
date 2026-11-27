@@ -31,4 +31,4 @@
 
 ## 验证
 
-证据在[工程记录](../records/STATUS.md)。本计划不关闭的缺口是 [OI-040](../records/OPEN_ITEMS.md#oi-040) 和 [OI-041](../records/OPEN_ITEMS.md#oi-041)。[OI-042](../records/OPEN_ITEMS.md#oi-042) 已在 Windows Server 2022 关闭。Windows 10 和 11 客户端仍是 [OI-001](../records/OPEN_ITEMS.md#oi-001)。
+证据在[工程记录](../records/STATUS.md)。本计划不关闭的缺口是 [OI-044](../records/OPEN_ITEMS.md#oi-044) 和 [OI-045](../records/OPEN_ITEMS.md#oi-045)。[OI-042](../records/OPEN_ITEMS.md#oi-042) 已在 Windows Server 2022 关闭。Windows 10 和 11 客户端仍是 [OI-001](../records/OPEN_ITEMS.md#oi-001)。

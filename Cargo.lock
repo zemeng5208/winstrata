@@ -221,6 +221,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "winstrata-strata-services"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "windows-sys",
+ "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-strata-trace"
 version = "0.1.0"
 dependencies = [
