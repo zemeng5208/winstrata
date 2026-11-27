@@ -31,4 +31,4 @@ StrataBudget still owns dynamic limits, pause and resume under pressure, and los
 
 ## Verification
 
-The evidence is in the [engineering record](../records/STATUS.md). Gaps that this plan does not close are [OI-040](../records/OPEN_ITEMS.md#oi-040), [OI-041](../records/OPEN_ITEMS.md#oi-041), and [OI-042](../records/OPEN_ITEMS.md#oi-042).
+The evidence is in the [engineering record](../records/STATUS.md). Gaps that this plan does not close are [OI-040](../records/OPEN_ITEMS.md#oi-040) and [OI-041](../records/OPEN_ITEMS.md#oi-041). [OI-042](../records/OPEN_ITEMS.md#oi-042) is closed for Windows Server 2022. Windows 10 and 11 clients remain [OI-001](../records/OPEN_ITEMS.md#oi-001).

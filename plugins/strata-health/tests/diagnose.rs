@@ -204,6 +204,8 @@ fn live_faults_queues_latency_and_loss_match_the_runtime() {
     let running = host.enable("strata.health").unwrap();
     assert!(running.enabled);
     assert_eq!(running.phase, "running");
+    assert!(running.pid.is_some());
+    #[cfg(target_os = "linux")]
     let plugin_pid = running.pid.expect("health pid");
     assert_eq!(host.subscriber_count(), 1);
     if host

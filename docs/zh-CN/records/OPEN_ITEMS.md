@@ -53,7 +53,7 @@
 | [OI-039](#oi-039) | 编写主机未测试 | 020 |
 | [OI-040](#oi-040) | 未实现 | 022、026、030、032、042 |
 | [OI-041](#oi-041) | 已知限制 | 无路线图行 |
-| [OI-042](#oi-042) | 未测试 | 025 的 Windows 作业，客户端属于 049 |
+| [OI-042](#oi-042) | 已在 Windows Server 2022 关闭 | 客户端仍是 [OI-001](#oi-001)，计划 049 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -903,10 +903,10 @@
 
 - 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 025
-- 当前状态: 未测试
-- 未完成原因: 编写主机是 Linux x86_64。这里没有在 Windows 上执行 `live_faults_queues_latency_and_loss_match_the_runtime`。这台主机没有安装 MSVC 目标，因此本记录也不声称做了 Windows 类型检查。
-- 负责 PR: 本计划 025 拉取请求上的 Windows 工作区检查。Windows 10 和 Windows 11 客户端仍是 [OI-001](#oi-001)，负责计划 049。
+- 当前状态: 已关闭
+- 未完成原因: Windows Server 2022 已关闭。头 `4b152ccbaee5346a7f76f55b99ee1efa4c55d0c9` 的文件树是 `2fc04f89c529471eac56736c3f75c480393c68c6`。拉取请求作业检出合并提交 `cf6d7cee42c0f65f873e264713c8a4c137d4c26c`，父提交是 `ac37d400c338fe4364260db76a43eeea6226f792` 和该头，文件树相同。[Windows 工作区检查](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140734668243) 运行 `cargo test --locked --workspace`，通过了 `health_stays_absent_until_the_binary_is_beside_the_runtime`、`live_faults_queues_latency_and_loss_match_the_runtime` 和 3 个健康单元测试。Windows 10 和 Windows 11 客户端仍是 [OI-001](#oi-001)。
+- 负责 PR: 客户端运行属于计划 049。这次 Server 2022 结果不关闭 OI-001。
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 在该拉取请求头上运行 `cargo test --locked --workspace` 的 Windows Server 2022 作业
+- 验证环境: Windows Server 2022，作业 140734668243，`cargo test --locked --workspace`
 - 验收标准: 该作业通过 `winstrata-strata-health` 测试，包括实时故障、队列、延迟和丢失测试
-- 关闭条件: 该头的作业日志显示这些测试通过。Linux 通过不关闭它。Server 2022 通过不关闭 OI-001。
+- 关闭条件: 该作业已满足。Linux 通过没有关闭它。这次 Server 2022 通过不关闭 OI-001。

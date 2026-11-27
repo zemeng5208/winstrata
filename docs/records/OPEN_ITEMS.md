@@ -53,7 +53,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
 | [OI-040](#oi-040) | Unimplemented | 022, 026, 030, 032, 042 |
 | [OI-041](#oi-041) | Known limitation | No roadmap row |
-| [OI-042](#oi-042) | Untested | 025 Windows job, then 049 for clients |
+| [OI-042](#oi-042) | Closed on Windows Server 2022 | Clients remain [OI-001](#oi-001), plan 049 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -903,10 +903,10 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 025
-- Current state: untested
-- Reason it is incomplete: the authoring host is Linux x86_64. `live_faults_queues_latency_and_loss_match_the_runtime` was not executed on Windows here. The MSVC target is not installed on this host, so this record does not claim a Windows type-check either.
-- Responsible PR: the Windows workspace check on this plan 025 pull request. Windows 10 and Windows 11 clients remain [OI-001](#oi-001), responsible plan 049.
+- Current state: closed
+- Reason it is incomplete: closed for Windows Server 2022. Head `4b152ccbaee5346a7f76f55b99ee1efa4c55d0c9` has tree `2fc04f89c529471eac56736c3f75c480393c68c6`. The pull request job checked out merge `cf6d7cee42c0f65f873e264713c8a4c137d4c26c`, whose parents are `ac37d400c338fe4364260db76a43eeea6226f792` and that head, and whose tree is the same. [Windows workspace checks](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140734668243) ran `cargo test --locked --workspace` and passed `health_stays_absent_until_the_binary_is_beside_the_runtime`, `live_faults_queues_latency_and_loss_match_the_runtime`, and the three health unit tests. Windows 10 and Windows 11 clients remain [OI-001](#oi-001).
+- Responsible PR: plan 049 for the client runs. This Server 2022 result does not close OI-001.
 - Handoff owner: repository owner zemeng5208
-- Verification environment: the Windows Server 2022 job that runs `cargo test --locked --workspace` on this pull request's head
+- Verification environment: Windows Server 2022, job 140734668243, `cargo test --locked --workspace`
 - Acceptance criteria: that job passes the `winstrata-strata-health` tests, including the live fault, queue, latency and loss test
-- Close conditions: the job log for that head shows those tests passed. A Linux pass does not close it. A Server 2022 pass does not close OI-001.
+- Close conditions: met for that job. A Linux pass did not close it. This Server 2022 pass does not close OI-001.

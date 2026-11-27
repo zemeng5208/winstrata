@@ -310,9 +310,9 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在这台 Linux x86_64 主机上，Rust 1.100.0、Python 3.12.3，以及 `/tmp/winstrata-node/bin/node` 的 Node.js 24.22.3。`cargo dev doctor` 通过。`PATH` 上原有的 `node` 是 22.23.4，因此 doctor 和语言测试通过 `PATH` 和 `WINSTRATA_NODE` 使用固定二进制。这个分支纳入计划 020 的合并之后，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 70 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试、5 个桌面测试、3 个 `winstrata-strata-env` 测试、3 个 `winstrata-strata-health` 单元测试、2 个 `winstrata-strata-health` 集成测试、1 个进程插件测试和 3 个注册表测试。健康集成测试把真实总线填到事件丢失，让一个调度任务留在队列里，用 `queue_full` 拒绝另一个任务，并等到一个正在运行的任务被计为超时。插件报告与这些实时计数一致，并包含一次测得的 IPC 延迟。暂停没有再追加报告行。恢复追加了一行。禁用向 `released` 写入 `joined`。同目录被登记的进程采集器保持禁用，并且没有写 `events.jsonl`。`node --test .github/scripts/merge-policy.test.mjs` 通过 9 项测试。`Cargo.lock` 增加路径包 `winstrata-strata-health`，没有新增外部 crate 版本。计划 020 的包 `winstrata-strata-env` 仍在。`pnpm-lock.yaml` 没有变化。
 
-这台主机没有运行 Windows 测试。这里没有安装 MSVC 目标，因此本记录不声称做了 Windows 类型检查。那次执行是 [OI-042](OPEN_ITEMS.md#oi-042)。服务、驱动、存储和界面读数是 [OI-040](OPEN_ITEMS.md#oi-040)。分开的采集器总线是 [OI-041](OPEN_ITEMS.md#oi-041)。E2E-08 和 E2E-15 未完成。本计划没有改动官方壳，[GUI_SOURCES.md](GUI_SOURCES.md) 没有变化。没有加入 Fluent UI 或 Astryx。
+服务、驱动、存储和界面读数是 [OI-040](OPEN_ITEMS.md#oi-040)。分开的采集器总线是 [OI-041](OPEN_ITEMS.md#oi-041)。E2E-08 和 E2E-15 未完成。本计划没有改动官方壳，[GUI_SOURCES.md](GUI_SOURCES.md) 没有变化。没有加入 Fluent UI 或 Astryx。
 
-这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。在计划 024 进入 main 之前，前驱顺序失败是预期结果。
+在 `4b152ccbaee5346a7f76f55b99ee1efa4c55d0c9` 上，文件树 `2fc04f89c529471eac56736c3f75c480393c68c6`，Linux 工作区检查、Windows 工作区检查和 Workspace 检查通过。拉取请求作业检出合并提交 `cf6d7cee42c0f65f873e264713c8a4c137d4c26c`。父提交是 `ac37d400c338fe4364260db76a43eeea6226f792` 和该头，文件树与该头相同。Windows Server 2022 运行 `cargo test --locked --workspace`。健康测试通过，包括 `live_faults_queues_latency_and_loss_match_the_runtime`。这次运行不是 Windows 10 或 Windows 11 客户端。[OI-042](OPEN_ITEMS.md#oi-042) 已按该作业关闭。[OI-001](OPEN_ITEMS.md#oi-001) 仍开放。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140734667702) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140734668243) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140735180772)。已发布的提交状态 `winstrata/merge-policy` 失败。说明是 “Plan 021 must merge before plan 025”。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46067012244)。该运行上名为 “Evaluate merge policy from main” 的工作流检查成功。那个工作流检查不是已发布状态。计划 021 至 024 不在 main 上，因此这次前驱失败是预期结果，不是缺陷。这四项结果属于 `4b152cc`。这份较晚的记录只是写下它们，所以它自己的四项门禁不是那些结果。
 
 ## PR 019 验证
 
@@ -354,7 +354,7 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T20:44:17Z 将计划 020 作为 [GitHub PR #31](https://github.com/zemeng5208/winstrata/pull/31) 合并为 `ac37d400c338fe4364260db76a43eeea6226f792`。父提交是 `2b4912a715a957b48e5451514a3a6d8393203545` 和 `579f85d63b338e4502f95abdbd122c3a815e2902`。文件树 `eaf2cb961158b3cf0c76fc7c7685f8339e8817b8`。这份记录不为该合并提交附加 CI 地址。Linux 编写主机没有打开真实环境存储。[OI-039](OPEN_ITEMS.md#oi-039) 仍开放。E2E-02 仍开放。
 
-当前交接点是计划 025，分支 `pr/025-strata-health`。请求的合并位置是紧接计划 024 之后、计划 026 之前。这个分支已包含到计划 020 合并为止的 main，因此共享宿主、锁文件和记录保留该计划。直接前置 007、008、012、014 和 016 已在 main 上。计划 023 和 024 不在 main 上，因此表顺序使这个拉取请求排在计划 024 之后。本计划不开始计划 021、022、023、024 或 026。`PLAN.md` 未改。这个头的四项门禁还没有回来。所有者合并。本 Agent 不合并。
+当前交接点是计划 025，分支 `pr/025-strata-health`。请求的合并位置是紧接计划 024 之后、计划 026 之前。这个分支已包含到计划 020 合并为止的 main，因此共享宿主、锁文件和记录保留该计划。直接前置 007、008、012、014 和 016 已在 main 上。计划 023 和 024 不在 main 上，因此表顺序使这个拉取请求排在计划 024 之后。本计划不开始计划 021、022、023、024 或 026。`PLAN.md` 未改。`4b152ccbaee5346a7f76f55b99ee1efa4c55d0c9` 的四项门禁已写入 PR 025 验证。这份较晚的记录不是那个头。所有者合并。本 Agent 不合并。
 
 ## PR 018 验证
 
