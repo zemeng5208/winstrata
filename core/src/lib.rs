@@ -4,6 +4,7 @@ mod files;
 mod hybrid;
 mod migration;
 mod platform;
+mod process;
 mod runtime;
 mod schedule;
 mod storage;
@@ -25,6 +26,11 @@ pub use file_registry::{
 pub use hybrid::{
     Batch, CapacityReport, CaptureWrite, Confidence, DataClass, Hybrid, ObjectRecord, Point,
     RecordRef, Recovery, Relation, RiskTag, Snapshot, SnapshotEntry, StoredCapture,
+};
+pub use process::{
+    MODULE_LOADED, MODULE_UNLOADED, PROCESS_EXITED, PROCESS_PROVIDER, PROCESS_SERVICE,
+    PROCESS_STARTED, PROCESS_UNRESOLVED, ProcessNode, ProcessTracker, THREAD_EXITED,
+    THREAD_STARTED,
 };
 pub use runtime::{
     Limits, MAX_ADMISSION_WAIT, MAX_QUEUE, MAX_SUBSCRIPTIONS, MAX_TASK_TIMEOUT, MAX_WORKERS,
