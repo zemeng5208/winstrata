@@ -29,7 +29,7 @@ GUI 与 Core 按普通用户权限运行，受控后台服务承担必要高权�
 
 ### 3.2 底层采集与驱动
 
-混合采集、Windows 官方支持接口优先、最小化自研内核代码。候选接口包括 ETW、WFP、PDH、WMI/CIM、Windows API、USN Journal、Windows Event Log，以及必要时文件系统 minifilter、注册表、进程/线程/模块通知等官方机制。具体实现及外部项目必须调研、实测并审批。计划 011 在用户态观测接口和 TCP/UDP 端点，原始包默认留在内存，只有合格标记点名的一个报文可以落盘。见[网络源](NETWORK-SOURCES.md)。它不加载 `strata-net.sys`。
+混合采集、Windows 官方支持接口优先、最小化自研内核代码。候选接口包括 ETW、WFP、PDH、WMI/CIM、Windows API、USN Journal、Windows Event Log，以及必要时文件系统 minifilter、注册表、进程/线程/模块通知等官方机制。具体实现及外部项目必须调研、实测并审批。当前进程、线程和模块采样使用 procfs 或 Toolhelp 以及服务控制管理器，见[进程来源](PROCESS.md)，不加载 `strata-proc`。计划 011 在用户态观测接口和 TCP/UDP 端点，原始包默认留在内存，只有合格标记点名的一个报文可以落盘。见[网络源](NETWORK-SOURCES.md)。它不加载 `strata-net.sys`。
 
 多驱动设计，候选产物 `strata-fs.sys`、`strata-reg.sys`、`strata-proc.sys`、`strata-net.sys`；具体拆分取决于技术验证。驱动独立构建、版本、状态管理、按需加载、安全卸载；引用计数协调共享订阅。单驱动加载失败需明确受影响范围，无依赖模块继续工作。内核层只负责采集和传输，不执行业务分析；控制 IRQL、锁竞争、内存、缓冲、回调时长；不使用非标准 hook 或未验证接口，不绕过驱动签名、Secure Boot、HVCI 等安全机制。真实 Windows 稳定性、故障、卸载及长时间测试是完成条件。
 

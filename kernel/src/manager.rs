@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 pub const MAX_SUBSCRIPTIONS: u32 = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

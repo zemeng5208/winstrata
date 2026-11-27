@@ -1,0 +1,37 @@
+# 进程、线程与模块来源
+
+[English](../../architecture/PROCESS.md) · [采样](../../../kernel/src/system.rs) · [跟踪](../../../core/src/process.rs) · [计划 010](../roadmap/PLAN.md#pr-010)
+
+计划 010 在 `winstrata-kernel` 中增加用户态进程采样，并在 `winstrata-core` 中增加进程跟踪。直接前置是计划 008。`CatalogHost` 对 `strata-proc` 仍返回 `image_absent`，不加载驱动。服务 IPC 没有改变。Core 在进程内调用采样器，因为读取 procfs 或 Windows 进程接口不需要新增高权限操作。
+
+## 采样
+
+`capture` 读取调用方令牌可见的一次采样。它不创建、不启动、不停止服务，也不打开内核进程回调。
+
+Linux 的设备标识是 `/etc/machine-id`，启动标识是 `/proc/sys/kernel/random/boot_id`。进程启动时间由 `/proc/stat` 的 `btime` 加上 `/proc/<pid>/stat` 第 22 字段，并用 `sysconf(_SC_CLK_TCK)` 换算。线程是 `/proc/<pid>/task` 中的条目。模块是 `/proc/<pid>/maps` 里按路径归并的可执行文件映射。cgroup 路径中除 `user@*.service` 以外的 `.service` 单元记为服务行。
+
+Windows 的设备标识是 `MachineGuid`，启动标识是注册表 `BootId`，前缀为 `boot:`。进程和线程来自 Toolhelp。启动时间来自 `GetProcessTimes`，映像路径来自 `QueryFullProcessImageNameW`。模块来自按进程建立的模块快照。服务行来自 `EnumServicesStatusExW` 的 `SERVICE_WIN32` 查询，使用其中的进程号。进程号为零不是服务关联。
+
+一次采样最多保留 4,096 个进程、每个进程 1,024 个线程和 64 个模块，以及 1,024 条服务行。超出部分设置对应的截断标志。映像、启动时间、线程或模块无法读取时设置 `limited`，并留空缺失字段。采样器不编造启动时间。服务枚举失败时设置 `services_unavailable`，服务列表为空。
+
+## 跟踪
+
+`ProcessTracker::observe` 在来源 `winstrata.process` 上分配协议事件。来源实例是启动标识。进程实例由启动标识、PID 和启动时间组成。1.0 观察记录没有属性表，因此映像、父进程和服务名保留在 `ProcessNode` 上。不读取命令行。
+
+实例第一次出现时发出 `process.started`，归因为已观察，证据是 `procfs` 或 `toolhelp`。后续采样仍包含该实例时不再发出启动。实例消失时发出一条 `process.exited`，完整性为部分，原因是 `not_in_snapshot`。再一次采样不重复这条退出。事件时间是采样时间，不是内核退出时间戳。
+
+同一 PID 的启动时间与正在跟踪的实例不同时，关闭旧实例并打开新实例。被截断的采样不把缺失 PID 当成退出，也不替换已跟踪的启动时间。线程和模块使用同一套首次出现与缺席规则。线程或模块列表被截断时不发出移除事件。进程退出不再逐条发出线程和模块退出。
+
+服务行的 PID 已有启动时间时，发出一条 `process.service`。归因是推断，证据是 `service:<name>`。它不是第二条 `process.started`。同一服务名在该实例上不重复发出。没有启动时间的服务 PID 只发出一条部分 `process.service`，不创建 `ProcessRef`。持续可见但没有启动时间的 PID 发出一条 `process.unresolved`，直到它消失。
+
+父进程必须出现在同一次采样中，且其启动时间不晚于子进程，才保留父子链接。发现环时去掉该链接。启动标识或设备标识变化时，先关闭原来的来源，再使用新的来源实例。
+
+## 覆盖范围
+
+这是采样，不是连续跟踪。只在两次采样之间出现并退出的进程没有事件，跟踪器也不为它编造序号缺口。没有实现 ETW 或内核进程回调。服务停止和重启记录仍属于计划 022。文件、注册表和网络采集仍属于计划 009 和 011。插件展示仍属于计划 018。
+
+## 验证
+
+在 Linux x86_64、Rust 1.100.0 上，`RUSTFLAGS="-Dwarnings" cargo test --workspace` 通过 32 项 Core 测试、9 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。新增测试读取真实进程表。一个真实子进程被连接到本次测试进程，只出现一次；第二次采样没有再次发出启动；回收后只发出一次退出。进程表中存在至少三个进程的链。这些事件发布到 Core 总线后序号连续，且没有记录丢失。本机这次采样有 33 个进程，没有 `.service` cgroup 单元，因此服务测试确认没有编造间接事件。
+
+复用测试把两个真实启动时间先后放到同一个 PID 上，关闭前者并打开后者。这个组合是跟踪器的输入安排。测试期间操作系统没有回收 PID。`cargo check --target x86_64-pc-windows-msvc --tests` 在拒绝警告的条件下对 Toolhelp、注册表和服务控制管理器代码做了类型检查。这些 Windows 测试没有执行。没有加载已签名的 `strata-proc` 映像。E2E-02 和 E2E-03 仍待完成。计数和 Windows 运行结果记入[工程记录](../records/STATUS.md)。

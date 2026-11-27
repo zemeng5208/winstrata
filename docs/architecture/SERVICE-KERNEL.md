@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/architecture/SERVICE-KERNEL.md) · [Service](../../services/src/lib.rs) · [Driver manager](../../kernel/src/lib.rs) · [Plan 008](../roadmap/PLAN.md#pr-008)
 
-Plan 008 adds `winstrata-service` and `winstrata-kernel`. The service exchanges versioned, length-prefixed JSON with the current user. The kernel crate tracks four driver subscriptions. The product host does not load a kernel image. Plan 009 adds user-mode file and registry watches in the same kernel crate, specified in [File and registry collection](FILE-REGISTRY.md). Plan 011 adds user-mode network observation, specified in [Network sources](NETWORK-SOURCES.md). Process collection remains plan 010.
+Plan 008 adds `winstrata-service` and `winstrata-kernel`. The service exchanges versioned, length-prefixed JSON with the current user. The kernel crate tracks four driver subscriptions. The product host does not load a kernel image. Plan 009 adds user-mode file and registry watches in the same kernel crate, specified in [File and registry collection](FILE-REGISTRY.md). Plan 010 adds user-mode process, thread and module sampling, specified in [Process sources](PROCESS.md). Plan 011 adds user-mode network observation, specified in [Network sources](NETWORK-SOURCES.md).
 
 ## Privilege
 
@@ -36,4 +36,4 @@ The `winstrata-service` binary listens on the default endpoint, waits for one by
 
 ## Verification boundary
 
-Linux ran the manager and service tests. Windows Server 2022, on the corrected head, passed the manager tests, the three Service Control Manager tests, the live pipe exchange, and the restricted-token denial for both SCM create access and the pipe. No signed INF/CAT package was built or loaded. File and registry collection is PR 009. Process collection remains PR 010. Network observation is PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).
+Linux ran the manager and service tests. Windows Server 2022, on the corrected head, passed the manager tests, the three Service Control Manager tests, the live pipe exchange, and the restricted-token denial for both SCM create access and the pipe. No signed INF/CAT package was built or loaded. File and registry collection is plan 009 and is on main. Process user-mode sampling is plan 010 and is on main. Network observation is PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).
