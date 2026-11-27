@@ -42,7 +42,7 @@ The official page at `/tags` composes the existing shadcn-admin [Button](../../p
 
 ## What this plan does not do
 
-This plan does not capture from a NIC inside the plugin, export PCAPNG, draw topology, or discover a network. Those stay plan 031. [E2E-04](../roadmap/ACCEPTANCE.md#e2e-04) stays open. Untagged connection metadata stays [OI-025](../records/OPEN_ITEMS.md#oi-025). [E2E-05](../roadmap/ACCEPTANCE.md#e2e-05) stays plan 030. This plan does not start plan 028 or plan 030. Local-agent tagging stays [OI-056](../records/OPEN_ITEMS.md#oi-056). The Windows `cargo test --locked --workspace` run for this plugin was not executed on the Linux authoring host. That gap is [OI-055](../records/OPEN_ITEMS.md#oi-055). Plan 028 keeps OI-052 and OI-053. This plan does not rewrite them.
+This plan does not capture from a NIC inside the plugin, export PCAPNG, draw topology, or discover a network. Those stay plan 031. [E2E-04](../roadmap/ACCEPTANCE.md#e2e-04) stays open. Untagged connection metadata stays [OI-025](../records/OPEN_ITEMS.md#oi-025). [E2E-05](../roadmap/ACCEPTANCE.md#e2e-05) stays plan 030. This plan does not start plan 028 or plan 030. Local-agent tagging stays [OI-056](../records/OPEN_ITEMS.md#oi-056). The Windows `cargo test --locked --workspace` run for this plugin was not executed on the Linux authoring host. [OI-055](../records/OPEN_ITEMS.md#oi-055) is closed only for head `a4f2edd6efd32a504723664f037677f294279592` and Windows job 140790098053. That close is not a writing-host pass beyond that job, and it is not a waiver. Plan 028 keeps OI-052 and OI-053. This plan does not rewrite them.
 
 ## Verification
 

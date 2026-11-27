@@ -4,7 +4,7 @@
 
 Authoritative error records for `plugins/strata-script`.
 
-[ERR-022](#err-022) is resolved and stays in this history. [ERR-024](#err-024) is open. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is [OI-045](../OPEN_ITEMS.md#oi-045), not an error recorded here. The Windows scripts page is [OI-044](../OPEN_ITEMS.md#oi-044). Plan 022 owns [ERR-020](strata-services.md#err-020).
+[ERR-022](#err-022) is resolved and stays in this history. [ERR-024](#err-024) is resolved for the Windows retest on head `a4f2edd6efd32a504723664f037677f294279592` and stays in this history. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is [OI-045](../OPEN_ITEMS.md#oi-045), not an error recorded here. The Windows scripts page is [OI-044](../OPEN_ITEMS.md#oi-044). Plan 022 owns [ERR-020](strata-services.md#err-020).
 
 <a id="err-022"></a>
 
@@ -35,5 +35,5 @@ Authoritative error records for `plugins/strata-script`.
 - Root cause: `wait_pause` treated `debug/pause.json` as complete as soon as the file existed. The debugger creates that file before the JSON line is finished. A partial read became `faulted`, and the child was dropped without being killed.
 - Impact: Windows script debugging returned `faulted` instead of `paused`. Windows workspace checks failed. Workspace checks failed with them. This blocks plan 029 until the Windows retest passes.
 - Fix plan: keep reading until the file contains a line number or the debug wait ends. Kill the child when that wait ends in `faulted`. The Linux unit test `a_partial_pause_file_is_read_after_it_is_complete` covers a file that starts empty.
-- Retest result: unknown on Windows. The Linux unit test passed on this authoring host, and `editor_languages_debug_triggers_logs_permissions_and_empty_presets` passed again on Linux. Those Linux runs do not close this record. [OI-044](../OPEN_ITEMS.md#oi-044) and [OI-045](../OPEN_ITEMS.md#oi-045) stay open.
-- Current state: open
+- Retest result: resolved only for the Windows retest on head `a4f2edd6efd32a504723664f037677f294279592`. Windows Server 2022 job 140790098053 in run 46084283846 completed success at 2026-11-27T23:47:48Z. The log shows `editor_languages_debug_triggers_logs_permissions_and_empty_presets ... ok` and `a_partial_pause_file_is_read_after_it_is_complete ... ok`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46084283846/job/140790098053). The Linux unit test and the Linux workbench rerun do not close this record. This retest does not close [OI-044](../OPEN_ITEMS.md#oi-044), [OI-045](../OPEN_ITEMS.md#oi-045), [OI-054](../OPEN_ITEMS.md#oi-054), [OI-056](../OPEN_ITEMS.md#oi-056), [OI-052](../OPEN_ITEMS.md#oi-052), or [OI-053](../OPEN_ITEMS.md#oi-053). It does not close [OI-055](../OPEN_ITEMS.md#oi-055); that row is closed separately by the two tag tests in the same job. A later head does not inherit this job.
+- Current state: resolved

@@ -42,7 +42,7 @@ actor 由调用方决定。来自 `strata.tag` 的调用是 `user`，`actor_id` 
 
 ## 本计划不做什么
 
-本计划不在插件内从网卡采集，不导出 PCAPNG，不绘制拓扑，也不做网络发现。这些仍属于计划 031。[E2E-04](../../roadmap/ACCEPTANCE.md#e2e-04) 保持开放。未标记连接元数据仍是 [OI-025](../records/OPEN_ITEMS.md#oi-025)。[E2E-05](../../roadmap/ACCEPTANCE.md#e2e-05) 仍属于计划 030。本计划不启动计划 028 或计划 030。本机 Agent 标记仍是 [OI-056](../records/OPEN_ITEMS.md#oi-056)。这台 Linux 编写主机没有执行该插件的 Windows `cargo test --locked --workspace`。该缺口是 [OI-055](../records/OPEN_ITEMS.md#oi-055)。计划 028 保留 OI-052 和 OI-053。本计划不改写它们。
+本计划不在插件内从网卡采集，不导出 PCAPNG，不绘制拓扑，也不做网络发现。这些仍属于计划 031。[E2E-04](../../roadmap/ACCEPTANCE.md#e2e-04) 保持开放。未标记连接元数据仍是 [OI-025](../records/OPEN_ITEMS.md#oi-025)。[E2E-05](../../roadmap/ACCEPTANCE.md#e2e-05) 仍属于计划 030。本计划不启动计划 028 或计划 030。本机 Agent 标记仍是 [OI-056](../records/OPEN_ITEMS.md#oi-056)。这台 Linux 编写主机没有执行该插件的 Windows `cargo test --locked --workspace`。[OI-055](../records/OPEN_ITEMS.md#oi-055) 只对头 `a4f2edd6efd32a504723664f037677f294279592` 和 Windows 作业 140790098053 关闭。这次关闭不是超出该作业的编写主机通过，也不是豁免。计划 028 保留 OI-052 和 OI-053。本计划不改写它们。
 
 ## 验证
 

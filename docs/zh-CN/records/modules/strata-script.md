@@ -4,7 +4,7 @@
 
 `plugins/strata-script` 的权威错误记录。
 
-[ERR-022](#err-022) 已解决，并留在这份历史里。[ERR-024](#err-024) 未解决。[隔离](../../architecture/SCRIPT.md#containment)中的 Windows AppContainer 缺口是 [OI-045](../OPEN_ITEMS.md#oi-045)，不是本登记中的错误。Windows 脚本页是 [OI-044](../OPEN_ITEMS.md#oi-044)。计划 022 拥有 [ERR-020](strata-services.md#err-020)。
+[ERR-022](#err-022) 已解决，并留在这份历史里。[ERR-024](#err-024) 对头 `a4f2edd6efd32a504723664f037677f294279592` 的 Windows 复测已解决，并留在这份历史里。[隔离](../../architecture/SCRIPT.md#containment)中的 Windows AppContainer 缺口是 [OI-045](../OPEN_ITEMS.md#oi-045)，不是本登记中的错误。Windows 脚本页是 [OI-044](../OPEN_ITEMS.md#oi-044)。计划 022 拥有 [ERR-020](strata-services.md#err-020)。
 
 <a id="err-022"></a>
 
@@ -35,5 +35,5 @@
 - 根因: `wait_pause` 在 `debug/pause.json` 一出现时就把它当成完整内容。调试器先创建这个文件，再写完行号。读到半截内容就变成 `faulted`，子进程被丢弃时没有被终止。
 - 影响: Windows 上的脚本调试返回 `faulted`，而不是 `paused`。Windows 工作区检查失败。Workspace 检查随之失败。在 Windows 复测通过之前，这阻塞计划 029。
 - 修复计划: 继续读取，直到文件里有行号，或调试等待结束。等待以 `faulted` 结束时终止子进程。Linux 单元测试 `a_partial_pause_file_is_read_after_it_is_complete` 覆盖了从空文件开始的情况。
-- 复测结果: Windows 上未知。这台编写主机上的 Linux 单元测试通过，`editor_languages_debug_triggers_logs_permissions_and_empty_presets` 也在 Linux 上再次通过。这些 Linux 运行不关闭本记录。[OI-044](../OPEN_ITEMS.md#oi-044) 和 [OI-045](../OPEN_ITEMS.md#oi-045) 保持开放。
-- 当前状态: 未解决
+- 复测结果: 只对头 `a4f2edd6efd32a504723664f037677f294279592` 的 Windows 复测解决。Windows Server 2022 作业 140790098053，运行 46084283846，于 2026-11-27T23:47:48Z 成功完成。日志显示 `editor_languages_debug_triggers_logs_permissions_and_empty_presets ... ok` 和 `a_partial_pause_file_is_read_after_it_is_complete ... ok`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46084283846/job/140790098053)。Linux 单元测试和 Linux 工作台复跑不关闭本记录。这次复测不关闭 [OI-044](../OPEN_ITEMS.md#oi-044)、[OI-045](../OPEN_ITEMS.md#oi-045)、[OI-054](../OPEN_ITEMS.md#oi-054)、[OI-056](../OPEN_ITEMS.md#oi-056)、[OI-052](../OPEN_ITEMS.md#oi-052) 或 [OI-053](../OPEN_ITEMS.md#oi-053)。它不关闭 [OI-055](../OPEN_ITEMS.md#oi-055)；那一行由同一作业里的两项标记测试另行关闭。更后的头不沿用这个作业。
+- 当前状态: 已解决

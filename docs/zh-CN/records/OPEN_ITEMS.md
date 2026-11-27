@@ -64,7 +64,7 @@
 | [OI-052](#oi-052) | 头 `bc009ea` 的 Windows Server 2022 已关闭 | 028 |
 | [OI-053](#oi-053) | 未测试 | 028 |
 | [OI-054](#oi-054) | 未测试 | 029 |
-| [OI-055](#oi-055) | 编写主机未测试 | 029 |
+| [OI-055](#oi-055) | 头 `a4f2edd` 的 Windows Server 2022 已关闭 | 029 |
 | [OI-056](#oi-056) | 未实现 | 045 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
@@ -985,13 +985,13 @@
 
 - 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
 - 来源 PR: 计划 029，`plugins/strata-tag`
-- 当前状态: 未测试
-- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-tag` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。这台主机没有安装 `x86_64-pc-windows-msvc` 目标，因此本行也不是类型检查结果。本项是 OI-055，因为计划 028 持有 OI-052 和 OI-053。那两行按计划 028 写下的内容保留。[OI-054](#oi-054) 是 Windows 标记页。
+- 当前状态: 对头 `a4f2edd6efd32a504723664f037677f294279592` 上的 Windows Server 2022 作业已关闭
+- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-tag` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。这台主机没有安装 `x86_64-pc-windows-msvc` 目标，因此本行也不是类型检查结果。本项是 OI-055，因为计划 028 持有 OI-052 和 OI-053。那两行按计划 028 写下的内容保留。[OI-054](#oi-054) 是 Windows 标记页。满足本行的结果只是头 `a4f2edd6efd32a504723664f037677f294279592` 上的 Windows 工作区作业，镜像 `windows-2022`，作业 140790098053，运行 46084283846。该作业于 2026-11-27T23:47:48Z 成功完成。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46084283846/job/140790098053)。日志显示 `manual_script_and_plugin_tags_keep_untagged_packets_off_disk ... ok` 和 `tag_stays_absent_until_the_binary_is_beside_the_runtime ... ok`。这不是超出该关闭条件的编写主机通过。这不是豁免。同一作业不关闭 [OI-054](#oi-054) 或 [OI-056](#oi-056)。
 - 负责 PR: 029，在本计划审查头的 Windows 工作区作业上
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 本计划审查头的 Windows 工作区作业，`cargo test --locked --workspace`
 - 验收标准: 该作业通过 `winstrata-strata-tag` 测试，包括 `manual_script_and_plugin_tags_keep_untagged_packets_off_disk` 和 `tag_stays_absent_until_the_binary_is_beside_the_runtime`
-- 关闭条件: 该作业记在本计划的审查头上。Linux 通过不关闭它。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04) 或 [OI-054](#oi-054)。这不是豁免。它不关闭计划 028 的 OI-052。
+- 关闭条件: 对头 `a4f2edd6efd32a504723664f037677f294279592` 已经由作业 140790098053 满足。Linux 通过不关闭它。更后的头不沿用这个作业。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04)、[OI-054](#oi-054) 或 [OI-056](#oi-056)。这不是豁免。这不是超出该作业的编写主机通过。它不关闭计划 028 的 OI-052。
 
 <a id="oi-056"></a>
 
