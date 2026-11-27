@@ -112,7 +112,7 @@ fn vendored_shell_is_built_from_the_approved_sources() {
             .unwrap();
     for item in stamp["files"].as_array().unwrap() {
         let path = root.join(item["path"].as_str().unwrap());
-        let digest = sha256(&std::fs::read(&path).unwrap());
+        let digest = sha256(&read_source(&path));
         assert_eq!(digest, item["sha256"].as_str().unwrap(), "{}", path.display());
     }
     let register: serde_json::Value =
@@ -130,7 +130,7 @@ fn vendored_shell_is_built_from_the_approved_sources() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../..")
             .join(row["productPath"].as_str().unwrap());
-        let digest = sha256(&std::fs::read(&path).unwrap());
+        let digest = sha256(&read_source(&path));
         assert_eq!(digest, row["sha256"].as_str().unwrap(), "{}", path.display());
         if row["modifications"].as_str() == Some("none") {
             assert_eq!(row["sha256"], row["upstreamSha256"], "{}", path.display());
@@ -167,6 +167,16 @@ fn vendored_shell_is_built_from_the_approved_sources() {
 
 fn normalize(text: &str) -> String {
     text.lines().map(str::trim_end).collect::<Vec<_>>().join("\n")
+}
+
+fn read_source(path: &std::path::Path) -> Vec<u8> {
+    // 登记记录的是 LF 字节。Windows 检出可能把文本改成 CRLF。
+    let bytes = std::fs::read(path).unwrap();
+    if bytes.contains(&b'\r') {
+        bytes.into_iter().filter(|byte| *byte != b'\r').collect()
+    } else {
+        bytes
+    }
 }
 
 fn section(source: &str, start: &str, end: &str) -> String {
