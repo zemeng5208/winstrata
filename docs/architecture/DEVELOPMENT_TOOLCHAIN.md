@@ -24,6 +24,7 @@ Run these commands from the repository or a nested project directory.
 | `cargo dev init` | Perform preflight, fetch locked Rust dependencies, and install the locked pnpm workspace. |
 | `cargo dev build` | Build the Rust workspace with the checked-in lockfile. |
 | `cargo dev verify` | Run Cargo workspace tests and verify frozen pnpm lockfile resolution. |
+| `cargo dev cross-probe` | Build and inspect the [Windows x64 console and driver link probes](WINDOWS_CROSS_BUILD.md) on Linux. |
 
 The Rust workspace uses [Cargo.toml](../../Cargo.toml) and [Cargo.lock](../../Cargo.lock). The pnpm workspace uses [pnpm-workspace.yaml](../../pnpm-workspace.yaml) and [pnpm-lock.yaml](../../pnpm-lock.yaml). Its package paths cover apps and shared frontend packages as those projects are added. Each ecosystem has one root lockfile. Tooling resolves subprocesses from the project root and uses the available host toolchain. Cargo uses its workspace target directory by default. pnpm's store and cache are under `.winstrata/`. Generated output, installs and local caches are ignored.
 

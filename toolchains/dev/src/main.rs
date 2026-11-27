@@ -4,7 +4,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
-const USAGE: &str = "Usage: cargo dev <doctor|init|build|verify>";
+mod cross_probe;
+
+const USAGE: &str = "Usage: cargo dev <doctor|init|build|verify|cross-probe>";
 
 #[derive(Clone, Copy)]
 enum Task {
@@ -12,6 +14,7 @@ enum Task {
     Init,
     Build,
     Verify,
+    CrossProbe,
 }
 
 fn main() -> ExitCode {
@@ -25,6 +28,7 @@ fn main() -> ExitCode {
         [value] if value == "init" => Task::Init,
         [value] if value == "build" => Task::Build,
         [value] if value == "verify" => Task::Verify,
+        [value] if value == "cross-probe" => Task::CrossProbe,
         _ => {
             eprintln!("{USAGE}");
             return ExitCode::from(2);
@@ -73,6 +77,7 @@ fn execute(root: &Path, task: Task) -> Result<(), String> {
                 &["install", "--frozen-lockfile", "--lockfile-only"],
             )
         }
+        Task::CrossProbe => cross_probe::run_probe(root),
     }
 }
 
@@ -157,15 +162,19 @@ fn pnpm_program() -> OsString {
     "pnpm".into()
 }
 
-fn command(root: &Path, program: &OsStr, args: &[&str]) -> Command {
+fn command(root: &Path, program: &OsStr, args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Command {
     let mut command = Command::new(program);
     command.current_dir(root).args(args);
     command
 }
 
 fn output(root: &Path, program: impl AsRef<OsStr>, args: &[&str]) -> Result<String, String> {
-    let program = program.as_ref();
-    let result = command(root, program, args)
+    capture(command(root, program.as_ref(), args))
+}
+
+fn capture(mut command: Command) -> Result<String, String> {
+    let program = command.get_program().to_os_string();
+    let result = command
         .output()
         .map_err(|error| format!("start {}: {error}", program.to_string_lossy()))?;
     if !result.status.success() {
@@ -182,7 +191,11 @@ fn output(root: &Path, program: impl AsRef<OsStr>, args: &[&str]) -> Result<Stri
     Ok(value.trim().into())
 }
 
-fn run(root: &Path, program: impl AsRef<OsStr>, args: &[&str]) -> Result<(), String> {
+fn run(
+    root: &Path,
+    program: impl AsRef<OsStr>,
+    args: impl IntoIterator<Item = impl AsRef<OsStr>>,
+) -> Result<(), String> {
     let program = program.as_ref();
     let status = command(root, program, args)
         .status()

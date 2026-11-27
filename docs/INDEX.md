@@ -8,6 +8,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Product and plugins](architecture/PRODUCT.md)
 - [System architecture and engineering layout](architecture/SYSTEM.md)
 - [Development toolchain](architecture/DEVELOPMENT_TOOLCHAIN.md)
+- [Windows x64 cross-build probe](architecture/WINDOWS_CROSS_BUILD.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)
