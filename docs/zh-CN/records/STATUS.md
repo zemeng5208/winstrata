@@ -80,7 +80,9 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试界限为 30 秒。同一测试的 Debug 运行耗时 145 毫秒。这是一次提交和一次同步，不是持续写入测量。`reserve(u64::MAX)` 通过既有容量检查返回空间不足，没有填满物理磁盘。本机没有 `tshark`、`tcpdump` 或 `editcap`，外部 PCAPNG 工具没有运行；测试只检查节头魔数 `0x0A0D0D0A` 并用库内解析器回读包字节。
 
-当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此没有运行 `cargo dev doctor` 或 `cargo dev verify`。verify 所调用的 `cargo test --locked --workspace` 已直接执行。锁文件没有新增外部包。Windows 测试、Windows 10/11 客户端、ReFS、加密、E2E-05、E2E-09 和 E2E-10 均未执行。GitHub Actions 在本记录写入时尚未对这个候选头运行。
+当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此本机没有运行 `cargo dev doctor` 或 `cargo dev verify`。verify 所调用的 `cargo test --locked --workspace` 已直接执行。锁文件没有新增外部包。本机没有运行 Windows 测试。Windows 10/11 客户端、ReFS、加密、E2E-05、E2E-09 和 E2E-10 均未执行。
+
+提交 `dfe59001d1647d8093fe8a90881efdc9a397f045` 上，GitHub 的 Workspace、Linux 工作区和 Windows 工作区检查成功。Linux 作业运行仓库的工作区脚本。Windows Server 2022 作业运行 `cargo test --locked --workspace` 并成功；不可写日志那一项只在 Linux 编译。`winstrata/merge-policy` 的说明为 “Plan 008 must merge before plan 012”。这是路线图序号门禁，不是混合存储的代码缺陷，本计划不修改门禁。[工作区运行](https://github.com/zemeng5208/winstrata/actions/runs/45998179293) · [Linux](https://github.com/zemeng5208/winstrata/actions/runs/45998179293/job/140502774850) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/45998179293/job/140502775240) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45998179219) 这里的 Windows 检查是 GitHub 工作区作业，不是 Windows 10/11 客户端、ReFS 或加密测试。
 
 ## 决策与技术假设
 
@@ -108,4 +110,4 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-计划 007 已由所有者合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。当前交接点为计划 012，分支 `pr/012-hybrid-storage`，基线就是该提交。计划 008 在同一基线上并行，不在本计划范围内。`winstrata/merge-policy` 按路线图序号要求 008–011 先于 012 合并；那些计划合并之前，该检查会失败。这不是混合存储的缺陷，本计划也不修改门禁来绕过它。Windows 10/11 客户端、ReFS、加密、外部 PCAPNG 工具、E2E-05、E2E-09、E2E-10 和已签名驱动加载仍未核实。所有者审查本计划。不要合并，也不要在本计划中开始计划 013。
+计划 007 已由所有者合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。当前交接点为计划 012，分支 `pr/012-hybrid-storage`，基线就是该提交。计划 008 在同一基线上并行，不在本计划范围内。提交 `dfe59001d1647d8093fe8a90881efdc9a397f045` 的 Workspace、Linux 工作区和 Windows 工作区检查已经成功。`winstrata/merge-policy` 按路线图序号要求 008–011 先于 012 合并，说明为 “Plan 008 must merge before plan 012”。那些计划合并之前，该检查会失败。这不是混合存储的缺陷，本计划也不修改门禁来绕过它。Windows 10/11 客户端、ReFS、加密、外部 PCAPNG 工具、E2E-05、E2E-09、E2E-10 和已签名驱动加载仍未核实。所有者审查本计划。不要合并，也不要在本计划中开始计划 013。
