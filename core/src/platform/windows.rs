@@ -210,8 +210,9 @@ pub(super) fn retry_unknown_revision<T>(mut op: impl FnMut() -> io::Result<T>) -
     loop {
         match op() {
             Ok(value) => return Ok(value),
-            // 1305 是安全描述符修订暂时读不出来。ACE 内容仍按原条件拒绝，不放宽。
-            Err(error) if error.raw_os_error() == Some(1305) && attempt < 3 => {
+            // 1305 是安全描述符修订暂时读不出来。1336 是同一读取里 ACL 结构暂时无效。
+            // 两者都发生在所有者和 ACE 比较之前。比较失败仍返回拒绝访问，不重试，也不放宽。
+            Err(error) if matches!(error.raw_os_error(), Some(1305 | 1336)) && attempt < 3 => {
                 std::thread::sleep(std::time::Duration::from_millis(1 << attempt));
                 attempt += 1;
             }
