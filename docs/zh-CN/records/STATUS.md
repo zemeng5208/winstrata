@@ -34,7 +34,7 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 051 | 已合并，验收仍有待项 | 所有者于 2026-11-27T17:19:35Z 将 [GitHub PR #18](https://github.com/zemeng5208/winstrata/pull/18) 合并为 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`。被合并的头是 `b855c188c85bb9916bc388232f1469e9b849fcad`。只包含标准和记录。UI Moments 已指定且未验证。这一行不是对 UI Moments 的验收。这份记录不为该合并提交附加 CI 地址。 |
 | PR 014 | 已合并，验收仍有待项 | 所有者将 GitHub PR #20 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。父提交是 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637` 和 `6744e0e0fbdc222fbea19851db5f5e2ed5e8cf25`。这份规范记录不附加 CI 地址，也不关闭 E2E-06。较早的审查头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的 `winstrata/merge-policy` 状态，随后 Windows 插件生命周期测试因共享冲突失败。合并后的树保留已经固定的插件目录。 |
 | PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
-| PR 015 | 待审查 | 在计划 014 和 053 之后实现了 [Python、TypeScript 和 JavaScript 运行时](../architecture/RUNTIMES.md)。Linux 在 Landlock 和 seccomp 中运行了真实脚本。撰写主机没有运行 Windows 容器测试。这份记录自己的四项门禁尚未返回，所以还不是审查头。 |
+| PR 015 | 待审查 | 在计划 014 和 053 之后实现了 [Python、TypeScript 和 JavaScript 运行时](../architecture/RUNTIMES.md)。Linux 在 Landlock 和 seccomp 中运行了真实脚本。头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。 |
 | PR 016–050 | 规划中 | 计划 015 仍先于计划 016。未合并的 GitHub PR #21 是计划 016，头为 `64bd627c362ad025869905441bee7802dda19ac1`，这里不验收它。本次规范变更不修改那个分支，也不把 053 写入它的直接依赖格。计划 016、017 及更晚的计划不属于计划 015。
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
 
@@ -273,9 +273,11 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 `b4f782e67e40adc6e8d3b48b2df967bba884bda7` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经创建进程，随后 venv 启动器报 “Unable to create process using” 项目 Python。作业只允许一个进程，而该启动器还需要第二个。Windows 现在直接启动项目 Python。一个进程的限制，以及测试对再创建子进程的拒绝，都保持不变。
 
-在 `d8dcc7c77ea10229bd0c2c30b7272f9678f28c56` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经启动项目解释器，随后同一测试失败，错误是 `permission_denied: storage must be owned by the current user with its private DACL`。合并包允许项时清掉了 `SE_DACL_PROTECTED`，并多了一条 ACE，宿主下次打开该私有对象就被拒绝。授权现在会在原来已受保护时保留这个保护位。私有 DACL 检查仍然要求所有者的完全控制项，并仍然拒绝其他额外 SID。只有 SID 属于该插件自己的 AppContainer 配置文件时，才接受额外的一条允许项。规范化后变成卷根的授权会被拒绝。这项修正还没有在 Windows 上执行。分支现在也包含 main `90601459c3662a586cc335c234315d54b20422be`。
+在 `d8dcc7c77ea10229bd0c2c30b7272f9678f28c56` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经启动项目解释器，随后同一测试失败，错误是 `permission_denied: storage must be owned by the current user with its private DACL`。合并包允许项时清掉了 `SE_DACL_PROTECTED`，并多了一条 ACE，宿主下次打开该私有对象就被拒绝。授权现在会在原来已受保护时保留这个保护位。私有 DACL 检查仍然要求所有者的完全控制项，并仍然拒绝其他额外 SID。只有 SID 属于该插件自己的 AppContainer 配置文件时，才接受额外的一条允许项。规范化后变成卷根的授权会被拒绝。分支也包含 main `90601459c3662a586cc335c234315d54b20422be`。
 
-没有运行 Windows 10/11 客户端、修正后的 Windows 容器测试、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。修正后的头上，这份记录自己的四项门禁尚未返回，所以还不是审查头。
+在 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 上，[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140683485683) 于 2026-11-27T18:43:01Z 成功。[Windows](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140683485996) 于 2026-11-27T18:44:13Z 成功。[Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140684225933) 于 2026-11-27T18:44:20Z 成功。已发布的提交状态 `winstrata/merge-policy` 为成功。说明是 “Merge order, blockers, and policy files checked”。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46051468945)。名为 “Evaluate merge policy from main” 的工作流检查成功，并不是这份已发布状态。那个头是审查头。这份较晚的记录只是写下该结果，所以它自己的四项门禁不是那些结果。
+
+没有运行 Windows 10/11 客户端、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。
 
 ## 交接
 
@@ -287,4 +289,4 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T17:41:19Z 将计划 014 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。所有者随后将计划 053 合并为 `90601459c3662a586cc335c234315d54b20422be`。该 main 是计划 015 的基线。路线图顺序是 014、053、015、016。
 
-当前交接点是计划 015，分支 `pr/015-language-runtimes-5b20`。它增加 Python、JavaScript 和 TypeScript SDK、项目解释器版本声明，以及这些语言进程的操作系统隔离。计划 016 由另一个改动进行。计划 017 没有开始。撰写主机运行了 Linux 语言测试。它没有运行 Windows 容器测试、Windows 10/11，以及 E2E-06、E2E-07 和 E2E-12。这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查尚未返回，所以还不是审查头。所有者审查本计划。不要合并。
+当前交接点是计划 015，分支 `pr/015-language-runtimes-5b20`。它增加 Python、JavaScript 和 TypeScript SDK、项目解释器版本声明，以及这些语言进程的操作系统隔离。计划 016 由另一个改动进行。计划 017 没有开始。撰写主机运行了 Linux 语言测试。Windows Server 2022 在 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 上运行了容器测试，该头的四项门禁通过。没有运行 Windows 10/11，以及 E2E-06、E2E-07 和 E2E-12。所有者审查本计划。不要合并。
