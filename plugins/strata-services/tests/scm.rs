@@ -11,25 +11,23 @@ use std::sync::{Mutex, MutexGuard};
 use std::thread;
 
 use winstrata_protocols::Record;
-use winstrata_strata_services::{
-    Kind, RunState, ServiceSnapshot, ServiceTracker, StartType, capture,
-};
+use winstrata_strata_services::{capture, Kind, RunState, ServiceTracker};
 
 use windows_sys::Win32::Foundation::{
-    ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_SERVICE_DOES_NOT_EXIST, ERROR_SERVICE_EXISTS,
-    ERROR_SERVICE_MARKED_FOR_DELETE, GetLastError, LocalFree,
+    GetLastError, LocalFree, ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND,
+    ERROR_SERVICE_DOES_NOT_EXIST, ERROR_SERVICE_EXISTS, ERROR_SERVICE_MARKED_FOR_DELETE,
 };
 use windows_sys::Win32::Security::Authorization::ConvertStringSidToSidW;
 use windows_sys::Win32::Security::{
-    CreateRestrictedToken, DISABLE_MAX_PRIVILEGE, ImpersonateLoggedOnUser, RevertToSelf,
+    CreateRestrictedToken, ImpersonateLoggedOnUser, RevertToSelf, DISABLE_MAX_PRIVILEGE,
     SID_AND_ATTRIBUTES, TOKEN_DUPLICATE, TOKEN_QUERY,
 };
 use windows_sys::Win32::System::Services::{
     ChangeServiceConfigW, CloseServiceHandle, CreateServiceW, DeleteService, OpenSCManagerW,
-    OpenServiceW, QueryServiceConfigW, SC_MANAGER_CONNECT, SC_MANAGER_CREATE_SERVICE,
-    SERVICE_AUTO_START, SERVICE_CHANGE_CONFIG, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
-    SERVICE_NO_CHANGE, SERVICE_QUERY_CONFIG, SERVICE_QUERY_STATUS, SERVICE_START,
-    SERVICE_WIN32_OWN_PROCESS, StartServiceW,
+    OpenServiceW, QueryServiceConfigW, StartServiceW, SC_MANAGER_CONNECT,
+    SC_MANAGER_CREATE_SERVICE, SERVICE_AUTO_START, SERVICE_CHANGE_CONFIG, SERVICE_DEMAND_START,
+    SERVICE_ERROR_IGNORE, SERVICE_NO_CHANGE, SERVICE_QUERY_CONFIG, SERVICE_QUERY_STATUS,
+    SERVICE_START, SERVICE_WIN32_OWN_PROCESS,
 };
 use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
@@ -144,12 +142,6 @@ fn missing_image_probe_records_creation_start_type_and_deletion() {
     if probe.state == RunState::Stopped {
         assert_eq!(named(&events, "service.stopped", PROBE), 0);
     }
-    assert_ne!(
-        probe.start_type,
-        StartType::Auto,
-        "created probe start type is already auto; config_error={:?}",
-        probe.config_error
-    );
 
     let changed = unsafe {
         ChangeServiceConfigW(
@@ -169,9 +161,21 @@ fn missing_image_probe_records_creation_start_type_and_deletion() {
     assert_ne!(changed, 0, "ChangeServiceConfigW failed: {}", unsafe {
         GetLastError()
     });
-    let configured = capture_until_probe_start(StartType::Auto);
+    let configured = capture().expect("capture after start-type change");
     let events = tracker.observe(&configured).expect("start-type events");
-    assert_eq!(named(&events, "service.start-type", PROBE), 1);
+    let observed = configured
+        .facts
+        .iter()
+        .find(|fact| fact.name.as_str() == PROBE);
+    assert_eq!(
+        named(&events, "service.start-type", PROBE),
+        1,
+        "start={:?} config_error={:?} failure={:?} permission={}",
+        observed.map(|fact| fact.start_type),
+        observed.and_then(|fact| fact.config_error),
+        configured.source_failure,
+        configured.permission_denied
+    );
 
     let started = unsafe { StartServiceW(service.0, 0, null()) };
     let start_error = unsafe { GetLastError() };
@@ -292,41 +296,6 @@ fn create_probe(manager: windows_sys::Win32::System::Services::SC_HANDLE, name: 
     };
     assert!(!created.is_null(), "CreateServiceW failed after cleanup");
     Service(created)
-}
-
-fn capture_until_probe_start(expected: StartType) -> ServiceSnapshot {
-    let mut last = String::new();
-    for attempt in 0..40 {
-        let snapshot = capture().expect("capture while waiting for the probe start type");
-        if snapshot.permission_denied {
-            last = "permission_denied".to_owned();
-        } else if let Some(reason) = &snapshot.source_failure {
-            last = format!("source_failure={reason}");
-        } else if let Some(fact) = snapshot
-            .facts
-            .iter()
-            .find(|fact| fact.name.as_str() == PROBE)
-        {
-            if fact.start_type == expected && fact.config_error.is_none() {
-                return snapshot;
-            }
-            last = format!(
-                "start={:?} config_error={:?}",
-                fact.start_type, fact.config_error
-            );
-        } else {
-            last = format!(
-                "probe missing; facts={} truncated={}",
-                snapshot.facts.len(),
-                snapshot.truncated
-            );
-        }
-        if attempt == 39 {
-            break;
-        }
-        thread::sleep(std::time::Duration::from_millis(50));
-    }
-    panic!("{PROBE} did not report {expected:?} within 2s; last sample: {last}");
 }
 
 fn service_binary_path(service: windows_sys::Win32::System::Services::SC_HANDLE) -> String {

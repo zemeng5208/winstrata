@@ -6,19 +6,19 @@ use std::io::{self, ErrorKind};
 use std::ptr::{null, null_mut};
 
 use windows_sys::Win32::Foundation::{
-    ERROR_ACCESS_DENIED, ERROR_MORE_DATA, ERROR_SUCCESS, GetLastError,
+    GetLastError, ERROR_ACCESS_DENIED, ERROR_MORE_DATA, ERROR_SUCCESS,
 };
 use windows_sys::Win32::System::Registry::{
-    HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ, RegGetValueW,
+    RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
 };
 use windows_sys::Win32::System::Services::{
-    CloseServiceHandle, EnumServicesStatusExW, OpenSCManagerW, OpenServiceW, QUERY_SERVICE_CONFIGW,
-    QueryServiceConfigW, SC_ENUM_PROCESS_INFO, SC_HANDLE, SC_MANAGER_CONNECT,
+    CloseServiceHandle, EnumServicesStatusExW, OpenSCManagerW, OpenServiceW, QueryServiceConfigW,
+    QUERY_SERVICE_CONFIGW, SC_ENUM_PROCESS_INFO, SC_HANDLE, SC_MANAGER_CONNECT,
     SC_MANAGER_ENUMERATE_SERVICE, SERVICE_DRIVER, SERVICE_QUERY_CONFIG, SERVICE_STATE_ALL,
     SERVICE_WIN32,
 };
 
-use super::{Coverage, Fact, Kind, RunState, ServiceSnapshot, StartType, clean_name, clean_path};
+use super::{clean_name, clean_path, Coverage, Fact, Kind, RunState, ServiceSnapshot, StartType};
 
 const MAX_EACH: usize = 1024;
 const BUFFER_CAP: usize = 1024 * 1024;
@@ -360,7 +360,18 @@ fn registry_sz(subkey: &str, value: &str) -> io::Result<String> {
 }
 
 fn wide(value: &str) -> Vec<u16> {
-    value.encode_utf16().collect()
+    // OpenServiceW 和注册表读取都要求以 0 结尾。服务名本身没有这个终止符。
+    value.encode_utf16().chain([0]).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_service_name_passed_to_the_manager_is_null_terminated() {
+        let encoded = super::wide("WinStrata022Probe");
+        assert_eq!(encoded.last().copied(), Some(0));
+        assert!(encoded[..encoded.len() - 1].iter().all(|unit| *unit != 0));
+    }
 }
 
 fn wide_ptr(value: *const u16) -> Option<String> {
