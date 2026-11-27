@@ -229,12 +229,12 @@ fn walk_no_preset_dir(dir: &Path) {
 #[test]
 fn editor_languages_debug_triggers_logs_permissions_and_empty_presets() {
     assert_no_shipped_presets();
-    let shim = script_bin().parent().unwrap().join(if cfg!(windows) {
-        "winstrata_shim.dll"
-    } else {
-        "libwinstrata_shim.so"
-    });
-    assert!(shim.is_file(), "isolation shim is not beside the script program");
+    // Linux 工作区检查会先构建工作区，因此垫片在脚本程序旁边。`cargo test` 本身不编译只有 cdylib 的垫片包。Windows 不加载这个文件。
+    #[cfg(unix)]
+    {
+        let shim = script_bin().parent().unwrap().join("libwinstrata_shim.so");
+        assert!(shim.is_file(), "isolation shim is not beside the script program");
+    }
     let (_core, mut host, state) = open();
     let before = host.report("strata.script").unwrap();
     assert!(!before.enabled);
@@ -331,7 +331,7 @@ fn editor_languages_debug_triggers_logs_permissions_and_empty_presets() {
     let revoked = call(&mut host, json!({"op": "run", "id": python, "emit": "script.finished"}));
     assert_eq!(revoked["code"], "permission_denied");
 
-    // Linux 子进程有 Landlock。Windows 的 AppContainer 仍是 OI-040，这里不把它记成通过。
+    // Linux 子进程有 Landlock。Windows 的 AppContainer 仍是 OI-041，这里不把它记成通过。
     #[cfg(unix)]
     {
         call(&mut host, json!({"op": "grant", "id": python, "permission": "storage.private"}));

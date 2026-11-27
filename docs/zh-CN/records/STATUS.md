@@ -373,4 +373,4 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 无头 Chrome 加载了官方壳，打开脚本页，并点击了检查预设。唯一发出的命令是带 `{"op":"empty"}` 的 `script-workbench`。页面显示预设为 0，并且工作台没有在运行。选择存储位置之前的桥接测试返回同样的空闲结果，也没有创建插件目录。桥接上的 `enable` 仍然返回 403。
 
-这台主机没有运行 Windows 测试、Windows AppContainer 或 Windows 工作台会话。它们仍是 [OI-040](OPEN_ITEMS.md#oi-040) 和 [OI-041](OPEN_ITEMS.md#oi-041)。[OI-039](OPEN_ITEMS.md#oi-039) 仍是计划 020 的环境事项。E2E-07 和 E2E-12 未完成。这个 head 的四项门禁在拉取请求打开后记录。所有者合并。本 Agent 不合并。
+头 `e08cf7ee2dfe42303276a0426d7cec46a6f02867` 的 Linux 工作区检查通过，Windows 工作区检查失败。工作台测试在脚本运行前要求 `winstrata_shim.dll`。这是 [ERR-020](modules/strata-script.md#err-020)。这台主机仍然没有运行 Windows 工作台会话或 Windows AppContainer。它们仍是 [OI-040](OPEN_ITEMS.md#oi-040) 和 [OI-041](OPEN_ITEMS.md#oi-041)。[OI-039](OPEN_ITEMS.md#oi-039) 仍是计划 020 的环境事项。E2E-07 和 E2E-12 未完成。所有者合并。本 Agent 不合并。
