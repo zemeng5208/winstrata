@@ -248,10 +248,14 @@ mod tests {
         assert!(report.pid.is_none());
         assert!(report.batch);
         assert_eq!(report.grants, vec!["event.publish".to_owned()]);
+        let env_report = host.report("strata.env").unwrap();
+        assert_eq!(env_report.kind, "builtin");
+        assert_eq!(env_report.phase, "disabled");
+        assert_eq!(env_report.availability, "ready");
         assert!(
             host.list()
                 .iter()
-                .filter(|item| item.id != PLUGIN_ID)
+                .filter(|item| item.id != PLUGIN_ID && item.id != "strata.env")
                 .all(|item| item.phase == "implementation_absent"
                     && item.availability == "implementation_absent")
         );
