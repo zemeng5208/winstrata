@@ -7,6 +7,7 @@
 - [根 Agent 规范与完整编号索引](AGENTS.md)
 - [产品与官方插件](architecture/PRODUCT.md)
 - [系统架构与工程布局](architecture/SYSTEM.md)
+- [开发工具链](architecture/DEVELOPMENT_TOOLCHAIN.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [网络与数据策略](architecture/DATA.md)
 - [前端设计与主题](architecture/FRONTEND.md)
