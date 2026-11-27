@@ -29,3 +29,6 @@ jobs:
       - name: Measure native data sources and Job Object enforcement
         shell: powershell
         run: .\.github\scripts\pr004-windows.ps1
+      - name: Measure an offline page in embedded WebView2
+        shell: powershell
+        run: .\.github\scripts\pr004-webview.ps1
