@@ -10,7 +10,7 @@
 
 `bind_languages` 核对两份项目声明。Node.js 必须等于 `package.json` 的 `engines.node`，当前是 24.22.3。Python 必须不低于 `toolchains/runtimes.json` 的 `python_minimum`，并且保持该主版本。调用方传入解释器的绝对路径和 SDK 目录。宿主不隐式搜索用户安装，也不把解释器复制进仓库。与声明不符的二进制返回 `toolchain_mismatch`。
 
-Python 从插件私有状态目录里的 `venv` 启动。创建时使用 `--without-pip`。SDK 以 `-s -B -E` 运行它，然后只加入该插件的私有模块目录；`modules.json` 列出的模块才加入项目目录。JavaScript 和 TypeScript 使用绑定的 Node.js。TypeScript 使用 Node 自带的类型剥离。私有模块和目录模块按名称从 `state/node` 和 `plugins/catalog/node` 加载。不在其中的模块视为缺失。用户站点包和另一个插件的目录不在搜索路径上。
+在 Linux 上，Python 从插件私有状态目录里的 `venv` 启动，创建时使用 `--without-pip`。在 Windows 上，这个 `venv` 可执行文件只是启动器，而作业只允许一个进程，因此 Python 直接使用项目声明的解释器。两种情况下 SDK 都以 `-s -B -E` 运行它，然后只加入该插件的私有模块目录；`modules.json` 列出的模块才加入项目目录。JavaScript 和 TypeScript 使用绑定的 Node.js。TypeScript 使用 Node 自带的类型剥离。私有模块和目录模块按名称从 `state/node` 和 `plugins/catalog/node` 加载。不在其中的模块视为缺失。用户站点包和另一个插件的目录不在搜索路径上。
 
 `modules.json` 可选。其中的 `modules` 名称是小写记号。列出的模块必须已经存在于 `plugins/catalog/python` 或 `plugins/catalog/node`。宿主不会下载它。停止、禁用、卸载和关闭宿主时删除 Python 的 `env` 目录。私有文件和历史保留。下次启动重新创建环境。
 

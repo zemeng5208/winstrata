@@ -209,8 +209,10 @@ pub(super) fn launch(
     let (program, prefix, script) = if python {
         let environment = state.join("env");
         ensure_venv(&tools.python, &environment)?;
+        // Windows 的 venv python.exe 只是启动器，会再创建一个解释器进程。
+        // 作业只允许一个活动进程，因此这里直接运行项目声明的解释器。
         let program = if cfg!(windows) {
-            environment.join("Scripts").join("python.exe")
+            tools.python.clone()
         } else {
             environment.join("bin").join("python")
         };

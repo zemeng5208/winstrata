@@ -269,7 +269,9 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 `91a5f1dab6157510fb1a4e027fefe8becebbbd47` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 通过了 ACL 合并，随后同一测试在打开 `stderr.log` 时失败，Win32 错误 32，“The process cannot access the file because it is being used by another process.” 父进程已经打开了该文件。Windows 现在把日志留给沙箱进程创建。
 
-在 `f29022e0729b4b6f82efc961bf2cdb4025fd48b5` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 随后同一测试失败，Win32 错误 203，“The system could not find the environment option that was entered.” `CreateEnvironmentBlock` 使用了空令牌。现在改为当前用户令牌，这是计划 004 记录为可以启动的做法。这项修正还没有在 Windows 上执行。
+在 `f29022e0729b4b6f82efc961bf2cdb4025fd48b5` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 随后同一测试失败，Win32 错误 203，“The system could not find the environment option that was entered.” `CreateEnvironmentBlock` 使用了空令牌。现在改为当前用户令牌，这是计划 004 记录为可以启动的做法。
+
+在 `b4f782e67e40adc6e8d3b48b2df967bba884bda7` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经创建进程，随后 venv 启动器报 “Unable to create process using” 项目 Python。作业只允许一个进程，而该启动器还需要第二个。Windows 现在直接启动项目 Python。一个进程的限制，以及测试对再创建子进程的拒绝，都保持不变。这项修正还没有在 Windows 上执行。
 
 没有运行 Windows 10/11 客户端、修正后的 Windows 容器测试、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。修正后的头上，这份记录自己的四项门禁尚未返回，所以还不是审查头。
 
