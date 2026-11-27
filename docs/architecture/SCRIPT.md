@@ -46,4 +46,4 @@ The official page composes the existing shadcn-admin [Button](../../packages/ui/
 
 ## Outside this plan
 
-Plans 026, 028, 038, 043, and 045 are outside this plan. Filter fallback, snapshot comparison, the shared market, and MCP are outside it. [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) and [E2E-12](../roadmap/ACCEPTANCE.md#e2e-12) stay open.
+Plans 026, 028, 038, 043, and 045 are outside this plan. Plan 028 calls this workbench once per filter batch and falls back when that run fails. Snapshot comparison, the shared market, and MCP remain outside this plan. [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) and [E2E-12](../roadmap/ACCEPTANCE.md#e2e-12) stay open.

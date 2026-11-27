@@ -6,6 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { FilterPage } from './filter-page'
 import { ScriptPage } from './script-page'
 import { OverviewPage, PluginsPage, ServicePage, SettingsPage, Shell } from './shell'
 
@@ -35,12 +36,18 @@ const scriptsRoute = createRoute({
   path: '/scripts',
   component: ScriptPage,
 })
+const filtersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/filters',
+  component: FilterPage,
+})
 const routeTree = rootRoute.addChildren([
   overviewRoute,
   pluginsRoute,
   serviceRoute,
   settingsRoute,
   scriptsRoute,
+  filtersRoute,
 ])
 const router = createRouter({
   routeTree,

@@ -46,4 +46,4 @@ Python 在真实源码上使用 `sys.settrace`。JavaScript 和 TypeScript 在 N
 
 ## 本计划之外
 
-计划 026、028、038、043 和 045 不在本计划内。过滤回退、快照比较、统一市场和 MCP 也不在本计划内。[E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) 和 [E2E-12](../roadmap/ACCEPTANCE.md#e2e-12) 仍待完成。
+计划 026、028、038、043 和 045 不在本计划内。计划 028 对每个过滤批次调用一次这个工作台，运行失败时回退。快照比较、统一市场和 MCP 仍不在本计划内。[E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) 和 [E2E-12](../roadmap/ACCEPTANCE.md#e2e-12) 仍待完成。
