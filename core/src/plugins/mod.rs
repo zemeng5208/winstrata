@@ -1,12 +1,13 @@
 //! 插件清单、权限、依赖和进程生命周期。
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
-//! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse` 与 `strata.health` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
+//! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse`、`strata.health` 与 `strata.budget` 只在同目录存在对应程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
+mod budget;
 mod env;
 mod health;
 mod language;
@@ -390,6 +391,11 @@ pub struct PluginHost {
     live: HashMap<String, Live>,
     bus: Option<EventBus>,
     scheduler: Option<SchedulerHandle>,
+    budget_paused: bool,
+    budget_sequence: u64,
+    budget_plugin: Option<String>,
+    budget_cpu: Option<budget::CpuBase>,
+    pending_budget: Option<budget::LimitUpdate>,
     starting: Vec<String>,
     languages: Option<Toolchain>,
     registry: Option<winstrata_strata_registry::Session>,
@@ -448,6 +454,11 @@ impl PluginHost {
             live: HashMap::new(),
             bus: None,
             scheduler: None,
+            budget_paused: false,
+            budget_sequence: 0,
+            budget_plugin: None,
+            budget_cpu: None,
+            pending_budget: None,
             starting: Vec::new(),
             languages: None,
             registry: None,
@@ -475,6 +486,7 @@ impl PluginHost {
         host.seed_startup_collector()?;
         host.seed_pulse_collector()?;
         host.seed_health_collector()?;
+        host.seed_budget_collector()?;
         Ok(host)
     }
 
@@ -948,9 +960,13 @@ impl PluginHost {
                     .unwrap_or_else(|| "plugin rejected the call".to_owned()),
             ));
         }
-        reply
+        let detail = reply
             .detail
-            .ok_or_else(|| PluginError::new("invalid_record", "plugin returned no result"))
+            .ok_or_else(|| PluginError::new("invalid_record", "plugin returned no result"))?;
+        if provider == budget::PLUGIN && capability == "budget.regulate" {
+            self.apply_budget(&detail)?;
+        }
+        Ok(detail)
     }
 
     pub fn read_private(&mut self, id: &str, name: &str) -> Result<String, PluginError> {
@@ -974,6 +990,12 @@ impl PluginHost {
 
     pub fn emit(&mut self, id: &str, event_type: &str) -> Result<Event, PluginError> {
         self.running(id)?;
+        if self.budget_paused {
+            return Err(PluginError::new(
+                "budget_paused",
+                "resource budget has paused publication",
+            ));
+        }
         self.require_grant(id, Permission::EventPublish)?;
         let manifest = self.manifest_file(id)?;
         if !manifest
@@ -1358,6 +1380,13 @@ impl PluginHost {
                     PluginError::new(
                         "runtime_missing",
                         "health collector is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == budget::PLUGIN {
+                budget::beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "budget collector is not beside the plugin runtime",
                     )
                 })?
             } else {
@@ -1920,7 +1949,10 @@ impl PluginHost {
         if manifest.id.as_str() != id || manifest.kind != PluginKind::Builtin {
             return Err(PluginError::new("invalid_manifest", mismatch));
         }
-        let files = vec![("manifest.json".to_owned(), manifest_json.as_bytes().to_vec())];
+        let files = vec![(
+            "manifest.json".to_owned(),
+            manifest_json.as_bytes().to_vec(),
+        )];
         self.write_tree("packages", id, &files)?;
         self.write_tree("recovery", id, &files)?;
         self.ensure_dir("state", id)?;
@@ -2011,8 +2043,17 @@ impl PluginHost {
         Ok(())
     }
 
+    fn seed_budget_collector(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            budget::PLUGIN,
+            budget::MANIFEST,
+            "winstrata-strata-budget",
+            "budget collector manifest is not the official plugin",
+        )
+    }
+
     fn invoke_payload(
-        &self,
+        &mut self,
         provider: &str,
         capability: &str,
         payload: &str,
@@ -2032,7 +2073,93 @@ impl PluginHost {
             }
             return Ok(text);
         }
+        if provider == budget::PLUGIN && capability == "budget.regulate" {
+            return self.budget_payload(payload);
+        }
         Ok(payload.to_owned())
+    }
+
+    fn budget_payload(&mut self, caller: &str) -> Result<String, PluginError> {
+        let update = budget::parse_limits(caller)?;
+        let (cpu, base) = budget::sample_cpu(self.budget_cpu.as_ref());
+        self.budget_cpu = base;
+        let plugin_queued = self.plugin_queue_depth(&update);
+        let pressure = budget::Pressure {
+            rss_kib: budget::rss_kib(),
+            cpu,
+            queued: self.bus.as_ref().map(|bus| count_u64(bus.stats().queued)),
+            lost: self.bus.as_ref().map(|bus| bus.stats().lost),
+            sched_queued: self
+                .scheduler
+                .as_ref()
+                .map(|scheduler| count_u64(scheduler.stats().queued)),
+            plugin_queued,
+        };
+        let text = budget::payload(&update, &pressure)?;
+        self.pending_budget = Some(update);
+        Ok(text)
+    }
+
+    fn plugin_queue_depth(&self, update: &budget::LimitUpdate) -> Option<u64> {
+        let id = match &update.plugin {
+            budget::PluginLimit::Clear => return None,
+            budget::PluginLimit::Set { id, .. } => id.as_str(),
+            budget::PluginLimit::Keep => self.budget_plugin.as_deref()?,
+        };
+        let live = self.live.get(id)?;
+        let queued = live
+            .subscriptions
+            .iter()
+            .map(|subscription| subscription.backlog().0)
+            .sum::<usize>();
+        Some(count_u64(queued))
+    }
+
+    fn apply_budget(&mut self, detail: &str) -> Result<(), PluginError> {
+        let decision = budget::parse_decision(detail)?;
+        let update = self.pending_budget.take();
+        match decision.action {
+            budget::Action::Keep => Ok(()),
+            budget::Action::Hold | budget::Action::Resume => {
+                self.remember_budget_plugin(update.as_ref());
+                self.budget_paused = false;
+                Ok(())
+            }
+            budget::Action::Pause => {
+                if decision.loss {
+                    self.publish_budget_loss()?;
+                }
+                self.remember_budget_plugin(update.as_ref());
+                self.budget_paused = true;
+                Ok(())
+            }
+        }
+    }
+
+    fn remember_budget_plugin(&mut self, update: Option<&budget::LimitUpdate>) {
+        let Some(update) = update else {
+            return;
+        };
+        match &update.plugin {
+            budget::PluginLimit::Keep => {}
+            budget::PluginLimit::Clear => self.budget_plugin = None,
+            budget::PluginLimit::Set { id, .. } => self.budget_plugin = Some(id.clone()),
+        }
+    }
+
+    fn publish_budget_loss(&mut self) -> Result<(), PluginError> {
+        let bus = self
+            .bus
+            .clone()
+            .ok_or_else(|| PluginError::new("bus_unavailable", "plugin host has no event bus"))?;
+        let sequence = self.budget_sequence.checked_add(1).ok_or_else(|| {
+            PluginError::new("resource_limit", "budget loss sequence is exhausted")
+        })?;
+        let event = budget::loss_event(&self.epoch, sequence)?;
+        bus.publish(event)
+            .map_err(|error| PluginError::new(error.error.code(), error.error.detail()))?;
+        self.budget_sequence = sequence;
+        Ok(())
     }
 
     fn plugin_faults(&self) -> u64 {
@@ -2387,6 +2514,10 @@ fn append_line(path: &Path, line: &str) -> Result<(), PluginError> {
     let mut body = existing.join("\n");
     body.push('\n');
     write_private(path, body.as_bytes())
+}
+
+fn count_u64(value: usize) -> u64 {
+    u64::try_from(value).unwrap_or(u64::MAX)
 }
 
 fn unix_ns() -> i64 {

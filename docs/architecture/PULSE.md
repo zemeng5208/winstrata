@@ -38,7 +38,7 @@ Each retained sample appends one JSON object to `history.jsonl` in the private s
 
 Measured values are also committed through `Core::commit_plugin_metrics` into the plan 012 metric store. On Windows the canonical `\\?\` prefix is removed before the workspace anchor is opened. The series id is `pulse.` plus the reading id, for example `pulse.memory.total.bytes` and `pulse.cpu.usage.ppm`. The state directory must be `<user>/plugins/state/strata.pulse`. If `vault.wsv` is present the commit is refused, the sample records `store` as `locked`, and the private history is still written. A sample with no measured value records `private_only` and does not open the store. These observations are not published with `emit`. `invoke` of `pulse.observe` returns the latest sample, measured, and unsupported counts.
 
-The official shell already lists this plugin. This plan does not add a page, a chart, a theme, or a visual system. [GUI_SOURCES.md](../records/GUI_SOURCES.md) is unchanged. First-launch enablement remains plan 017. StrataHealth and StrataBudget remain plans 025 and 026.
+The official shell already lists this plugin. This plan does not add a page, a chart, a theme, or a visual system. [GUI_SOURCES.md](../records/GUI_SOURCES.md) is unchanged. First-launch enablement remains plan 017. StrataHealth remains plan 025. StrataBudget is plan 026 and is described in [Resource budgets](BUDGET.md). It does not replace these counters.
 
 ## Verification
 

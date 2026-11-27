@@ -57,6 +57,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-047](#oi-047) | Unimplemented | 022, 026, 030, 032, 042 |
 | [OI-048](#oi-048) | Known limitation | No roadmap row |
 | [OI-049](#oi-049) | Server 2022 probe recorded on `01f26d1`; Windows 10/11 stay [OI-001](#oi-001) | 023 |
+| [OI-050](#oi-050) | Untested on the authoring host | 026 |
+| [OI-051](#oi-051) | Unimplemented | 030, 031, 032, 016, 042 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -333,8 +335,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-08](#e2e-08) and [E2E-15](#e2e-15)
 - Source PR: plan 007. Windows 10/11 client behavior, GUI latency, sustained pressure, dynamic budgets, authenticated IPC, ReFS, and encrypted migration were not run in that plan. Encrypted migration was later exercised by plan 013 on Linux and on Windows Server 2022 review head `36b5cd6`. The other items were not.
 - Current state: untested
-- Reason it is incomplete: the scheduler tests are not a sustained-load or GUI run
-- Responsible PR: 015 for authenticated IPC, 048 for sustained pressure, GUI latency, and dynamic budgets
+- Reason it is incomplete: the scheduler tests are not a sustained-load or GUI run. Plan 026 adjusts CPU, memory, and queue limits on a short Linux test. That test is not the sustained load or the GUI latency this row names.
+- Responsible PR: 015 for authenticated IPC, 048 for sustained pressure and GUI latency. Plan 026 does not close this row.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the environment each responsible plan names
 - Acceptance criteria: the named measurement or IPC check is recorded
@@ -655,7 +657,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08)
 - Source PR: plan 007
 - Current state: not done
-- Reason it is incomplete: Plan 024 records CPU, memory, and the counters this Linux host exposes, and labels the rest unsupported. The scenario still needs an authorized load, StrataHealth, StrataBudget, SSD counters, and a Windows run.
+- Reason it is incomplete: Plan 024 records CPU, memory, and the counters this Linux host exposes, and labels the rest unsupported. Plan 025 reads attached faults, queues, latency, and loss. Plan 026 adjusts CPU, memory, and queue limits, pauses and resumes, and marks loss on this Linux host. The scenario still needs an authorized sustained load, SSD counters, and a Windows run.
 - Responsible PR: 048
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows under an authorized load
@@ -872,6 +874,34 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: that test passes on the review head. It must show a HKCU Run value added, changed, disabled through StartupApproved, and removed; a user Startup shortcut whose local path is `C:\Probe.exe`; and a scheduled task created, changed, and deleted. A Linux run does not close it.
 - Close conditions: met for the Windows Server 2022 probe on review head `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b`. The log is the job above, and this row records that result. A Linux run does not meet it. This does not close [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14), [OI-043](#oi-043), [ERR-021](modules/strata-services.md#err-021), or [OI-001](#oi-001). Windows 10 and Windows 11 stay OI-001.
 
+<a id="oi-050"></a>
+
+## OI-050
+
+- Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-15
+- Source PR: plan 026, `plugins/strata-budget`
+- Current state: untested
+- Reason it is incomplete: the Linux authoring host did not execute the Windows budget tests. `GetProcessMemoryInfo` and `GetProcessTimes` were not run here. Pid 1 is tini. A Linux pass is not a Windows pass.
+- Responsible PR: 026, on the Windows workspace job for this plan's review head
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job for this plan's review head, `cargo test --locked --workspace`
+- Acceptance criteria: that job passes the `winstrata-strata-budget` tests, including `pressure_adjusts_limits_pauses_resumes_and_marks_loss`
+- Close conditions: that job is recorded against this plan's review head. A Linux pass does not close it. This row does not close [OI-001](#oi-001) or [E2E-08](#e2e-08). It is not an exemption.
+
+<a id="oi-051"></a>
+
+## OI-051
+
+- Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-15
+- Source PR: plan 026, `plugins/strata-budget`
+- Current state: unimplemented
+- Reason it is incomplete: plan 026 regulates this process's CPU ppm and resident set, the attached bus queue plus the attached scheduler queue, and one running plugin's subscription backlog. It pauses, resumes, and marks loss for those readings. It does not implement disk I/O, network, storage, or GUI refresh budgets, and it does not invent zero readings for them.
+- Responsible PR: 031 for network, 032 for disk I/O, 030 for storage, and 016 and 042 for GUI refresh. Plan 048 owns sustained pressure. This plan does not edit `PLAN.md` and does not add those IDs to plan 026.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the later plan's own run, on the source that produces that budget
+- Acceptance criteria: that plan records the budget from its own source, or the owner narrows PL-15
+- Close conditions: those records exist. Not closed by the CPU, memory, and queue test in plan 026. Not an exemption.
+
 <a id="e2e-17"></a>
 
 ## E2E-17
@@ -921,8 +951,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-13
 - Source PR: plan 025, `plugins/strata-health`. This row was OI-040, then OI-044. It is OI-047 because [PR #34](https://github.com/zemeng5208/winstrata/pull/34) head `d90fb398e8d700e814e19f7737417f0336a988be` uses OI-044 and OI-045, and [PR #33](https://github.com/zemeng5208/winstrata/pull/33) head `e4f2eb637f7d575167ee587629999d81fa6dd0eb` uses OI-046. Main holds OI-043.
 - Current state: unimplemented
-- Reason it is incomplete: plan 025 reads faults, queues, latency and loss from the bus and scheduler attached to the plugin host and from plugin availability. It does not read service or driver snapshots, hybrid capacity, drive health, or paint a GUI page.
-- Responsible PR: 022 for service and driver state, 026 for regulation, 030 and 032 for storage and drive health, and 042 for dashboard presentation. This plan does not edit `PLAN.md` and does not add those IDs to plan 025.
+- Reason it is incomplete: plan 025 reads faults, queues, latency and loss from the bus and scheduler attached to the plugin host and from plugin availability. Plan 026 regulates this process's CPU and resident set, the attached bus and scheduler queues, and one running plugin's subscription backlog, with pause, resume, and a `Lost` gap when regulation asks for a loss marker. Service and driver snapshots, hybrid capacity, drive health, and a GUI page remain. Disk I/O, network, storage, and GUI refresh budgets are [OI-051](#oi-051).
+- Responsible PR: 022 for service and driver state, 030 and 032 for storage and drive health, and 042 for dashboard presentation. Plan 026 does not close this row. This plan does not edit `PLAN.md`.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the later plan's own run, on the source that produces that reading
 - Acceptance criteria: that plan records the reading from its own source. E2E-08 and E2E-15 are not closed by plan 025.
@@ -935,8 +965,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and [REQ-05.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 025. This row was OI-041, then OI-045. It is OI-048 because [PR #34](https://github.com/zemeng5208/winstrata/pull/34) head `d90fb398e8d700e814e19f7737417f0336a988be` uses OI-044 and OI-045.
 - Current state: known limitation
-- Reason it is incomplete: file and registry collectors keep the separate buses created by plan 009. StrataHealth reads only the bus and scheduler attached to `PluginHost`. Retargeting those collectors would change their delivery, so this plan does not do it.
-- Responsible PR: no roadmap row. The owner assigns a follow-up if one bus must cover collector queues. Plan 026 does not receive that work from this change.
+- Reason it is incomplete: file and registry collectors keep the separate buses created by plan 009. StrataHealth and StrataBudget read only the bus and scheduler attached to `PluginHost`. Retargeting those collectors would change their delivery. Plan 026 does not retarget them.
+- Responsible PR: no roadmap row. The owner assigns a follow-up if one bus must cover collector queues. Plan 026 does not receive that work.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: a host where file or registry collection and StrataHealth run together
 - Acceptance criteria: the health report includes that collector's queue and loss, or the owner records that those buses stay separate
