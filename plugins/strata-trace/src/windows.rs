@@ -102,6 +102,8 @@ impl Drop for LocalBlock {
 
 struct DirectoryIo {
     overlapped: OVERLAPPED,
+    // 系统在重叠完成时可能写回这个地址。完成字节数以 GetOverlappedResult 为准。
+    transferred: u32,
     buffer: Vec<u32>,
 }
 
@@ -160,12 +162,23 @@ fn watch(
 ) {
     let mut watched = Vec::with_capacity(paths.len());
     for path in paths {
-        match arm_directory(path) {
+        match prepare_directory(path) {
             Ok(item) => watched.push(item),
             Err(error) => {
                 let _ = ready.send(Err(error));
                 return;
             }
+        }
+    }
+    // 重叠结构和完成字节数必须停在这个向量里。先发出读取再移动结构，
+    // GetOverlappedResult 会读到空副本，并把真实变更报成 source_failure。
+    for item in &mut watched {
+        if let Err(error) = issue_read(&item.directory, &mut item.io) {
+            for armed in &watched {
+                cancel(&armed.directory, &armed.io.overlapped);
+            }
+            let _ = ready.send(Err(error));
+            return;
         }
     }
     if ready.send(Ok(())).is_err() {
@@ -228,15 +241,15 @@ fn wait_for_single_object_signaled(event: HANDLE) -> bool {
     unsafe { windows_sys::Win32::System::Threading::WaitForSingleObject(event, 0) == WAIT_OBJECT_0 }
 }
 
-fn arm_directory(path: &Path) -> Result<Watched, TraceError> {
+fn prepare_directory(path: &Path) -> Result<Watched, TraceError> {
     let directory = open_directory(path)?;
     let event = WinHandle(event_handle()?);
-    let mut io = DirectoryIo {
+    let io = DirectoryIo {
         overlapped: overlapped(event.0),
+        transferred: 0,
         buffer: vec![0u32; BUFFER_WORDS],
     };
     let (baseline, complete) = snapshot(path)?;
-    issue_read(&directory, &mut io)?;
     let root_text = path
         .to_str()
         .ok_or_else(|| TraceError::fault("invalid trace scope"))?
@@ -607,6 +620,7 @@ fn issue_read(directory: &WinHandle, io: &mut DirectoryIo) -> Result<(), TraceEr
     let event = io.overlapped.hEvent;
     io.overlapped = unsafe { zeroed() };
     io.overlapped.hEvent = event;
+    io.transferred = 0;
     unsafe { ResetEvent(event) };
     let filter = FILE_NOTIFY_CHANGE_FILE_NAME
         | FILE_NOTIFY_CHANGE_DIR_NAME
@@ -615,7 +629,6 @@ fn issue_read(directory: &WinHandle, io: &mut DirectoryIo) -> Result<(), TraceEr
         | FILE_NOTIFY_CHANGE_LAST_WRITE
         | FILE_NOTIFY_CHANGE_SECURITY;
     let byte_len = u32::try_from(io.buffer.len() * 4).unwrap_or(u32::MAX);
-    let mut transferred = 0u32;
     let ok = unsafe {
         ReadDirectoryChangesW(
             directory.0,
@@ -623,7 +636,7 @@ fn issue_read(directory: &WinHandle, io: &mut DirectoryIo) -> Result<(), TraceEr
             byte_len,
             0,
             filter,
-            &mut transferred,
+            &mut io.transferred,
             &mut io.overlapped,
             None,
         )
@@ -695,8 +708,11 @@ mod tests {
             added
                 .iter()
                 .any(|event| event_type(event) == Some("file.added")),
-            "create was not observed: {}",
-            summarize(&added)
+            "create was not observed: {}; {}",
+            summarize(&added),
+            session
+                .fault_text()
+                .unwrap_or_else(|| "no collector fault".to_owned())
         );
         let created = added
             .iter()

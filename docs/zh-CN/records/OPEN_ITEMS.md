@@ -29,7 +29,7 @@
 | [OI-015](#oi-015) | 已知限制 | 018、022 |
 | [OI-016](#oi-016) | 部分已测试 | 021 |
 | [OI-017](#oi-017) | 未测试 | 031 |
-| [OI-018](#oi-018) | 未测试 | 021 |
+| [OI-018](#oi-018) | 已关闭 | 021 |
 | [OI-019](#oi-019) | 部分已测 | 015 |
 | [OI-020](#oi-020) | 未测试 | 015、048 |
 | [OI-021](#oi-021) | 已知限制 | 050 |
@@ -271,7 +271,7 @@
 - 关联需求: [AS-006](STATUS.md)
 - 来源 PR: 计划 009。`ReadDirectoryChangesW` 和 `RegNotifyChangeKeyValue` 省略 `precision_ns` 和执行进程。没有加载已签名的微过滤驱动或注册表回调。
 - 当前状态: 部分已测试
-- 未完成原因: 计划 021 记录用户态文件元数据的前后值：大小、权限变化标志，以及仅当能放入标识符时的 SDDL。`precision_ns` 和执行进程仍然省略。没有加载已签名的文件微过滤驱动。这不是内核归因。Linux 可以测试该语法。编写主机没有运行 Windows 文件监视。
+- 未完成原因: 计划 021 记录用户态文件元数据的前后值：大小、权限变化标志，以及仅当能放入标识符时的 SDDL。`precision_ns` 和执行进程仍然省略。没有加载已签名的文件微过滤驱动。这不是内核归因。Linux 语法测试已通过。在 Windows Server 2022 上，`windows_trace_records_metadata_without_content` 在任何文件事件之前失败。该缺陷是 [ERR-019](ERRORS.md#err-019)，尚未关闭。
 - 负责 PR: 021。计划 019 的用户态注册表证据已记录，并且不是内核归因。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows 文件监视，或以后批准的内核回调
@@ -298,13 +298,13 @@
 
 - 关联需求: 计划 009 的文件监视行为
 - 来源 PR: 计划 009。没有故意撑满 16 KiB 文件缓冲区。
-- 当前状态: 未测试
-- 未完成原因: Windows 文件监视套件里已有 `windows_file_watch_overflow_records_a_lost_gap`，它尝试迫使计划 009 的 16 KiB 溢出。生产缓冲区仍是 16 KiB。这台 Linux 编写主机没有运行这项测试。不标成通过。
+- 当前状态: 已关闭
+- 未完成原因: 真实溢出已经记录。生产缓冲区仍是 16 KiB。
 - 负责 PR: 021
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 变更大于 16 KiB 缓冲区的 Windows 文件监视
+- 验证环境: Windows Server 2022，GitHub Actions `windows-2022`
 - 验收标准: 测试迫使溢出并记录缺口行为
-- 关闭条件: 只有记录了该 Windows 结果之后才能关闭。不标成通过。
+- 关闭条件: 已满足。在头 `0b46a2edba97a587d774d1b721f714dde840f6a6` 上，`windows_file_watch_overflow_records_a_lost_gap` 通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687)。同一作业随后在跟踪插件里失败，见 [ERR-019](ERRORS.md#err-019)。那次失败不重新打开这次溢出结果。
 
 <a id="oi-019"></a>
 

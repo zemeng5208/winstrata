@@ -903,6 +903,14 @@ impl Session {
         lock(&self.memory).ring.iter().cloned().collect()
     }
 
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn fault_text(&self) -> Option<String> {
+        lock(&self.memory)
+            .fault
+            .as_ref()
+            .map(|error| format!("{}:{}", error.code(), error.detail()))
+    }
+
     pub fn pause(&self) -> Result<(), TraceError> {
         let mut memory = lock(&self.memory);
         memory.paused = true;

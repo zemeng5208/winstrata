@@ -29,7 +29,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
 | [OI-016](#oi-016) | Partly tested | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
-| [OI-018](#oi-018) | Untested | 021 |
+| [OI-018](#oi-018) | Closed | 021 |
 | [OI-019](#oi-019) | Partly tested | 015 |
 | [OI-020](#oi-020) | Untested | 015, 048 |
 | [OI-021](#oi-021) | Known limitation | 050 |
@@ -271,7 +271,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
 - Current state: partly tested
-- Reason it is incomplete: plan 021 records user-mode file metadata before and after: size, a permission-changed flag, and SDDL only when it fits an identifier. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution. Linux can test the grammar. The Windows file watch has not been run on the authoring host.
+- Reason it is incomplete: plan 021 records user-mode file metadata before and after: size, a permission-changed flag, and SDDL only when it fits an identifier. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution. Linux grammar tests passed. On Windows Server 2022, `windows_trace_records_metadata_without_content` failed before any file event. That defect is [ERR-019](ERRORS.md#err-019) and is not closed.
 - Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows file watch or a later approved kernel callback
@@ -298,13 +298,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: plan 009 file-watch behavior
 - Source PR: plan 009. A live overflow of the 16 KiB file buffer was not forced.
-- Current state: untested
-- Reason it is incomplete: `windows_file_watch_overflow_records_a_lost_gap` is in the Windows file-watch suite and tries to force the plan 009 16 KiB overflow. The production buffer stays 16 KiB. This Linux host did not run that test. Not marked passed.
+- Current state: closed
+- Reason it is incomplete: the live overflow has now been recorded. The production buffer stayed 16 KiB.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows file watch with a change larger than the 16 KiB buffer
+- Verification environment: Windows Server 2022, GitHub Actions `windows-2022`
 - Acceptance criteria: the test forces the overflow and records the gap behavior
-- Close conditions: close only after that Windows result is recorded. Not marked passed.
+- Close conditions: met. On head `0b46a2edba97a587d774d1b721f714dde840f6a6`, `windows_file_watch_overflow_records_a_lost_gap` passed. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687). The same job later failed [ERR-019](ERRORS.md#err-019) in the trace plugin. That failure does not reopen this overflow result.
 
 <a id="oi-019"></a>
 

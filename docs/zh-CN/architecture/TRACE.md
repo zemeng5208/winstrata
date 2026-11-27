@@ -34,4 +34,4 @@ Windows 监视使用 `ReadDirectoryChangesW`。监视不递归。缓冲区为 16
 
 ## 仍保留的限制
 
-没有加载已签名的文件微过滤驱动。编写主机是 Linux。这台主机上的 Linux 语法测试已通过。它没有运行 Windows 文件监视或 GUI 会话，也没有执行 `windows_file_watch_overflow_records_a_lost_gap` 或 `windows_trace_records_metadata_without_content`。计数写在[工程记录](../records/STATUS.md)。E2E-02 和 E2E-03 未完成。OI-016 仍是部分已测试。OI-018 仍是未测试。两项都没有关闭，也都不标成内核归因。计划 020 没有开始。
+没有加载已签名的文件微过滤驱动。编写主机是 Linux。这台主机上的 Linux 语法测试已通过。在 Windows Server 2022 上，`windows_file_watch_overflow_records_a_lost_gap` 通过，`windows_trace_records_metadata_without_content` 在文件事件之前失败。该失败是 [ERR-019](../records/ERRORS.md#err-019)。没有运行 GUI 会话。计数写在[工程记录](../records/STATUS.md)。E2E-02 和 E2E-03 未完成。OI-016 仍是部分已测试。OI-018 已由溢出结果关闭。两项都不标成内核归因。计划 020 已在 main 上，本计划不重新实现它。

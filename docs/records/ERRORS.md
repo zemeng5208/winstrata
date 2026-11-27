@@ -29,6 +29,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-016 | Resolved | [Core](modules/core.md#err-016) |
 | ERR-017 | Resolved | [Services](modules/services.md#err-017) |
 | ERR-018 | Resolved | [Core](modules/core.md#err-018) |
+| ERR-019 | Open | This file |
 
 ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c454aea4537809`. ERR-013 names the same defect. Plan 052 is the designated fix and is merged as `004974215e239f96160b47d3eef40a84c316e802`. Windows workspace checks on that commit passed. Plan 051 does not implement the fix.
 
@@ -95,3 +96,19 @@ ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c
 - Fix plan: when a pull request changes `docs/roadmap/PLAN.md`, read that file from the verified test merge and still reject a dropped or reordered existing ID. Implemented in `a6a22c200eca6d67f5cffff6f370d0537567850e` and merged as `004974215e239f96160b47d3eef40a84c316e802`.
 - Retest result: the check “Evaluate merge policy from main” on that merge succeeded. [Policy run](https://github.com/zemeng5208/winstrata/actions/runs/46036724065/job/140633881742). The commit-status API for the merge SHA returned no contexts when this record was written.
 - Current state: resolved
+
+<a id="err-019"></a>
+
+## ERR-019
+
+- Error ID: ERR-019
+- Discovery time: 2026-11-27T20:36:59Z
+- Related PR: GitHub PR #29, plan 021, head `0b46a2edba97a587d774d1b721f714dde840f6a6`
+- Environment: GitHub Actions `windows-2022`, Windows Server 2022
+- Reproduction method: `cargo test --locked --workspace` reached `windows_trace_records_metadata_without_content`
+- Evidence: the test created `observed.txt` and saw only `gap:SourceFailure`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687). Linux workspace checks on that head passed. `windows_file_watch_overflow_records_a_lost_gap` passed in the same Windows process. Workspace checks then failed because Windows failed. The published `winstrata/merge-policy` status failed with “Plan 020 must merge before plan 021”; that order result is expected and is not this defect.
+- Root cause: `ReadDirectoryChangesW` was issued while `OVERLAPPED` still lived in a stack value. Pushing that value into the watch vector moved the structure. The kernel wrote the completion into the old address, and `GetOverlappedResult` read the empty copy.
+- Impact: a real file create was reported as `source_failure`. The watch thread then stopped. Windows workspace checks failed.
+- Fix plan: park the directory in the vector first, then issue the read in place. Keep the completion byte count in that same structure. The production buffer stays 16 KiB.
+- Retest result: not yet recorded. This Linux host cannot run the Windows watch. The next Windows workspace job is the retest.
+- Current state: open
