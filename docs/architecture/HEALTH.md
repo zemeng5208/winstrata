@@ -27,7 +27,7 @@ The process rejects a snapshot that is missing a required field, repeats a field
 
 ## What this plan does not do
 
-StrataBudget still owns dynamic limits, pause and resume under pressure, and loss marking for that regulation. StrataPulse still owns CPU, GPU, memory and hardware counters. Service and driver snapshots, hybrid capacity, drive health, and a GUI page for these readings are not in this plan. File and registry collectors keep the separate buses created by plan 009. This plan does not attach those buses and does not change what those collectors publish. The official shell already lists this plugin. This plan does not add a page, a theme, or a visual system. First-launch enablement remains plan 017. E2E-08 and E2E-15 are not complete.
+Plan 026 regulates CPU, memory, and attached queue pressure in [Resource budgets](BUDGET.md). Disk I/O, network, storage, and GUI refresh budgets remain [OI-051](../records/OPEN_ITEMS.md#oi-051). StrataPulse still owns CPU, GPU, memory and hardware counters. Service and driver snapshots, hybrid capacity, drive health, and a GUI page for these readings are not in this plan. File and registry collectors keep the separate buses created by plan 009. This plan does not attach those buses and does not change what those collectors publish. The official shell already lists this plugin. This plan does not add a page, a theme, or a visual system. First-launch enablement remains plan 017. E2E-08 and E2E-15 are not complete.
 
 ## Verification
 

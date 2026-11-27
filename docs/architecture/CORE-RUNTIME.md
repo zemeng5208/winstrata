@@ -8,7 +8,7 @@ Plan 007 adds a fixed worker pool and an in-process event bus to `winstrata-core
 
 `Limits::standard` uses 2 workers, task and event queues of 256 and 1,024, a shared event budget of 1,024, batches of 64, 64 subscriptions and a 20 ms admission wait. `Limits::check` rejects zero values and values above the fixed ceilings: 32 workers, 65,536 queued tasks or events, 1,024 subscriptions, a 5 second admission wait, and a batch larger than the subscriber queue. A task timeout must be greater than zero and no more than 24 hours.
 
-These are the minimum protections for this plan. StrataBudget still owns dynamic CPU, I/O and memory budgets. StrataHealth still owns the diagnostic presentation. Plan 025 reads the attached scheduler and bus counters in [Health diagnostics](HEALTH.md). That read does not change these limits.
+These are the minimum protections for this plan. Plan 026 adjusts CPU, memory, and queue budgets inside these ceilings in [Resource budgets](BUDGET.md) and does not change the ceilings. Disk I/O, network, storage, and GUI refresh budgets remain [OI-051](../records/OPEN_ITEMS.md#oi-051). StrataHealth still owns the diagnostic presentation. Plan 025 reads the attached scheduler and bus counters in [Health diagnostics](HEALTH.md). That read does not change these limits.
 
 ## Tasks
 
