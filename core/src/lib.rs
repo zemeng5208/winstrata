@@ -2,6 +2,7 @@ mod bus;
 mod file_registry;
 mod files;
 mod migration;
+mod network;
 mod platform;
 mod process;
 mod runtime;
@@ -21,6 +22,10 @@ use storage::{
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
 pub use file_registry::{
     Channel, ChannelView, CollectError, FILE_PROVIDER, FileRegistry, REGISTRY_PROVIDER,
+};
+pub use network::{
+    DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
+    flow_event, interface_event,
 };
 pub use process::{
     MODULE_LOADED, MODULE_UNLOADED, PROCESS_EXITED, PROCESS_PROVIDER, PROCESS_SERVICE,
