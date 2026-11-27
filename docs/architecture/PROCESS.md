@@ -30,7 +30,7 @@ A parent link is kept when the parent is in the same sample and its start time i
 
 ## Coverage
 
-This is a sample, not a continuous trace. A process that starts and exits between samples produces no event, and the tracker does not invent a sequence hole for it. ETW and kernel process callbacks are not implemented. Service stop and restart records remain plan 022. File, registry and network collection remain plans 009 and 011. The plugin that runs this sampler is [plan 018](#plugin).
+This is a sample, not a continuous trace. A process that starts and exits between samples produces no event, and the tracker does not invent a sequence hole for it. ETW and kernel process callbacks are not implemented. Plan 022 now records service stop records as `service.stopped` in `strata.services` ([Services plugin](SERVICES.md)). Plan 010 and plan 018 still do not emit `service.stopped`. File, registry and network collection remain plans 009 and 011. The plugin that runs this sampler is [plan 018](#plugin).
 
 ## Plugin
 
@@ -48,7 +48,7 @@ Pause stops new samples and leaves the process running. Resume continues the sam
 
 The official shell already lists this plugin. This plan does not add a page, a theme, or a visual system. First-launch enablement remains plan 017.
 
-Command lines, ETW, kernel process callbacks, and a process that starts and exits between samples are not implemented. Service stop records remain plan 022. No signed `strata-proc` image is loaded. E2E-02 and E2E-03 are not complete.
+Command lines, ETW, kernel process callbacks, and a process that starts and exits between samples are not implemented. Plan 022 now records service stop records as `service.stopped` in `strata.services` ([Services plugin](SERVICES.md)). Plan 010 and plan 018 still do not emit `service.stopped`. No signed `strata-proc` image is loaded. E2E-02 and E2E-03 are not complete.
 
 ## Verification
 

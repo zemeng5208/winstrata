@@ -1,7 +1,7 @@
 //! 插件清单、权限、依赖和进程生命周期。
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
-//! `strata.process` 只在同目录存在采集程序时登记为已安装且默认禁用。
+//! `strata.process` 与 `strata.services` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
@@ -38,6 +38,7 @@ const MAX_PACKAGE_FILES: usize = 16;
 const MAX_PACKAGE_FILE: u64 = 64 * 1024;
 const MAX_HISTORY_LINES: usize = 1024;
 const PROCESS_PLUGIN: &str = "strata.process";
+const SERVICES_PLUGIN: &str = "strata.services";
 
 // 清单与采集程序共同描述计划 018。宿主不通过第三方安装写入这个身份。
 const PROCESS_MANIFEST: &str = concat!(
@@ -47,6 +48,17 @@ const PROCESS_MANIFEST: &str = concat!(
     r#""dependencies":[],"events":["process.started","process.exited","process.thread.started","#,
     r#""process.thread.exited","process.module.loaded","process.module.unloaded","#,
     r#""process.service","process.unresolved"],"rescue":false}"#,
+);
+
+// 计划 022 的服务与驱动观察。事件名沿用插件令牌，不含下划线。
+const SERVICES_MANIFEST: &str = concat!(
+    r#"{"version":{"major":1,"minor":0},"id":"strata.services","name":"StrataServices","#,
+    r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
+    r#""capabilities":["services.observe"],"permissions":["event.publish","storage.private"],"#,
+    r#""dependencies":[],"events":["service.state","service.created","service.deleted","#,
+    r#""service.started","service.stopped","service.start-type","service.config","#,
+    r#""service.failure","service.permission","driver.state","driver.loaded","#,
+    r#""driver.unloaded","driver.removed"],"rescue":false}"#,
 );
 
 #[derive(Debug)]
@@ -392,6 +404,7 @@ impl PluginHost {
         };
         host.read_entries()?;
         host.seed_process_collector()?;
+        host.seed_services_collector()?;
         Ok(host)
     }
 
@@ -1194,10 +1207,17 @@ impl PluginHost {
     ) -> Result<Live, PluginError> {
         if manifest.runtime.as_str() == "native" {
             let program = if manifest.id.as_str() == PROCESS_PLUGIN {
-                collector_beside(&self.runtime).ok_or_else(|| {
+                collector_beside(&self.runtime, "winstrata-strata-process").ok_or_else(|| {
                     PluginError::new(
                         "runtime_missing",
                         "process collector is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == SERVICES_PLUGIN {
+                collector_beside(&self.runtime, "winstrata-strata-services").ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "services collector is not beside the plugin runtime",
                     )
                 })?
             } else {
@@ -1663,25 +1683,43 @@ impl PluginHost {
     }
 
     fn seed_process_collector(&mut self) -> Result<(), PluginError> {
-        if collector_beside(&self.runtime).is_none() || self.entry(PROCESS_PLUGIN).is_ok() {
+        self.seed_builtin(
+            PROCESS_PLUGIN,
+            PROCESS_MANIFEST,
+            "winstrata-strata-process",
+            "process collector manifest is not the official plugin",
+        )
+    }
+
+    fn seed_services_collector(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            SERVICES_PLUGIN,
+            SERVICES_MANIFEST,
+            "winstrata-strata-services",
+            "services collector manifest is not the official plugin",
+        )
+    }
+
+    fn seed_builtin(
+        &mut self,
+        id: &str,
+        manifest_json: &str,
+        stem: &str,
+        mismatch: &str,
+    ) -> Result<(), PluginError> {
+        if collector_beside(&self.runtime, stem).is_none() || self.entry(id).is_ok() {
             return Ok(());
         }
-        let manifest = Manifest::from_json(PROCESS_MANIFEST).map_err(manifest_error)?;
-        if manifest.id.as_str() != PROCESS_PLUGIN || manifest.kind != PluginKind::Builtin {
-            return Err(PluginError::new(
-                "invalid_manifest",
-                "process collector manifest is not the official plugin",
-            ));
+        let manifest = Manifest::from_json(manifest_json).map_err(manifest_error)?;
+        if manifest.id.as_str() != id || manifest.kind != PluginKind::Builtin {
+            return Err(PluginError::new("invalid_manifest", mismatch));
         }
-        let files = vec![(
-            "manifest.json".to_owned(),
-            PROCESS_MANIFEST.as_bytes().to_vec(),
-        )];
-        self.write_tree("packages", PROCESS_PLUGIN, &files)?;
-        self.write_tree("recovery", PROCESS_PLUGIN, &files)?;
-        self.ensure_dir("state", PROCESS_PLUGIN)?;
+        let files = vec![("manifest.json".to_owned(), manifest_json.as_bytes().to_vec())];
+        self.write_tree("packages", id, &files)?;
+        self.write_tree("recovery", id, &files)?;
+        self.ensure_dir("state", id)?;
         self.entries.push(Installed {
-            id: PROCESS_PLUGIN.to_owned(),
+            id: id.to_owned(),
             name: manifest.name.as_str().to_owned(),
             kind: PluginKind::Builtin,
             version: manifest.plugin_version,
@@ -1693,7 +1731,7 @@ impl PluginHost {
             availability: "ready".to_owned(),
         });
         self.save()?;
-        self.audit(PROCESS_PLUGIN, "seed", "ok", "present")?;
+        self.audit(id, "seed", "ok", "present")?;
         Ok(())
     }
 
@@ -1853,11 +1891,11 @@ fn static_code(code: Option<&str>) -> &'static str {
     }
 }
 
-fn collector_beside(runtime: &Path) -> Option<PathBuf> {
+fn collector_beside(runtime: &Path, stem: &str) -> Option<PathBuf> {
     let name = if cfg!(windows) {
-        "winstrata-strata-process.exe"
+        format!("{stem}.exe")
     } else {
-        "winstrata-strata-process"
+        stem.to_owned()
     };
     let path = runtime.parent()?.join(name);
     path.is_file().then_some(path)
