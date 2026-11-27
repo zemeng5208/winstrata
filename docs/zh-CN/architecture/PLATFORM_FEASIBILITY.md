@@ -53,6 +53,6 @@ node .github/scripts/pr004-ui-build.mjs target/pr004-components
 
 ## 选型与验收
 
-建议从指定的三个项目按需复用组件，研究用包和资源保留在交付物之外。试验关闭开发服务器。上游锁定的 Vite 开发工具存在已知安全公告，选择产品工具链前须重新核对。[前端边界](FRONTEND.md#section-9) · [Vite 安全公告](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
+建议从上述已实测的三个项目按需复用组件。2026-11-27，所有者在[前端规范](FRONTEND.md#section-9)中把 [UI Moments](https://github.com/guanmo-ai/ui-moments) 追加为指定来源。该指定不是已完成的实测：UI Moments、Fluent UI 与 Astryx 尚未接受本报告所记录的修订核验、许可链核对或 WebView2 测量。不得把其演示页当作已验证组件，也不得把本报告读成批准交付 Fluent UI 或 Astryx。已实测来源的研究用包和资源保留在交付物之外。试验关闭开发服务器。上游锁定的 Vite 开发工具存在已知安全公告，选择产品工具链前须重新核对。[前端边界](FRONTEND.md#section-9) · [Vite 安全公告](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
 
 建议继续评估 Windows 内置采集、AppContainer 文件授权搭配 Job Object 配额、本机子进程 stdio 和所选界面组件。正式采用运行时、IPC 契约、库或界面项目版本须由所有者选定。Windows 10/11 x64、混合运行时的完整隔离、长时间运行的性能和整机产品仍待验证。Phase 0 须在所有者复核剩余风险及生效合并门禁后验收。

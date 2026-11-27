@@ -16,7 +16,7 @@ The owner reviews the proposed order in PR 000. Plan numbers are independent of 
 | <a id="pr-001"></a>001 | Cargo and pnpm, toolchains, developer entry point and project dependency paths | 000 | Initialize and build in the available environment, detect missing dependencies and verify resolution after moving the checkout. Keep outputs out of Git. |
 | <a id="pr-002"></a>002 | .github, merge-order requests, main protection and shared checks | 001 | Exercise order and defect blocking, protection against bypass and reuse of the checks. |
 | <a id="pr-003"></a>003 | Linux to Windows x64 cross-build and driver proof of concept | 001 | Link and inspect real artifacts and verify signing, load and security feasibility. Record blockers and distinguish the proof of concept. |
-| <a id="pr-004"></a>004 | Feasibility of native sources, isolation, MCP and GUI | 001 | Try real candidates, report reuse and selection evidence, and evaluate the three specified UI sources, licenses, performance and WebView2. |
+| <a id="pr-004"></a>004 | Feasibility of native sources, isolation, MCP and GUI | 001 | Try real candidates, report reuse and selection evidence, and evaluate Amicro, Glasswork, and shadcn-admin under [§9](../architecture/FRONTEND.md#section-9) for licenses, performance, and WebView2. UI Moments, designated on 2026-11-27, has not received the same verification. |
 
 Accept after PR 000 is in effect, enforced gates and feasibility risks are understood, and critical unknowns are resourced. Pause affected work and seek approval if Linux driver builds or sandbox feasibility fail.
 
@@ -109,7 +109,7 @@ Address findings from real integrated validation and approved optimizations. Res
 | Area | Decision or evidence needed |
 |---|---|
 | Repository and name | The owner selected and created zemeng5208/winstrata. Another software business uses winstrata.com. Formal trademark verification is pending. |
-| Frontend | Three sources and themes are specified. Verify version, coverage, license text, WebView2, resource cost and initial theme. |
+| Frontend | Specified sources are Amicro, Glasswork, shadcn-admin, and UI Moments. Three themes remain. The plan 004 report verifies only the first three; UI Moments has not received the same verification. Verify version, coverage, license text, WebView2, resource cost, and initial theme before integration. Designation does not approve Fluent UI or Astryx as product dependencies. |
 | Native Linux Windows build | PR 003 verifies WDK, linking, signing, and Windows loading under actual protections. |
 | Runtime and isolation | PRs 004 and 015 verify isolation and overhead before approving packages. |
 | Windows and interfaces | Validate supported Windows 10/11 x64 versions and observable devices. |

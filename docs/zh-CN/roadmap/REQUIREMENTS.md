@@ -62,7 +62,7 @@
 | REQ-17.02 | 只读展示可观测安全与证书状态 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [037](PLAN.md#pr-037) | [14](ACCEPTANCE.md#e2e-14) | 规划中 |
 | REQ-18.01 | 检索和关联授权来源，并追溯对象证据 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-18.02 | 多轨时间线、仅供分析的回放及区间导出 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [041](PLAN.md#pr-041) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-19.01 | 验证三项指定来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查三个指定修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。产品布局仍待验收。 |
+| REQ-19.01 | 验证指定 UI 来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查 Amicro、Glasswork、shadcn-admin 三个修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。UI Moments 已于 2026-11-27 指定，尚未做同等实测。产品布局仍待验收。 |
 | REQ-19.02 | 三套共享主题可运行时切换并持久保存 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.03 | 完整双语与 Windows WebView2 可读的真实交互 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.04 | 持久化单首页布局并接入动态插件界面 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |

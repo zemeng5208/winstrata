@@ -6,7 +6,7 @@
 
 ### AG-30 前端设计
 
-严格执行 [§9.1–§9.3](../architecture/FRONTEND.md#section-9) 的权威前端规范：指定 Amicro、Glasswork、shadcn-admin 三个开源来源，内置白色圆角亚克力、黑色圆角亚克力、Apple 液态玻璃按钮 + 毛玻璃三套主题。禁止自行创造、重复实现已有 UI 基础组件或擅自更换组件库、视觉、配色及交互；允许复用组合与业务适配，shadcn-admin 排版可小幅调整。遇组件缺口先报告并申请批准，不自行补造。统一插件扩展、窗口尺寸适配、真实数据和异常展示；验证三主题切换、持久化、真实交互与性能。UI 文档遵守专业写作，不记无意义过程。根 `AGENTS.md` 必须索引本条与 [§9](../architecture/FRONTEND.md#section-9) 对应的正式前端规范。
+严格执行 [§9.1–§9.3](../architecture/FRONTEND.md#section-9) 的权威前端规范：指定 Amicro、Glasswork、shadcn-admin 与 UI Moments，内置白色圆角亚克力、黑色圆角亚克力、Apple 液态玻璃按钮 + 毛玻璃三套主题。UI Moments 只作为已有交互组件与动效的复用来源；其组件示例须先完成许可和版本审查，不因指定而批准 Fluent UI 或 Astryx 作为产品依赖。禁止自行创造、重复实现已有 UI 基础组件或擅自更换组件库、视觉、配色及交互；允许复用组合与业务适配，shadcn-admin 排版可小幅调整。遇组件缺口先报告并申请批准，不自行补造。统一插件扩展、窗口尺寸适配、真实数据和异常展示；验证三主题切换、持久化、真实交互与性能。UI 文档遵守专业写作，不记无意义过程。根 `AGENTS.md` 必须索引本条与 [§9](../architecture/FRONTEND.md#section-9) 对应的正式前端规范。
 
 <a id="ag-32"></a>
 

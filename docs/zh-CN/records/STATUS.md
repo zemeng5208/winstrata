@@ -45,7 +45,7 @@ Linux x86_64 使用 Rust 1.100.0、附带的 LLD 23.1.5 和 Binutils 2.44，运�
 
 ## PR 004 验证
 
-Windows Server 2022 x64 实测覆盖 CIM、事件日志、Job Object、AppContainer 文件授权与撤销、本机 MCP 子进程和三个上游组件的离线 WebView2 渲染。Linux 复验覆盖工作区、两个链接探针、本机协议、依赖查找和上游组件。所选依赖仅用于临时研究。指标、控件、原始运行链接及限制见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。
+Windows Server 2022 x64 实测覆盖 CIM、事件日志、Job Object、AppContainer 文件授权与撤销、本机 MCP 子进程和三个上游组件的离线 WebView2 渲染。这三个组件是 Amicro、Glasswork 与 shadcn-admin。此后追加的 UI Moments 不在本次验证范围内。Linux 复验覆盖工作区、两个链接探针、本机协议、依赖查找和上游组件。所选依赖仅用于临时研究。指标、控件、原始运行链接及限制见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。
 
 Phase 0 验收范围为实测工具链、已生效的合并门禁和可行性探针。三个工作流均在 PR 004 的实际合并提交上通过。后续阶段的产品及客户端验证见 AS-001 和 AS-002。[Linux CI](https://github.com/zemeng5208/winstrata/actions/runs/45969082288) · [Windows 可行性](https://github.com/zemeng5208/winstrata/actions/runs/45969082284) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45969082364)
 
@@ -81,6 +81,7 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 | ADR-003 | 所有者已确认 | 按各自工具许可，在本地开发环境使用官方 Microsoft WDK 与 Windows SDK x64 10.0.26100.6584 导入库验证 Linux 探针。 |
 | ADR-004 | 所有者已确认 | 以初版事件、对象、错误及版本契约启动 Phase 1。使用启用 `derive` 的 `serde` 1.0.229、`serde_json` 1.0.154 及其锁定的间接依赖进行 JSON 编解码。[协议契约](../architecture/PROTOCOLS.md) |
 | ADR-005 | 所有者已确认 | Windows 以当前令牌 SID 隔离数据，默认使用 D 盘。Local AppData 保存位置指针和会话锁。固定 windows-sys 0.61.2、windows-link 0.2.1 与 Linux 开发依赖 libc 0.2.191。三者均为 MIT OR Apache-2.0；2026-11-27 的 OSV 查询未返回已知公告。[存储接口](../architecture/CORE-STORAGE.md) |
+| ADR-006 | 所有者已确认 | 2026-11-27，所有者把 UI Moments（`guanmo-ai/ui-moments`）追加为指定 UI 来源。三套内置主题不变。该指定只复用已有交互组件与动效，不批准 Fluent UI 或 Astryx 作为产品依赖，不提前开始计划 016，也不替换计划 004 对 Amicro、Glasswork、shadcn-admin 的实测。集成前仍须对 UI Moments 做同样的源码、许可、WebView2 与性能审查。[前端规范](../architecture/FRONTEND.md#section-9) |
 | AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。PR 008 需要经验证的 INF/CAT 包和微软签名，并在启用 Secure Boot 与 HVCI 的 Windows 上实测代表性驱动的加载与卸载。PR 050 需验证完整 Linux 交叉构建。 |
 | AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。PR 008 验证产品授权，PR 015 验证混合运行时隔离，PR 016 验证普通用户 GUI，PR 048 验证持续性能，PR 049 验证 Windows 10/11 客户端。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。 |
