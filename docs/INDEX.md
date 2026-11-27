@@ -1,0 +1,24 @@
+# Documentation index
+
+[简体中文](zh-CN/INDEX.md)
+
+Use these sources for governing requirements, the proposed plan, and actual evidence.
+
+- [Root agent instructions and complete rule index](../AGENTS.md)
+- [Product and plugins](architecture/PRODUCT.md)
+- [System architecture and engineering layout](architecture/SYSTEM.md)
+- [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
+- [Network and data](architecture/DATA.md)
+- [Frontend and themes](architecture/FRONTEND.md)
+- [Development](standards/DEVELOPMENT.md)
+- [Architecture](standards/ARCHITECTURE.md)
+- [Git, PRs and gates](standards/GIT_AND_PR.md)
+- [Testing](standards/TESTING.md)
+- [Security engineering](standards/SECURITY.md)
+- [Documentation and records](standards/DOCUMENTATION.md)
+- [Dependencies and configuration](standards/DEPENDENCIES.md)
+- [Agent workflow and checklist](standards/AGENT_WORKFLOW.md)
+- [PR plan and open decisions](roadmap/PLAN.md)
+- [Performance and end-to-end acceptance](roadmap/ACCEPTANCE.md)
+- [Requirements traceability](roadmap/REQUIREMENTS.md)
+- [Progress, decisions, errors and handover](records/STATUS.md)
