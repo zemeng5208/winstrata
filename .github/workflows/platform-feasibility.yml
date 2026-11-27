@@ -1,0 +1,31 @@
+name: Windows feasibility
+
+on:
+  push:
+    branches: [pr/004-platform-feasibility]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/scripts/pr004-*
+      - .github/workflows/platform-feasibility.yml
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  windows:
+    name: Windows platform probes
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - name: Fetch the exact revision
+        shell: bash
+        run: |
+          set -eu
+          git init --quiet
+          git fetch --no-tags --depth=1 "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Measure native data sources and Job Object enforcement
+        shell: powershell
+        run: .\.github\scripts\pr004-windows.ps1
