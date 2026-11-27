@@ -1,4 +1,5 @@
 ﻿# 使用 Windows 开发镜像中的 64 位 Windows PowerShell 5.1 单线程单元。
+param([string]$AssetDirectory)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -55,6 +56,9 @@ foreach ($root in $roots) {
     if (-not $loaders.Count) { continue }
     foreach ($core in $coreFiles) {
         if (-not (Test-MicrosoftSignature $core)) { continue }
+        try { $name = [Reflection.AssemblyName]::GetAssemblyName($core.FullName) }
+        catch [BadImageFormatException] { continue }
+        if ($name.ProcessorArchitecture -notin @('MSIL', 'Amd64', 'None')) { continue }
         $assembly = $core
         $loader = $loaders | Sort-Object @{ Expression = { if ($_.VersionInfo.ProductVersion -eq $core.VersionInfo.ProductVersion) { 0 } else { 1 } } }, FullName | Select-Object -First 1
         break
@@ -107,16 +111,60 @@ function frame(t) {
 requestAnimationFrame(frame);
 </script></body></html>
 '@
-    $view.NavigateToString($html)
+    $network = @{ blocked = 0 }
+    if ($AssetDirectory) {
+        $assets = Get-Item -LiteralPath $AssetDirectory
+        $index = Join-Path $assets.FullName 'index.html'
+        if (-not $assets.PSIsContainer -or -not (Test-Path -LiteralPath $index -PathType Leaf)) {
+            throw 'The component bundle requires a local directory containing index.html.'
+        }
+        $virtualHost = 'winstrata-probe.invalid'
+        $view.SetVirtualHostNameToFolderMapping($virtualHost, $assets.FullName, [Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind]::Deny)
+        $view.AddWebResourceRequestedFilter('*', [Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext]::All)
+        $view.add_WebResourceRequested({
+            param($source, $request)
+            $uri = [Uri]$request.Request.Uri
+            if (($uri.Scheme -eq 'https' -and $uri.Host -eq $virtualHost -and $uri.IsDefaultPort) -or
+                $uri.Scheme -eq 'data' -or $uri.AbsoluteUri.StartsWith("blob:https://$virtualHost/")) { return }
+            $network.blocked++
+            $request.Response = $environment.CreateWebResourceResponse([IO.MemoryStream]::new(), 403, 'Forbidden', 'Content-Type: text/plain')
+        })
+        $view.add_NewWindowRequested({ param($source, $request) $request.Handled = $true })
+        $view.Navigate("https://$virtualHost/index.html")
+    } else {
+        $view.NavigateToString($html)
+    }
     $render = [Diagnostics.Stopwatch]::StartNew()
     do {
         [Windows.Forms.Application]::DoEvents()
-        if ($render.Elapsed.TotalSeconds -gt 30) { throw 'Timed out waiting for 30 animation-frame intervals on the local page.' }
+        if ($render.Elapsed.TotalSeconds -gt 30) { throw 'Timed out waiting for the local page to report its observations.' }
         [Threading.Thread]::Sleep(30)
         $raw = Wait-WebTask ($view.ExecuteScriptAsync('window.probeReport || null')) 'reading the local page'
     } while (-not $raw -or $raw -eq 'null')
     $result = $raw | ConvertFrom-Json
-    if ($result.visibility -ne 'visible' -or $result.samples -ne 30 -or $result.intervalMedianMs -le 0 -or
+    $fixture = 'offline synthetic button'
+    if ($AssetDirectory) {
+        $fixture = 'Amicro, Glasswork and shadcn-admin components'
+        if ($result.ok -isnot [bool] -or -not $result.ok) { throw "Component page reported a failure: $raw" }
+        $checks = @($result.checks.PSObject.Properties)
+        $timings = @($result.timingsMs.PSObject.Properties)
+        $requiredChecks = @('amicroTransition', 'glassRefraction', 'glassCleanup', 'shadcnLayout', 'shadcnResize', 'shadcnFluid')
+        $requiredTimings = @('amicroTransition', 'glassReady', 'shadcnMount')
+        if (@($requiredChecks | Where-Object { $_ -notin $checks.Name }).Count -or
+            @($requiredTimings | Where-Object { $_ -notin $timings.Name }).Count -or $network.blocked -ne 0) {
+            throw "Incomplete component evidence or a forbidden request (blocked: $($network.blocked)): $raw"
+        }
+        foreach ($check in $checks) {
+            if ($check.Value -isnot [bool] -or -not $check.Value) { throw "Component check failed: $($check.Name)" }
+        }
+        foreach ($metric in $timings) {
+            if ($metric.Value -is [string] -or $null -eq $metric.Value -or [double]$metric.Value -lt 0 -or
+                [double]::IsNaN($metric.Value) -or [double]::IsInfinity($metric.Value)) { throw "Invalid component timing: $($metric.Name)" }
+        }
+        if ($result.frameSamples -ne 30 -or $result.frameMedianMs -le 0 -or $result.frameP95Ms -lt $result.frameMedianMs) {
+            throw "Component page frame timing was incomplete: $raw"
+        }
+    } elseif ($result.visibility -ne 'visible' -or $result.samples -ne 30 -or $result.intervalMedianMs -le 0 -or
         $result.intervalP95Ms -lt $result.intervalMedianMs -or $result.width -ne 160 -or $result.backdrop -ne 'blur(6px)' -or
         $result.transform -ne 'matrix(1, 0, 0, 1, 30, 0)') {
         throw "WebView2 rendered an unexpected fixture result: $raw"
@@ -126,7 +174,7 @@ requestAnimationFrame(frame);
         runtime = $environment.BrowserVersionString
         sdk = $assembly.VersionInfo.ProductVersion
         loader = $loader.VersionInfo.ProductVersion
-        fixture = 'offline synthetic button'
+        fixture = $fixture
         hostStartupMs = $startup.ElapsedMilliseconds
         render = $result
     } | ConvertTo-Json -Depth 3 -Compress

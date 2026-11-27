@@ -36,3 +36,33 @@ jobs:
         if: ${{ !cancelled() }}
         shell: powershell
         run: .\.github\scripts\pr004-webview.ps1
+      - name: Resolve the approved Node.js release
+        id: node
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw package.json | ConvertFrom-Json).engines.node
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected an exact Node.js version' }
+          if ((node --version) -eq "v$version") { return }
+          $name = "node-v$version-win-x64"
+          $url = "https://nodejs.org/dist/v$version"
+          $archive = Join-Path $env:RUNNER_TEMP "$name.zip"
+          Invoke-WebRequest "$url/$name.zip" -OutFile $archive
+          $checks = (Invoke-RestMethod "$url/SHASUMS256.txt") -split '\r?\n'
+          $line = @($checks | Where-Object { $_.EndsWith("  $name.zip") })
+          if ($line.Count -ne 1 -or $line[0].Split(' ')[0] -ne (Get-FileHash $archive).Hash) { throw 'Unexpected Node archive digest' }
+          Expand-Archive $archive $env:RUNNER_TEMP
+          Join-Path $env:RUNNER_TEMP $name >> $env:GITHUB_PATH
+      - name: Exercise MCP over local pipes
+        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
+        shell: pwsh
+        run: node --test --test-isolation=none .github/scripts/pr004-mcp.test.mjs
+      - name: Build the three approved upstream components
+        id: assets
+        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
+        shell: pwsh
+        run: node .github/scripts/pr004-ui-build.mjs "$env:RUNNER_TEMP/components"
+      - name: Render and measure the three components in WebView2
+        if: ${{ !cancelled() && steps.assets.outcome == 'success' }}
+        shell: powershell
+        run: .\.github\scripts\pr004-webview.ps1 -AssetDirectory "$env:RUNNER_TEMP/components"
