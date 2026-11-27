@@ -29,4 +29,4 @@ The Rust workspace uses [Cargo.toml](../../Cargo.toml) and [Cargo.lock](../../Ca
 
 ## Acceptance scope
 
-PR 001 builds and exercises the developer tool on the available host. Its Rust crate uses the standard library, and the JavaScript workspace has a root package with zero dependencies. Linux evidence is recorded with the [project progress](../records/STATUS.md). Windows host verification and Windows x64 application and driver cross-compilation remain scheduled under the [roadmap](../roadmap/PLAN.md). The shared quality gates are planned for PR 002.
+PR 001 builds and exercises the developer tool on the available host. Its Rust crate uses the standard library, and the JavaScript workspace has a root package with zero dependencies. Linux evidence is recorded with the [project progress](../records/STATUS.md). Windows host verification and Windows x64 application and driver cross-compilation remain scheduled under the [roadmap](../roadmap/PLAN.md). See the [CI and merge gates](MERGE_GATES.md) for workspace checks introduced by PR 002.

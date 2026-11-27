@@ -29,4 +29,4 @@ Rust 使用工作区根目录的 [Cargo.toml](../../../Cargo.toml) 与 [Cargo.lo
 
 ## 验收范围
 
-PR 001 在当前可用环境构建并执行开发工具。Rust crate 使用标准库，JavaScript 工作区根包没有依赖。Linux 的验证记录见[项目进度](../records/STATUS.md)。Windows 环境验证及 Windows x64 应用和驱动交叉构建按[路线图](../roadmap/PLAN.md)推进，统一质量门禁由 PR 002 实施。
+PR 001 在当前可用环境构建并执行开发工具。Rust crate 使用标准库，JavaScript 工作区根包没有依赖。Linux 的验证记录见[项目进度](../records/STATUS.md)。Windows 环境验证及 Windows x64 应用和驱动交叉构建按[路线图](../roadmap/PLAN.md)推进，PR 002 引入的工作区质量检查见 [CI 与合并门禁](MERGE_GATES.md)。

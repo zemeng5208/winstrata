@@ -14,6 +14,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Development](standards/DEVELOPMENT.md)
 - [Architecture](standards/ARCHITECTURE.md)
 - [Git, PRs and gates](standards/GIT_AND_PR.md)
+- [CI and merge gates](architecture/MERGE_GATES.md)
 - [Testing](standards/TESTING.md)
 - [Security engineering](standards/SECURITY.md)
 - [Documentation and records](standards/DOCUMENTATION.md)

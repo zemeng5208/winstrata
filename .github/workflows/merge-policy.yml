@@ -1,0 +1,42 @@
+name: WinStrata merge policy
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft, labeled, unlabeled, closed]
+  issues:
+    types: [opened, reopened, closed, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  statuses: write
+
+concurrency:
+  group: winstrata-merge-policy
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Evaluate merge policy from main
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Fetch protected main
+        shell: bash
+        run: |
+          git init --quiet
+          git fetch --depth=1 --no-tags "https://github.com/$GITHUB_REPOSITORY.git" refs/heads/main
+          git checkout --quiet --detach FETCH_HEAD
+      - name: Publish policy status for current test merge commits
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/merge-policy.mjs
