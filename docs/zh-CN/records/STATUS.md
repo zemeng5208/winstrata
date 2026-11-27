@@ -25,7 +25,7 @@
 | PR 008 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #12](https://github.com/zemeng5208/winstrata/pull/12) 合并为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。父提交为 `3e0097a44f54d552662b39ab3621002ebce59505` 与 `8eff3a84901eb430728b8d6d744a40d3d7e66155`。文件树为 `e745b6af56936bfc0971218cb9c692542122d940`。没有进行已签名驱动的加载或卸载。 |
 | PR 009 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #15](https://github.com/zemeng5208/winstrata/pull/15) 合并为 `8fe3014846605a726249f64d58eaca9362eaacd4`。父提交为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5` 与 `e3d6b609fc9c6b58cf30ebf33c4b3a51261abbf0`。已记录的 Windows 证据属于提交 `565599ed4f6125fdfa737d4e83087027211879c2`。没有运行 Windows 10/11、已签名驱动、故意缓冲区溢出和 E2E-02。 |
 | PR 010 | 规划中 | 独立计划。本记录不实现它。 |
-| PR 011 | 待审查 | 已在 `pr/011-network-sources` 实现[网络源](../architecture/NETWORK-SOURCES.md)。该分支正在更新到 `8fe3014846605a726249f64d58eaca9362eaacd4`。在 `ab01883653187bbebd5e9197a80a92b784d89e36` 上，Linux、Windows Server 2022 和工作区检查已通过。该提交发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 009 must merge before plan 011”。E2E-04 未完成。 |
+| PR 011 | 待审查 | 已在 `pr/011-network-sources` 实现[网络源](../architecture/NETWORK-SOURCES.md)。`65c39fe2f27444a21eb7c132b0acf24beeaf5595` 包含主分支 `8fe3014846605a726249f64d58eaca9362eaacd4`。该提交已通过 Linux、Windows Server 2022 和工作区检查。它发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 010 must merge before plan 011”。E2E-04 未完成。 |
 | PR 012–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加服务控制面。计划 009 增加用户态文件和注册表监视。计划 011 增加用户态网络观测和选择性报文留存。进程采集、插件及其他指标仍按各自计划推进。 |
 
@@ -105,6 +105,10 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 发布的提交状态 `winstrata/merge-policy` 在 `fcb7e3d61881a87e05d92f76846df86d6fdd7778` 上失败，说明是 “Plan 009 must merge before plan 011”。[第一次策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46007292445) 同一状态在 `ab01883653187bbebd5e9197a80a92b784d89e36` 上再次失败，说明同样是 “Plan 009 must merge before plan 011”。两次的工作流检查 “Evaluate merge policy from main” 都成功；以状态上下文为准。[第二次策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46007911416) 这些说明早于计划 009 的合并。计划 010 尚未合并。本计划不绕过这道门禁。没有运行 Windows 10/11 客户端、HVCI、已签名 `strata-net.sys` 加载、拓扑、发现和 PCAPNG 导出。未标记连接元数据没有落盘。E2E-04 未完成。没有加载已签名驱动。
 
+在提交 `65c39fe2f27444a21eb7c132b0acf24beeaf5595` 上，Linux 工作区检查、Windows 工作区检查和汇总的工作区检查均通过。拉取请求作业检出的是 `GITHUB_SHA`。这次事件中它是合并提交 `af2a472294fca8efdceb888b347feedc8b40852d`，父提交为 `8fe3014846605a726249f64d58eaca9362eaacd4` 与 `65c39fe2f27444a21eb7c132b0acf24beeaf5595`，文件树 `424babfc6bb83c1fca26ed2a966db3a47254e739` 与分支头相同。Linux 通过 40 项 Core 测试、20 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。Windows Server 2022 运行 `cargo test --locked --workspace`，通过 41 项 Core 测试、22 项内核测试、11 项协议库测试、2 项协议集成测试、1 项真实系统事件测试和 7 项服务测试。两项现场网络测试都通过。三项 Windows 文件和注册表测试再次通过，包括真实文件的创建、重命名和删除，以及一个易失的 HKCU DWORD。`SourceFailure` 缺口没有被当成成功。内核现场测试度过了采样等待。日志没有打印当时记录的是 TLS 记录还是采样缺口；这次环回交换对 Windows 原始套接字不可见，因此不把该次运行说成已观察到加密。内核测试再次拒绝启动缺失映像。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46013354975/job/140554172239) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46013354975/job/140554171840) · [工作区](https://github.com/zemeng5208/winstrata/actions/runs/46013354975/job/140554788086)
+
+发布的提交状态 `winstrata/merge-policy` 在 `65c39fe2f27444a21eb7c132b0acf24beeaf5595` 上失败，说明是 “Plan 010 must merge before plan 011”。工作流检查 “Evaluate merge policy from main” 成功。以状态上下文为准。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46013406302) 计划 010 尚未合并。本计划不绕过这道门禁。该 Windows 作业是 Windows Server 2022。它不是 Windows 10/11 客户端，也不是 HVCI 或已签名 `strata-net.sys` 加载。E2E-04 未完成。未标记连接元数据没有落盘。`CatalogHost` 仍然返回 `image_absent`。没有加载已签名驱动。
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
@@ -148,4 +152,4 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 所有者将 PR #15 合并为 `8fe3014846605a726249f64d58eaca9362eaacd4`。父提交为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5` 与 `e3d6b609fc9c6b58cf30ebf33c4b3a51261abbf0`。`e3d6b609fc9c6b58cf30ebf33c4b3a51261abbf0` 包含 `565599ed4f6125fdfa737d4e83087027211879c2`。主分支工作流 [Linux、Windows 和工作区](https://github.com/zemeng5208/winstrata/actions/runs/46012223713) 与[合并策略](https://github.com/zemeng5208/winstrata/actions/runs/46012223697) 均成功。更新本记录时，`8fe3014846605a726249f64d58eaca9362eaacd4` 的合并提交状态接口没有返回状态上下文，因此不为该提交声称发布说明。
 
-当前交接点为计划 011，分支 `pr/011-network-sources`，已更新到主分支 `8fe3014846605a726249f64d58eaca9362eaacd4`。较早的网络提交 `ab01883653187bbebd5e9197a80a92b784d89e36` 已通过 Linux、Windows Server 2022 和工作区检查。它发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 009 must merge before plan 011”。这次更新自己的检查尚未记录。计划 010 尚未合并，也不属于本计划。E2E-04 未完成。已签名 `strata-net.sys` 加载、拓扑、发现、PCAPNG 导出和未标记元数据留存仍待完成。测试宿主返回的 `ready` 不是已加载的驱动。`CatalogHost` 仍然返回 `image_absent`。环回流量对 Windows 原始套接字不可见，因此没有在 Server 2022 上观察到加密。
+当前交接点为计划 011，分支 `pr/011-network-sources`。`65c39fe2f27444a21eb7c132b0acf24beeaf5595` 包含主分支 `8fe3014846605a726249f64d58eaca9362eaacd4`，并已通过 Linux、Windows Server 2022 和工作区检查。它发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 010 must merge before plan 011”。本记录是其后的提交。它自己的 Linux、Windows 和工作区检查尚未记录，因此还不是送审头。计划 010 尚未合并，也不属于本计划。E2E-04 未完成。已签名 `strata-net.sys` 加载、拓扑、发现、PCAPNG 导出和未标记元数据留存仍待完成。测试宿主返回的 `ready` 不是已加载的驱动。`CatalogHost` 仍然返回 `image_absent`。环回流量对 Windows 原始套接字不可见，因此没有在 Server 2022 上观察到加密。
