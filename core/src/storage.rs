@@ -57,6 +57,17 @@ pub(crate) struct Location {
 }
 
 impl Location {
+    pub(crate) fn read(dir: &Anchor) -> io::Result<Option<Self>> {
+        match files::read_json::<Self>(dir, POINTER) {
+            Ok(location) => {
+                location.validate()?;
+                Ok(Some(location))
+            }
+            Err(error) if error.kind() == ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
     pub(crate) fn new(root: &Path, config: &Config) -> Self {
         Self {
             version: VERSION,
@@ -130,8 +141,9 @@ impl Config {
     }
 
     pub(crate) fn save(&self, dir: &Anchor) -> io::Result<()> {
-        capacity(dir, serde_json::to_vec(&self)?.len() as u64 + 1)?;
-        files::write_json(dir, CONFIG, self)
+        let bytes = files::encode_json(self)?;
+        capacity(dir, bytes.len() as u64)?;
+        files::write_encoded(dir, CONFIG, &bytes)
     }
 }
 
@@ -186,5 +198,47 @@ pub(crate) fn require_disjoint(
         Ok(_) => Ok(()),
         Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
         Err(error) => Err(error),
+    }
+}
+
+pub(crate) fn require_independent_root(candidate: &Path, previous: &Path) -> io::Result<()> {
+    // 离线卷无法返回文件身份，仍需按本机路径规则拒绝原根与其上下级。
+    let mut common = true;
+    for (a, b) in candidate.components().zip(previous.components()) {
+        if !component_eq(a.as_os_str(), b.as_os_str())? {
+            common = false;
+            break;
+        }
+    }
+    if common {
+        return Err(io::Error::new(
+            ErrorKind::InvalidInput,
+            "select an independent storage root",
+        ));
+    }
+    if let Ok(existing) = Anchor::open(previous) {
+        require_disjoint(candidate, previous, &existing)?;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn component_eq(a: &OsStr, b: &OsStr) -> io::Result<bool> {
+    Ok(a == b)
+}
+
+#[cfg(windows)]
+fn component_eq(a: &OsStr, b: &OsStr) -> io::Result<bool> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Globalization::{CSTR_EQUAL, CompareStringOrdinal};
+    let a: Vec<u16> = a.encode_wide().collect();
+    let b: Vec<u16> = b.encode_wide().collect();
+    // Windows 的序数忽略大小写比较不会受当前语言区域或显示格式影响。
+    let result =
+        unsafe { CompareStringOrdinal(a.as_ptr(), a.len() as i32, b.as_ptr(), b.len() as i32, 1) };
+    if result == 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(result == CSTR_EQUAL)
     }
 }

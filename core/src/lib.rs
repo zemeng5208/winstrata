@@ -8,7 +8,10 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{self, ErrorKind};
 use std::path::{Path, PathBuf};
-use storage::{Config, Location, POINTER, capacity, data_dir, require_disjoint, validate_path};
+use storage::{
+    Config, Location, POINTER, capacity, data_dir, require_disjoint, require_independent_root,
+    validate_path,
+};
 
 pub use storage::Settings;
 
@@ -48,14 +51,7 @@ impl Core {
         let user = platform::current_id()?;
         let locator = Anchor::open(parent)?.child(OsStr::new("WinStrata"), true, true)?;
         let session = files::lock(&locator, "session.lock")?;
-        let location: Option<Location> = match files::read_json::<Location>(&locator, POINTER) {
-            Ok(location) => {
-                location.validate()?;
-                Some(location)
-            }
-            Err(error) if error.kind() == ErrorKind::NotFound => None,
-            Err(error) => return Err(error),
-        };
+        let location = Location::read(&locator)?;
         let mut core = Self {
             user,
             locator_path: parent.join("WinStrata"),
@@ -139,8 +135,13 @@ impl Core {
         let (dir, mut config) = self.active(0)?;
         config.settings = settings.clone();
         if let Err(error) = config.save(&dir) {
-            self.suspend(&error);
+            if error.kind() != ErrorKind::InvalidInput {
+                self.suspend(&error);
+            }
             return Err(error);
+        }
+        if self.run == RunState::Live && settings.monitored_roots.is_empty() {
+            self.stop();
         }
         Ok(())
     }
@@ -169,6 +170,29 @@ impl Core {
         self.run = RunState::History;
     }
 
+    // 原子更名后若目录同步失败，下一次选择以磁盘上实际发布的指针为准。
+    fn refresh_location(&mut self) -> io::Result<()> {
+        let result = Location::read(&self.locator).and_then(|location| {
+            if self.location.is_some() && location.is_none() {
+                return Err(io::Error::new(
+                    ErrorKind::NotFound,
+                    "the saved storage locator is missing",
+                ));
+            }
+            Ok(location)
+        });
+        match result {
+            Ok(location) => {
+                self.location = location;
+                Ok(())
+            }
+            Err(error) => {
+                self.suspend(&error);
+                Err(error)
+            }
+        }
+    }
+
     fn check_destination(&self, root: &Path) -> io::Result<PathBuf> {
         validate_path(root)?;
         let leaf = root.join(&self.user);
@@ -189,6 +213,7 @@ impl Core {
     }
 
     pub fn select_directory(&mut self, root: &Path) -> io::Result<()> {
+        self.refresh_location()?;
         let target_path = self.check_destination(root)?;
         if self.selected_root() == Some(root) {
             let result = self.bind().and_then(|(dir, _)| {
@@ -242,6 +267,7 @@ impl Core {
 
     // 用户明确选择新的空工作区，原卷离线时仍能开始工作；此操作不代表已迁移历史。
     pub fn select_empty_directory(&mut self, root: &Path) -> io::Result<()> {
+        self.refresh_location()?;
         self.check_destination(root)?;
         if let Some(location) = &self.location {
             if location.root == root || self.bind().is_ok() {
@@ -250,13 +276,7 @@ impl Core {
                     "use verified migration for an available workspace",
                 ));
             }
-            // 即使原卷离线，也不能在原位置内创建替代数据。
-            if root.starts_with(&location.root) || location.root.starts_with(root) {
-                return Err(io::Error::new(
-                    ErrorKind::InvalidInput,
-                    "select an independent storage root",
-                ));
-            }
+            require_independent_root(root, &location.root)?;
         }
         let target = data_dir(root, &self.user, true)?;
         capacity(&target, 1)?;

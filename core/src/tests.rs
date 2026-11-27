@@ -65,6 +65,20 @@ fn first_selection_run_state_and_settings_survive_the_expected_boundaries() {
     assert_eq!(core.run_state(), RunState::Stopped);
     core.start_live().unwrap();
     assert_eq!(core.run_state(), RunState::Live);
+    core.update_settings(&Settings::default()).unwrap();
+    assert_eq!(core.run_state(), RunState::Stopped);
+    core.update_settings(&settings).unwrap();
+    core.start_live().unwrap();
+    let oversized = Settings {
+        monitored_roots: vec![settings.monitored_roots[0].clone(); 65536],
+        ..Settings::default()
+    };
+    assert_eq!(
+        core.update_settings(&oversized).unwrap_err().kind(),
+        std::io::ErrorKind::InvalidInput
+    );
+    assert_eq!(core.run_state(), RunState::Live);
+    assert_eq!(core.settings().unwrap(), settings);
     core.enter_history();
     assert_eq!(core.run_state(), RunState::History);
     core.stop();

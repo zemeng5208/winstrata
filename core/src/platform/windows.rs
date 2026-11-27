@@ -24,8 +24,7 @@ use windows_sys::Win32::Storage::FileSystem::{
     FILE_FLAG_OPEN_REPARSE_POINT, FILE_ID_INFO, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE,
     FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TRAVERSE, FileAttributeTagInfo, FileIdInfo,
     GetDiskFreeSpaceExW, GetFileInformationByHandleEx, GetFinalPathNameByHandleW,
-    GetVolumeInformationByHandleW, OPEN_EXISTING, READ_CONTROL, ReOpenFile, SYNCHRONIZE,
-    VOLUME_NAME_GUID,
+    GetVolumeInformationByHandleW, OPEN_EXISTING, READ_CONTROL, SYNCHRONIZE, VOLUME_NAME_GUID,
 };
 use windows_sys::Win32::System::Com::{CoCreateGuid, CoTaskMemFree};
 use windows_sys::Win32::System::IO::IO_STATUS_BLOCK;
@@ -338,52 +337,50 @@ impl Anchor {
             SecurityDescriptor: access.as_ref().map_or(null(), |sd| sd.descriptor().cast()),
             SecurityQualityOfService: null(),
         };
-        let mut result = IO_STATUS_BLOCK::default();
-        let mut raw = null_mut();
-        // 只解析相对父句柄的一个名称。FILE_OPEN_IF 原子创建或打开；现存对象必须重新验证。
-        let status = unsafe {
-            NtCreateFile(
-                &mut raw,
-                OPEN_RIGHTS | if private { READ_CONTROL } else { 0 },
-                &attributes,
-                &mut result,
-                null(),
-                0,
-                FILE_SHARE_READ,
-                if create { FILE_OPEN_IF } else { FILE_OPEN },
-                FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT | FILE_SYNCHRONOUS_IO_NONALERT,
-                null(),
-                0,
-            )
-        };
-        if status < 0 {
-            return Err(io::Error::from_raw_os_error(
-                unsafe { RtlNtStatusToDosError(status) } as i32,
-            ));
-        }
-        if raw.is_null() {
-            return Err(io::Error::other("directory open returned no handle"));
-        }
-        let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
-        verify_directory(raw)?;
-        let handle = if let Some(access) = access {
-            access.verify(raw)?;
-            // 首次句柄排除了已有的写入或删除句柄。仅在确认当前用户独享 DACL 后，
-            // 重新打开同一个对象以便用户重命名或发布其子文件；目录本身仍不共享删除。
-            let reopened = unsafe {
-                ReOpenFile(
-                    raw,
-                    OPEN_RIGHTS,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        // 用同一个已固定父目录和经检查的单个名称打开；原子创建时即应用描述符。
+        let open = |disposition, share| -> io::Result<OwnedHandle> {
+            let mut result = IO_STATUS_BLOCK::default();
+            let mut raw = null_mut();
+            let status = unsafe {
+                NtCreateFile(
+                    &mut raw,
+                    OPEN_RIGHTS | if private { READ_CONTROL } else { 0 },
+                    &attributes,
+                    &mut result,
+                    null(),
+                    0,
+                    share,
+                    disposition,
+                    FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT | FILE_SYNCHRONOUS_IO_NONALERT,
+                    null(),
+                    0,
                 )
             };
-            if reopened == INVALID_HANDLE_VALUE {
-                return Err(io::Error::last_os_error());
+            if status < 0 {
+                return Err(io::Error::from_raw_os_error(
+                    unsafe { RtlNtStatusToDosError(status) } as i32,
+                ));
             }
-            unsafe { OwnedHandle::from_raw_handle(reopened) }
+            if raw.is_null() {
+                return Err(io::Error::other("directory open returned no handle"));
+            }
+            Ok(unsafe { OwnedHandle::from_raw_handle(raw) })
+        };
+        let first = open(
+            if create { FILE_OPEN_IF } else { FILE_OPEN },
+            FILE_SHARE_READ,
+        )?;
+        verify_directory(first.as_raw_handle())?;
+        let handle = if let Some(access) = access {
+            access.verify(first.as_raw_handle())?;
+            // 保留首次严格句柄直至相对打开且比较文件标识。私有目录允许所有者写入子项，仍禁止共享删除。
+            let pinned = open(FILE_OPEN, FILE_SHARE_READ | FILE_SHARE_WRITE)?;
+            if handle_key(pinned.as_raw_handle())? != handle_key(first.as_raw_handle())? {
+                return Err(io::Error::other("private directory identity changed"));
+            }
+            pinned
         } else {
-            handle
+            first
         };
         Ok(Self {
             pin: Arc::new(Pin {

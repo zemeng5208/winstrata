@@ -184,26 +184,81 @@ pub(crate) fn read_json<T: DeserializeOwned>(dir: &Anchor, name: &str) -> io::Re
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
 }
 
+struct JsonBuffer(Vec<u8>);
+
+impl Write for JsonBuffer {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if bytes.len() > MAX_JSON_BYTES - self.0.len() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "control file is too large",
+            ));
+        }
+        self.0.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+pub(crate) fn encode_json<T: Serialize + ?Sized>(value: &T) -> io::Result<Vec<u8>> {
+    let mut encoded = JsonBuffer(Vec::new());
+    serde_json::to_writer(&mut encoded, value)
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error))?;
+    Ok(encoded.0)
+}
+
 pub(crate) fn write_json<T: Serialize + ?Sized>(
     dir: &Anchor,
     name: &str,
     value: &T,
 ) -> io::Result<()> {
+    write_encoded(dir, name, &encode_json(value)?)
+}
+
+#[cfg(windows)]
+fn replace(source: &Path, destination: &Path) -> io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::{
+        MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW,
+    };
+    let source: Vec<_> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+    let destination: Vec<_> = destination
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    // SAFETY: 两条路径均由相同私有目录和受检文件名生成，缓冲区在调用时有效。
+    let flags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
+    if unsafe { MoveFileExW(source.as_ptr(), destination.as_ptr(), flags) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+use fs::rename as replace;
+
+pub(crate) fn write_encoded(dir: &Anchor, name: &str, bytes: &[u8]) -> io::Result<()> {
+    if bytes.len() > MAX_JSON_BYTES {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "control file is too large",
+        ));
+    }
     let dest = control_path(dir, name)?;
     match open_existing(&dest, false) {
         Ok(_) => {}
         Err(error) if error.kind() == io::ErrorKind::NotFound => {}
         Err(error) => return Err(error),
     }
-    let bytes = serde_json::to_vec(value)?;
-    if bytes.len() > MAX_JSON_BYTES {
-        return Err(invalid("control file is too large"));
-    }
     // 临时文件与目标同目录；写入或同步失败时保留旧版本。
     let mut temp = Temporary::create(dir)?;
-    temp.file.write_all(&bytes)?;
+    temp.file.write_all(bytes)?;
     temp.file.sync_all()?;
-    fs::rename(&temp.path, &dest)?;
+    replace(&temp.path, &dest)?;
     temp.cleanup = false;
     #[cfg(target_os = "linux")]
     File::open(dir.io_path())?.sync_all()?;
@@ -246,7 +301,17 @@ mod tests {
             write_json(dir, name, &1_u64).unwrap();
             write_json(dir, name, &2_u64).unwrap();
             assert_eq!(read_json::<u64>(dir, name).unwrap(), 2);
-            assert!(write_json(dir, name, &"x".repeat(MAX_JSON_BYTES)).is_err());
+            assert_eq!(
+                write_json(dir, name, &"x".repeat(MAX_JSON_BYTES))
+                    .unwrap_err()
+                    .kind(),
+                io::ErrorKind::InvalidInput
+            );
+            let invalid_key = std::collections::BTreeMap::from([((1, 2), "value")]);
+            assert_eq!(
+                write_json(dir, name, &invalid_key).unwrap_err().kind(),
+                io::ErrorKind::InvalidInput
+            );
             assert_eq!(read_json::<u64>(dir, name).unwrap(), 2);
             let file = dir.io_path().join(name);
             fs::write(&file, vec![b' '; MAX_JSON_BYTES + 1]).unwrap();
