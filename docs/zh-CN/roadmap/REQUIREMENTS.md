@@ -23,8 +23,8 @@
 | REQ-04.03 | 建立选定范围基线并标注重建历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [017](PLAN.md#pr-017), [021](PLAN.md#pr-021) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.04 | 实时与历史切换、暂停恢复、缺失记录和安全退出 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-05.01 | 事件稳定标识和版本、时间顺序、来源与完整性 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005) | [02](ACCEPTANCE.md#e2e-02), [15](ACCEPTANCE.md#e2e-15) | [事件标识、排序、来源与缺口契约](../architecture/PROTOCOLS.md)已通过真实 Node 子进程、Windows 日志、兼容用例与确定性回放验证；产品规模的多来源对齐留待集成场景。 |
-| REQ-05.02 | 有界批处理、队列、背压、吞吐及丢失记录 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [007](PLAN.md#pr-007) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-05.03 | 统一优先级、超时、取消和资源保护 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-45) | [007](PLAN.md#pr-007), [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
+| REQ-05.02 | 有界批处理、队列、背压、吞吐及丢失记录 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [007](PLAN.md#pr-007) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | [Core 运行时](../architecture/CORE-RUNTIME.md)已限制队列和批量，在记录丢失前等待，并发布协议缺口。Linux release 在 39.925 毫秒内传送 20,000 条事件。E2E-08 与 E2E-15 仍待完成。 |
+| REQ-05.03 | 统一优先级、超时、取消和资源保护 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-45) | [007](PLAN.md#pr-007), [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 调度器已实现优先级、超时、取消和固定的工作者与队列上限。动态预算和健康诊断仍属 PR 025 与 PR 026。E2E-08 与 E2E-15 仍待完成。 |
 | REQ-06.01 | 文件操作、所有权与权限；不存文件内容版本 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [009](PLAN.md#pr-009), [021](PLAN.md#pr-021) | [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-06.02 | 观测进程、线程、模块、来源及 PID 生命周期 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [010](PLAN.md#pr-010), [018](PLAN.md#pr-018) | [02](ACCEPTANCE.md#e2e-02), [03](ACCEPTANCE.md#e2e-03) | 规划中 |
 | REQ-06.03 | 归因注册表与环境变量并呈现前后值 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [019](PLAN.md#pr-019), [020](PLAN.md#pr-020) | [02](ACCEPTANCE.md#e2e-02) | 规划中 |

@@ -20,9 +20,10 @@ The owner saved [Protect main](https://github.com/zemeng5208/winstrata/rules/282
 | PR 003 | Merged with open acceptance items | The owner merged [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) as `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`. Its tree matched the submitted tree. Linux workspace and both x64 link probes passed on that baseline. Packaging, signing and actual driver loading remain open. |
 | PR 004 | Accepted for platform feasibility | The owner merged [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) as `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`. The file tree matched the reviewed head. Postmerge Linux, Windows and policy checks passed. |
 | PR 005 | Accepted | The owner merged [protocols PR #6](https://github.com/zemeng5208/winstrata/pull/6). Main commit `14a8ec6` has the same tree as reviewed head `e446453`. |
-| PR 006 | In review | Implemented [current-user configuration and storage](../architecture/CORE-STORAGE.md). The owner reviews and merges [candidate PR #7](https://github.com/zemeng5208/winstrata/pull/7). |
-| PR 007–050 | Planned | Follow the approved roadmap and verify prerequisites. |
-| Core and PL-01 through PL-25 | Planned | Runtime and metrics remain unverified. Maintain their evidence in requirements and module records as work lands. |
+| PR 006 | Accepted | Owner merged [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) as `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`. The merge tree `9cd3c33c49919c7e82f73824f9e5581148d5ff62` matches the reviewed head. Main CI and merge policy succeeded. Windows 10/11 client, ReFS and encrypted migration remain unverified. |
+| PR 007 | In review | Implemented the [Core scheduler and event bus](../architecture/CORE-RUNTIME.md). The owner reviews the candidate PR. |
+| PR 008–050 | Planned | Follow the approved roadmap and verify prerequisites. |
+| Core and PL-01 through PL-25 | Planned | Plan 007 verifies the in-process scheduler and bus on Linux. Storage, collection, plugins and other metrics remain on their own plans. |
 
 ## PR 000 verification
 
@@ -60,6 +61,14 @@ On code candidate `b3f56ab`, Linux passed 21 Core tests and Windows Server 2022 
 
 Earlier candidates hit a Windows sharing violation during config replacement. Long-lived pins on shared ancestors also interfered with sibling renames. The session now holds only its locator lock file between operations. Native NTFS regression confirmed that a private directory stays pinned while an ordinary sibling can be renamed. The missing-drive test selected a drive letter reported as unmounted. The capacity test exceeded the actual caller-available space with a write budget, without filling a physical disk. Both Linux cross-link probes and Core rustfmt passed locally. Workspace-wide rustfmt still reports legacy layout differences in unchanged developer-tool source. Windows 10/11 and ReFS behavior remain unverified.
 
+After merge, local Git confirmed parents `14a8ec6b9fda65c8bea3fcaf9d8af1093c830d98` and `4fbf9d64bd15aa3236f4ffad0a987a035304b3d7` and tree `9cd3c33c49919c7e82f73824f9e5581148d5ff62`. [Main CI](https://github.com/zemeng5208/winstrata/actions/runs/45978807885) and [merge policy](https://github.com/zemeng5208/winstrata/actions/runs/45978807889) completed successfully on that commit. Encrypted migration remains a later plan.
+
+## PR 007 verification
+
+On Linux x86_64 with Rust 1.100.0 and an Intel Xeon host, `cargo test --workspace --locked` passed 27 Core tests, 11 protocol library tests and 2 protocol integration tests. The new tests publish protocol events through the scheduler and bus. They check contiguous delivery, admission waiting, full-queue rejection, coalesced `lost` and `filtered` gaps, cross-batch holes, duplicates, priority, cooperative cancellation, timeout signaling, panic isolation, subscription limits and joined threads. On Linux the joined thread IDs no longer carry that scheduler's thread name. A release run delivered 20,000 observations in 39.925 ms, about 501,000 events per second, with no losses. Debug runs of that test stayed inside the 10 second bound. `cargo build --locked -p winstrata-core` reported no warnings. The lockfile adds only the existing `winstrata-protocols` crate to Core. No new external crate was added.
+
+`cargo dev doctor` was not run here because the active Node.js is v22.23.4 and the pinned engine is 24.22.3. The workspace test command used by verify was run directly. Windows execution of plan 007 is not yet available from this host. Windows 10/11 client behavior, GUI latency, sustained pressure, dynamic budgets, authenticated IPC, ReFS and encrypted migration were not run. E2E-08 and E2E-15 remain open.
+
 ## Decisions and open assumptions
 
 | ID | Status | Evidence and follow-up |
@@ -73,6 +82,7 @@ Earlier candidates hit a Windows sharing violation during config replacement. Lo
 | AS-001 | Partially verified | Linux linked both x64 probes. PR 008 needs a validated INF/CAT package, Microsoft signing and representative load/unload on Windows with Secure Boot and HVCI enabled. PR 050 must verify the full Linux cross-build. |
 | AS-002 | Partially verified | The [platform report](../architecture/PLATFORM_FEASIBILITY.md) records Server 2022 probes. Verify product authorization in PR 008, mixed-runtime containment in PR 015, ordinary-user GUI in PR 016, sustained performance in PR 048 and Windows 10/11 clients in PR 049. |
 | AS-003 | Pending decision | Confirm accounting and cleanup semantics, untagged metadata retention, WebView2 themes, Windows support, and performance methods in the [open decision list](../roadmap/PLAN.md#section-19). |
+| AS-004 | Recorded constraint | Plan 007 uses the Rust standard library for its worker pool because no async-runtime crate is approved. A different runtime needs a separate dependency decision. [Core runtime](../architecture/CORE-RUNTIME.md) |
 
 ## Errors and handover
 
@@ -84,4 +94,4 @@ Earlier candidates hit a Windows sharing violation during config replacement. Lo
 | ERR-003 | Resolved | The first Linux driver link failed because the selected x64 WDK import archive did not export `KeQueryInterruptTime`. Inspected the archive, switched to the documented export `KeQueryTimeIncrement`, and reran both probes and PE inspection. |
 | ERR-004 | Resolved on PR 004 | PR 003 merged with a failed policy status while only Workspace checks was required and strict latest-base was off. PR 004 passed both checks on head `1788410`. The effective rules require `Workspace checks`, `winstrata/merge-policy` and an up-to-date branch, with GitHub Actions as the source for both checks and no bypass actors. [PR 003 policy failure](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 main CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 policy success](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [Effective rules](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-The current handover is [plan 006 candidate PR #7](https://github.com/zemeng5208/winstrata/pull/7). Verify the actual merge tree and main checks before starting plan 007.
+The current handover is plan 007 on branch `cursor/core-runtime-007-1c62`, based on merge commit `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`. The owner reviews and merges the candidate. Do not start plan 008 until that merge and its required checks are verified. Windows results for this plan are still absent. Next work is the controlled service and driver-management plan, after the owner merge.

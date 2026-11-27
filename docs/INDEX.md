@@ -12,6 +12,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Platform feasibility](architecture/PLATFORM_FEASIBILITY.md)
 - [Event, object, error and version contracts](architecture/PROTOCOLS.md)
 - [Current-user Core configuration and storage](architecture/CORE-STORAGE.md)
+- [Core scheduling and event bus](architecture/CORE-RUNTIME.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)

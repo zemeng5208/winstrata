@@ -55,7 +55,7 @@ The following illustrative marker reports that sequences 12 through 14 were lost
 }
 ```
 
-Use `filtered`, `sampled`, `paused`, `source_failure` or `lost` according to the observed cause. Omit `range` if its bounds are unknown. A single marker cannot establish the coverage of another source, and the decoder does not invent missing records from a clock change. Cross-batch reconciliation and backpressure belong to PR 007.
+Use `filtered`, `sampled`, `paused`, `source_failure` or `lost` according to the observed cause. Omit `range` if its bounds are unknown. A single marker cannot establish the coverage of another source, and the decoder does not invent missing records from a clock change. The Core runtime reconciles an open sequence hole and applies bounded backpressure when it accepts an event. See the [Core runtime](CORE-RUNTIME.md).
 
 ## Verification and dependencies
 

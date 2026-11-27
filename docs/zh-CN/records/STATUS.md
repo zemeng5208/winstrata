@@ -20,9 +20,10 @@
 | PR 003 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) 合并为 `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`。合并树与送审树一致，Linux 工作区回归和两个 x64 链接探针复验通过。打包、签名及实际驱动加载仍待验证。 |
 | PR 004 | 平台可行性验证已验收 | 所有者将 [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) 合并为 `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`。文件树与送审提交一致，合并后 Linux、Windows 及策略检查均通过。 |
 | PR 005 | 已验收 | 所有者已合并[公共协议 PR #6](https://github.com/zemeng5208/winstrata/pull/6)。主分支提交 `14a8ec6` 与送审提交 `e446453` 的文件树相同。 |
-| PR 006 | 等待验收 | 已实现[当前用户配置与存储](../architecture/CORE-STORAGE.md)。[候选 PR #7](https://github.com/zemeng5208/winstrata/pull/7) 由所有者审核合并。 |
-| PR 007–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
-| Core 与 PL-01 至 PL-25 | 规划中 | 运行及性能均待验证；相关工作提交时更新需求及模块证据。 |
+| PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
+| PR 007 | 待审查 | 已实现 [Core 调度与事件总线](../architecture/CORE-RUNTIME.md)。候选 PR 由所有者审核。 |
+| PR 008–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
+| Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。存储、采集、插件及其他指标仍按各自计划推进。 |
 
 ## PR 000 验证
 
@@ -60,6 +61,14 @@ Phase 0 验收范围为实测工具链、已生效的合并门禁和可行性探
 
 Windows 早期候选在替换配置文件时遇到共享冲突，测试也发现长时间锁定公共祖先会影响同级目录更名。修复后，持久会话只持有定位锁文件。NTFS 回归确认私有目录保持固定、普通同级目录仍可改名。缺盘测试使用系统报告未挂载的盘符；空间不足通过真实可用容量与超额写入预算触发，未填满物理磁盘。开发环境还通过两个 Linux 交叉链接探针及 Core 的 rustfmt 检查。整个工作区的格式检查仍报告早于此 PR 的开发工具源码排版差异。Windows 10/11 与 ReFS 的行为尚未实测。
 
+合并后，本地 Git 确认父提交 `14a8ec6b9fda65c8bea3fcaf9d8af1093c830d98` 与 `4fbf9d64bd15aa3236f4ffad0a987a035304b3d7`，文件树为 `9cd3c33c49919c7e82f73824f9e5581148d5ff62`。该提交上的[主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45978807885)和[合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45978807889)均成功。加密迁移仍属于后续计划。
+
+## PR 007 验证
+
+在 Linux x86_64、Rust 1.100.0 和 Intel Xeon 主机上，`cargo test --workspace --locked` 通过 27 项 Core 测试、11 项协议库测试和 2 项协议集成测试。新增测试经由调度器与总线发布协议事件，覆盖连续投递、准入等待、满队列拒绝、合并后的 `lost` 与 `filtered` 缺口、跨批次空洞、重复序号、优先级、合作式取消、超时信号、panic 隔离、订阅上限和线程汇合。Linux 确认汇合后的线程 ID 不再带有该调度器的线程名。Release 在 39.925 毫秒内投递 20,000 条观测，约每秒 501,000 条，且无丢失。该测试的 Debug 运行处于 10 秒界限内。`cargo build --locked -p winstrata-core` 没有警告。锁文件只把既有的 `winstrata-protocols` 加入 Core，没有新增外部包。
+
+当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。verify 所调用的工作区测试命令已直接执行。本机尚未运行计划 007 的 Windows 测试。Windows 10/11 客户端、GUI 延迟、持续压力、动态预算、带认证的 IPC、ReFS 和加密迁移均未执行。E2E-08 与 E2E-15 仍待完成。
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
@@ -73,6 +82,7 @@ Windows 早期候选在替换配置文件时遇到共享冲突，测试也发现
 | AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。PR 008 需要经验证的 INF/CAT 包和微软签名，并在启用 Secure Boot 与 HVCI 的 Windows 上实测代表性驱动的加载与卸载。PR 050 需验证完整 Linux 交叉构建。 |
 | AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。PR 008 验证产品授权，PR 015 验证混合运行时隔离，PR 016 验证普通用户 GUI，PR 048 验证持续性能，PR 049 验证 Windows 10/11 客户端。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。 |
+| AS-004 | 已记录的约束 | 计划 007 的工作者池使用 Rust 标准库，因为尚未批准异步运行时包。更换运行时须单独决定依赖。[Core 运行时](../architecture/CORE-RUNTIME.md) |
 
 ## 错误与交接
 
@@ -84,4 +94,4 @@ Windows 早期候选在替换配置文件时遇到共享冲突，测试也发现
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-当前交接点为计划 006 的[候选 PR #7](https://github.com/zemeng5208/winstrata/pull/7)。合并后核对实际文件树和主分支检查，再开始计划 007。
+当前交接点为计划 007，分支 `cursor/core-runtime-007-1c62`，基线为合并提交 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。候选 PR 由所有者审核合并。在该合并及其必需检查核实之前，不要开始计划 008。本计划的 Windows 结果仍缺。下一步是所有者合并后的受控服务与驱动管理计划。
