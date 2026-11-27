@@ -36,4 +36,4 @@ The `winstrata-service` binary listens on the default endpoint, waits for one by
 
 ## Verification boundary
 
-Linux ran the manager and service tests. The first Windows workspace run executed the manager tests and the three Service Control Manager tests, including the missing-image start refusal and the restricted-token denial. Its service pipe tests failed because the instance did not exist until after `listen` returned. That listener now creates the instance first. No signed INF/CAT package was built or loaded. Collection remains PR 009 through PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).
+Linux ran the manager and service tests. Windows Server 2022, on the corrected head, passed the manager tests, the three Service Control Manager tests, the live pipe exchange, and the restricted-token denial for both SCM create access and the pipe. No signed INF/CAT package was built or loaded. Collection remains PR 009 through PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).
