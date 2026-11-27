@@ -112,11 +112,22 @@ fn storage_must_be_selected_before_plugins_open() {
 }
 
 fn process_collector_present() -> bool {
-    let name = if cfg!(windows) {
+    collector_present(if cfg!(windows) {
         "winstrata-strata-process.exe"
     } else {
         "winstrata-strata-process"
-    };
+    })
+}
+
+fn health_collector_present() -> bool {
+    collector_present(if cfg!(windows) {
+        "winstrata-strata-health.exe"
+    } else {
+        "winstrata-strata-health"
+    })
+}
+
+fn collector_present(name: &str) -> bool {
     runtime()
         .parent()
         .is_some_and(|dir| dir.join(name).is_file())
@@ -134,6 +145,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         .collect();
     assert_eq!(builtins.len(), 25);
     let seeded = process_collector_present();
+    let health_seeded = health_collector_present();
     let registry = builtins
         .iter()
         .find(|report| report.id == "strata.registry")
@@ -146,6 +158,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             true
         } else if report.id == "strata.process" && seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.health" && health_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else {
             report.phase == "implementation_absent"
         }
@@ -157,6 +171,12 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     if seeded {
         assert_eq!(
             host.uninstall("strata.process").unwrap_err().code(),
+            "builtin_retained"
+        );
+    }
+    if health_seeded {
+        assert_eq!(
+            host.uninstall("strata.health").unwrap_err().code(),
             "builtin_retained"
         );
     }

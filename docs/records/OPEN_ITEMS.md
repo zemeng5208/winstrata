@@ -50,6 +50,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
+| [OI-039](#oi-039) | Unimplemented | 022, 026, 030, 032, 042 |
+| [OI-040](#oi-040) | Known limitation | No roadmap row |
+| [OI-041](#oi-041) | Untested | 025 Windows job, then 049 for clients |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -850,3 +853,45 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the commit that contains the official GUI or official plugin presentation
 - Acceptance criteria: the scenario text
 - Close conditions: the register and the files match. Not closed by the empty table.
+
+<a id="oi-039"></a>
+
+## OI-039
+
+- Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-13
+- Source PR: plan 025, `plugins/strata-health`
+- Current state: unimplemented
+- Reason it is incomplete: plan 025 reads faults, queues, latency and loss from the bus and scheduler attached to the plugin host and from plugin availability. It does not read service or driver snapshots, hybrid capacity, drive health, or paint a GUI page.
+- Responsible PR: 022 for service and driver state, 026 for regulation, 030 and 032 for storage and drive health, and 042 for dashboard presentation. This plan does not edit `PLAN.md` and does not add those IDs to plan 025.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the later plan's own run, on the source that produces that reading
+- Acceptance criteria: that plan records the reading from its own source. E2E-08 and E2E-15 are not closed by plan 025.
+- Close conditions: those records exist, or the owner narrows PL-13. Not closed by the plan 025 queue report.
+
+<a id="oi-040"></a>
+
+## OI-040
+
+- Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and [REQ-05.02](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 025
+- Current state: known limitation
+- Reason it is incomplete: file and registry collectors keep the separate buses created by plan 009. StrataHealth reads only the bus and scheduler attached to `PluginHost`. Retargeting those collectors would change their delivery, so this plan does not do it.
+- Responsible PR: no roadmap row. The owner assigns a follow-up if one bus must cover collector queues. Plan 026 does not receive that work from this change.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: a host where file or registry collection and StrataHealth run together
+- Acceptance criteria: the health report includes that collector's queue and loss, or the owner records that those buses stay separate
+- Close conditions: that evidence is recorded. Not closed by the attached-bus test in plan 025.
+
+<a id="oi-041"></a>
+
+## OI-041
+
+- Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 025
+- Current state: untested
+- Reason it is incomplete: the authoring host is Linux x86_64. `live_faults_queues_latency_and_loss_match_the_runtime` was not executed on Windows here. The MSVC target is not installed on this host, so this record does not claim a Windows type-check either.
+- Responsible PR: the Windows workspace check on this plan 025 pull request. Windows 10 and Windows 11 clients remain [OI-001](#oi-001), responsible plan 049.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows Server 2022 job that runs `cargo test --locked --workspace` on this pull request's head
+- Acceptance criteria: that job passes the `winstrata-strata-health` tests, including the live fault, queue, latency and loss test
+- Close conditions: the job log for that head shows those tests passed. A Linux pass does not close it. A Server 2022 pass does not close OI-001.

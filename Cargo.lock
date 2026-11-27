@@ -185,6 +185,14 @@ name = "winstrata-shim"
 version = "0.1.0"
 
 [[package]]
+name = "winstrata-strata-health"
+version = "0.1.0"
+dependencies = [
+ "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-strata-process"
 version = "0.1.0"
 dependencies = [

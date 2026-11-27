@@ -17,6 +17,7 @@
 - [文件与注册表采集](architecture/FILE-REGISTRY.md)
 - [注册表插件](architecture/REGISTRY.md)
 - [进程、线程与模块来源](architecture/PROCESS.md)
+- [自身诊断](architecture/HEALTH.md)
 - [网络源、接口与归因](architecture/NETWORK-SOURCES.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [原生插件契约与生命周期](architecture/PLUGINS.md)

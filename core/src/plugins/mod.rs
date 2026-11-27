@@ -2,9 +2,11 @@
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
 //! `strata.process` 只在同目录存在采集程序时登记为已安装且默认禁用。
+//! `strata.health` 只在同目录存在诊断程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
+mod health;
 mod language;
 mod process;
 mod registry;
@@ -27,6 +29,7 @@ use winstrata_strata_registry::PLUGIN_ID;
 use crate::bus::{EventBus, Filter};
 use crate::files;
 use crate::platform::Anchor;
+use crate::schedule::SchedulerHandle;
 
 pub use language::LanguageRequirement;
 use language::{Toolchain, entry_name, language_runtime, shim_beside, supported_runtime};
@@ -336,6 +339,7 @@ pub struct PluginHost {
     entries: Vec<Installed>,
     live: HashMap<String, Live>,
     bus: Option<EventBus>,
+    scheduler: Option<SchedulerHandle>,
     starting: Vec<String>,
     languages: Option<Toolchain>,
     registry: Option<winstrata_strata_registry::Session>,
@@ -381,6 +385,7 @@ impl PluginHost {
             entries: Vec::new(),
             live: HashMap::new(),
             bus: None,
+            scheduler: None,
             starting: Vec::new(),
             languages: None,
             registry: None,
@@ -392,11 +397,17 @@ impl PluginHost {
         };
         host.read_entries()?;
         host.seed_process_collector()?;
+        host.seed_health_collector()?;
         Ok(host)
     }
 
     pub fn attach_bus(&mut self, bus: EventBus) {
         self.bus = Some(bus);
+    }
+
+    /// 只保存读取计数的句柄。丢弃句柄不会关闭调度器，也不改变任务队列。
+    pub fn attach_scheduler(&mut self, scheduler: SchedulerHandle) {
+        self.scheduler = Some(scheduler);
     }
 
     /// 绑定项目声明的解释器和 SDK。语言插件在绑定前不能安装。
@@ -808,7 +819,7 @@ impl PluginHost {
         let provider = self.resolve_provider(id, capability)?;
         let mut frame = PluginFrame::request("invoke");
         frame.capability = Some(capability.to_owned());
-        frame.payload = Some(payload.to_owned());
+        frame.payload = Some(self.invoke_payload(&provider, capability, payload)?);
         let reply = self.exchange(&provider, &frame)?;
         if reply.pid != Some(self.live.get(&provider).map(Live::pid).unwrap_or(0)) {
             return Err(PluginError::new(
@@ -1198,6 +1209,13 @@ impl PluginHost {
                     PluginError::new(
                         "runtime_missing",
                         "process collector is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == health::PLUGIN {
+                health::beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "health collector is not beside the plugin runtime",
                     )
                 })?
             } else {
@@ -1695,6 +1713,72 @@ impl PluginHost {
         self.save()?;
         self.audit(PROCESS_PLUGIN, "seed", "ok", "present")?;
         Ok(())
+    }
+
+    fn seed_health_collector(&mut self) -> Result<(), PluginError> {
+        if health::beside(&self.runtime).is_none() || self.entry(health::PLUGIN).is_ok() {
+            return Ok(());
+        }
+        let manifest = Manifest::from_json(health::MANIFEST).map_err(manifest_error)?;
+        if manifest.id.as_str() != health::PLUGIN || manifest.kind != PluginKind::Builtin {
+            return Err(PluginError::new(
+                "invalid_manifest",
+                "health collector manifest is not the official plugin",
+            ));
+        }
+        let files = vec![(
+            "manifest.json".to_owned(),
+            health::MANIFEST.as_bytes().to_vec(),
+        )];
+        self.write_tree("packages", health::PLUGIN, &files)?;
+        self.write_tree("recovery", health::PLUGIN, &files)?;
+        self.ensure_dir("state", health::PLUGIN)?;
+        self.entries.push(Installed {
+            id: health::PLUGIN.to_owned(),
+            name: manifest.name.as_str().to_owned(),
+            kind: PluginKind::Builtin,
+            version: manifest.plugin_version,
+            enabled: false,
+            pin: None,
+            grants: manifest.permissions.clone(),
+            pending: Vec::new(),
+            loaded: false,
+            availability: "ready".to_owned(),
+        });
+        self.save()?;
+        self.audit(health::PLUGIN, "seed", "ok", "present")?;
+        Ok(())
+    }
+
+    fn invoke_payload(
+        &self,
+        provider: &str,
+        capability: &str,
+        payload: &str,
+    ) -> Result<String, PluginError> {
+        if provider == health::PLUGIN && capability == "health.observe" {
+            let text = health::snapshot_text(
+                unix_ns(),
+                self.plugin_faults(),
+                self.bus.as_ref().map(EventBus::stats),
+                self.scheduler.as_ref().map(SchedulerHandle::stats),
+            );
+            if text.len() > 1024 || text.chars().any(char::is_control) {
+                return Err(PluginError::new(
+                    "invalid_record",
+                    "health snapshot does not fit a plugin frame",
+                ));
+            }
+            return Ok(text);
+        }
+        Ok(payload.to_owned())
+    }
+
+    fn plugin_faults(&self) -> u64 {
+        self.entries
+            .iter()
+            .filter(|entry| matches!(entry.availability.as_str(), "faulted" | "unavailable"))
+            .count() as u64
     }
 
     fn save(&self) -> Result<(), PluginError> {

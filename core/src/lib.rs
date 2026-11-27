@@ -55,7 +55,7 @@ pub use runtime::{
     Limits, MAX_ADMISSION_WAIT, MAX_QUEUE, MAX_SUBSCRIPTIONS, MAX_TASK_TIMEOUT, MAX_WORKERS,
     Runtime, RuntimeError,
 };
-pub use schedule::{Cancel, Scheduler, SchedulerStats, Task, TaskId};
+pub use schedule::{Cancel, Scheduler, SchedulerHandle, SchedulerStats, Task, TaskId};
 pub use storage::Settings;
 pub use vault::Protection;
 
