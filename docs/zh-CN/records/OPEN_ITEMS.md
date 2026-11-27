@@ -51,10 +51,13 @@
 | [OI-037](#oi-037) | 未实现 | 无路线图行 |
 | [OI-038](#oi-038) | 待决定 | 所有者 |
 | [OI-039](#oi-039) | 编写主机未测试 | 020 |
+| [OI-042](#oi-042) | 已在 Windows Server 2022 关闭 | 客户端仍是 [OI-001](#oi-001)，计划 049 |
 | [OI-043](#oi-043) | 未测试 | 022 |
 | [OI-044](#oi-044) | 未测试 | 027 |
 | [OI-045](#oi-045) | 已知限制 | 027 |
 | [OI-046](#oi-046) | 未测试 | 024，负载场景属于 048 |
+| [OI-047](#oi-047) | 未实现 | 022、026、030、032、042 |
+| [OI-048](#oi-048) | 已知限制 | 无路线图行 |
 | [OI-049](#oi-049) | `01f26d1` 上的 Server 2022 探测已记录；Windows 10/11 仍属于 [OI-001](#oi-001) | 023 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
@@ -864,7 +867,7 @@
 - 关联需求: [REQ-06.04](../roadmap/REQUIREMENTS.md)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - 来源 PR: 计划 022
 - 当前状态: 未测试
-- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。在头 `1987f4826f92aaf5794d4678d3d4b43872932a97` 上，Windows Server 2022 通过了受限令牌枚举。这关闭了 [ERR-020](modules/strata-services.md#err-020)。同一作业中 `missing_image_probe_records_creation_start_type_and_deletion` 失败：`WinStrata022Probe` 的 `service.start-type` 计数是 0。该缺陷是 [ERR-021](modules/strata-services.md#err-021)。`OpenServiceW` 拿到的服务名没有结尾 NUL，配置读取可能失败，两次采样的启动类型都停在 `Unknown`。那条断言没有执行到创建之后的启动失败和删除。下面的验收条件尚未满足。本项是 OI-043，因为计划 025 占用 OI-040、OI-041 和 OI-042。计划 020 的环境存储限制仍是 OI-039。
+- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。在头 `1987f4826f92aaf5794d4678d3d4b43872932a97` 上，Windows Server 2022 通过了受限令牌枚举。这关闭了 [ERR-020](modules/strata-services.md#err-020)。同一作业中 `missing_image_probe_records_creation_start_type_and_deletion` 失败：`WinStrata022Probe` 的 `service.start-type` 计数是 0。该缺陷是 [ERR-021](modules/strata-services.md#err-021)。`OpenServiceW` 拿到的服务名没有结尾 NUL，配置读取可能失败，两次采样的启动类型都停在 `Unknown`。那条断言没有执行到创建之后的启动失败和删除。下面的验收条件尚未满足。本项是 OI-043，因为编号时计划 025 占用 OI-040、OI-041 和 OI-042。那两项仍开放的缺口现在是 OI-047 和 OI-048。OI-042 仍只对 Server 2022 的健康作业关闭。计划 020 的环境存储限制仍是 OI-039。
 - 负责 PR: 022 负责把 Windows 工作区作业记入记录。E2E-03 和 E2E-14 保持开放。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows Server 2022 的服务控制管理器，运行计划 022 的插件测试
@@ -940,3 +943,45 @@
 - 验证环境: 包含官方 GUI 或官方插件界面的提交
 - 验收标准: 场景文本
 - 关闭条件: 登记与文件相符。空表不关闭它。
+
+<a id="oi-047"></a>
+
+## OI-047
+
+- 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md) 和 PL-13
+- 来源 PR: 计划 025，`plugins/strata-health`。这一行原来是 OI-040，随后是 OI-044。现在是 OI-047，因为 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 的头 `d90fb398e8d700e814e19f7737417f0336a988be` 使用 OI-044 和 OI-045，[PR #33](https://github.com/zemeng5208/winstrata/pull/33) 的头 `e4f2eb637f7d575167ee587629999d81fa6dd0eb` 使用 OI-046。main 占用 OI-043。
+- 当前状态: 未实现
+- 未完成原因: 计划 025 从插件宿主已附着的总线和调度器以及插件可用性读取故障、队列、延迟和丢失。它不读取服务或驱动快照、混合存储容量、磁盘健康，也不绘制界面页。
+- 负责 PR: 022 负责服务和驱动状态，026 负责调节，030 和 032 负责存储和磁盘健康，042 负责仪表盘呈现。本计划不修改 `PLAN.md`，也不把这些编号加进计划 025。
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: 后续计划自己的运行，使用产生该读数的来源
+- 验收标准: 该计划记录来自其自身来源的读数。E2E-08 和 E2E-15 不由计划 025 关闭。
+- 关闭条件: 这些记录存在，或所有者收窄 PL-13。计划 025 的队列报告不关闭它。
+
+<a id="oi-048"></a>
+
+## OI-048
+
+- 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md) 和 [REQ-05.02](../roadmap/REQUIREMENTS.md)
+- 来源 PR: 计划 025。这一行原来是 OI-041，随后是 OI-045。现在是 OI-048，因为 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 的头 `d90fb398e8d700e814e19f7737417f0336a988be` 使用 OI-044 和 OI-045。
+- 当前状态: 已知限制
+- 未完成原因: 文件和注册表采集器仍使用计划 009 创建的独立总线。StrataHealth 只读取附着在 `PluginHost` 上的总线和调度器。把那些采集器改到另一条总线会改变它们的投递，因此本计划不做。
+- 负责 PR: 无路线图行。若一条总线必须覆盖采集器队列，由所有者指定后续计划。本次变更不把这项工作交给计划 026。
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: 同时运行文件或注册表采集和 StrataHealth 的主机
+- 验收标准: 健康报告包含该采集器的队列和丢失，或所有者记录这些总线保持分开
+- 关闭条件: 该证据被记录。计划 025 的已附着总线测试不关闭它。
+
+<a id="oi-042"></a>
+
+## OI-042
+
+- 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md)
+- 来源 PR: 计划 025
+- 当前状态: 已关闭
+- 未完成原因: Windows Server 2022 已关闭。头 `4b152ccbaee5346a7f76f55b99ee1efa4c55d0c9` 的文件树是 `2fc04f89c529471eac56736c3f75c480393c68c6`。拉取请求作业检出合并提交 `cf6d7cee42c0f65f873e264713c8a4c137d4c26c`，父提交是 `ac37d400c338fe4364260db76a43eeea6226f792` 和该头，文件树相同。[Windows 工作区检查](https://github.com/zemeng5208/winstrata/actions/runs/46067012974/job/140734668243) 运行 `cargo test --locked --workspace`，通过了 `health_stays_absent_until_the_binary_is_beside_the_runtime`、`live_faults_queues_latency_and_loss_match_the_runtime` 和 3 个健康单元测试。Windows 10 和 Windows 11 客户端仍是 [OI-001](#oi-001)。
+- 负责 PR: 客户端运行属于计划 049。这次 Server 2022 结果不关闭 OI-001。
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: Windows Server 2022，作业 140734668243，`cargo test --locked --workspace`
+- 验收标准: 该作业通过 `winstrata-strata-health` 测试，包括实时故障、队列、延迟和丢失测试
+- 关闭条件: 该作业已满足。Linux 通过没有关闭它。这次 Server 2022 通过不关闭 OI-001。

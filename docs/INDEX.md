@@ -22,6 +22,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Services plugin](architecture/SERVICES.md)
 - [Startup plugin](architecture/STARTUP.md)
 - [Pulse counters](architecture/PULSE.md)
+- [Health diagnostics](architecture/HEALTH.md)
 - [Network sources, interfaces and attribution](architecture/NETWORK-SOURCES.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Native plugin contracts and lifecycle](architecture/PLUGINS.md)
