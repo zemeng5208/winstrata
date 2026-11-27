@@ -156,7 +156,10 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     assert_eq!(trace.availability, "ready");
     assert!(!trace.enabled);
     assert!(builtins.iter().all(|report| {
-        if report.id == "strata.registry" || report.id == "strata.env" || report.id == "strata.trace" {
+        if report.id == "strata.registry"
+            || report.id == "strata.env"
+            || report.id == "strata.trace"
+        {
             true
         } else if report.id == "strata.process" && seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
