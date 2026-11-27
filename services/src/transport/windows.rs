@@ -19,7 +19,8 @@ use windows_sys::Win32::Security::{
     TOKEN_USER, TokenElevation, TokenUser,
 };
 use windows_sys::Win32::Storage::FileSystem::{
-    CreateFileW, FILE_FLAG_OVERLAPPED, OPEN_EXISTING, PIPE_ACCESS_DUPLEX, ReadFile, WriteFile,
+    CreateFileW, FILE_FLAG_OVERLAPPED, OPEN_EXISTING, PIPE_ACCESS_DUPLEX, ReadFile,
+    SECURITY_IMPERSONATION, SECURITY_SQOS_PRESENT, WriteFile,
 };
 use windows_sys::Win32::System::IO::{CancelIoEx, GetOverlappedResult, OVERLAPPED};
 use windows_sys::Win32::System::Pipes::{
@@ -38,6 +39,8 @@ use crate::session::{self, Session};
 
 const GENERIC_READ_WRITE: u32 =
     windows_sys::Win32::Foundation::GENERIC_READ | windows_sys::Win32::Foundation::GENERIC_WRITE;
+const CLIENT_PIPE_FLAGS: u32 =
+    FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IMPERSONATION;
 
 pub(crate) struct Connection(OwnedHandle);
 
@@ -146,7 +149,7 @@ pub(super) fn connect(address: &str) -> io::Result<Connection> {
                 0,
                 null(),
                 OPEN_EXISTING,
-                FILE_FLAG_OVERLAPPED,
+                CLIENT_PIPE_FLAGS,
                 null_mut(),
             )
         };

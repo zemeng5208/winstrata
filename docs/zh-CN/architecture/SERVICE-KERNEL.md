@@ -18,7 +18,7 @@
 
 Linux 使用 Unix 域套接字。临时端点是权限 `0700` 的目录，其中套接字权限为 `0600`；关闭时删除该目录。默认端点在确认运行时目录为私有后使用 `$XDG_RUNTIME_DIR/winstrata/service.sock`。启动时会移除同名的旧套接字。关闭时不删除默认套接字，因此后启动的监听者不会被清掉。`SO_PEERCRED` 提供对端用户，其 uid 必须等于服务的有效 uid。凭据无法读取或 uid 不同时，连接被丢弃且 `faults` 增加。这些字节不会被解析，也不写审计记录。
 
-Windows 使用重叠 I/O 的命名管道。临时名为 `\\.\pipe\winstrata-<pid>-<n>`。默认名为 `\\.\pipe\WinStrata-<sid>`。DACL 为 `D:P(A;;GA;;;<sid>)`，管道设置 `PIPE_REJECT_REMOTE_CLIENTS` 且只允许一个实例。连接到达后，服务先模拟客户端，读取线程令牌 SID，并在调用驱动管理器之前恢复原令牌。不满足 DACL 的令牌在 `CreateFile` 处被拒绝。服务看不到这次调用，因此不审计它。管道 ACL 测试和服务控制管理器测试只在 Windows 上编译。
+Windows 使用重叠 I/O 的命名管道。临时名为 `\\.\pipe\winstrata-<pid>-<n>`。默认名为 `\\.\pipe\WinStrata-<sid>`。DACL 为 `D:P(A;;GA;;;<sid>)`，管道设置 `PIPE_REJECT_REMOTE_CLIENTS` 且只允许一个实例。客户端以 `SECURITY_IMPERSONATION` 打开管道，因此服务可以模拟它。连接到达后，服务先模拟客户端，读取线程令牌 SID，并在调用驱动管理器之前恢复原令牌。无法模拟的连接会被直接关闭，不返回应答。不满足 DACL 的令牌在 `CreateFile` 处被拒绝。服务看不到这次调用，因此不审计它。管道 ACL 测试和服务控制管理器测试只在 Windows 上编译。
 
 请求使用协议版本 1。未知字段、重复键、不属于 `strata-fs`、`strata-reg`、`strata-proc`、`strata-net` 的驱动，以及出现在错误操作上的驱动字段，返回 `invalid_record`。JSON 无法解析时返回 `invalid_json`。其他主版本返回 `unsupported_version`。声称的用户必须等于对端，且对端必须等于服务所有者，否则代码为 `identity_mismatch`。
 
