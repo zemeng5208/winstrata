@@ -53,8 +53,8 @@
 | [OI-039](#oi-039) | 编写主机未测试 | 020 |
 | [OI-042](#oi-042) | 已在 Windows Server 2022 关闭 | 客户端仍是 [OI-001](#oi-001)，计划 049 |
 | [OI-043](#oi-043) | 未测试 | 022 |
-| [OI-044](#oi-044) | 未实现 | 022、026、030、032、042 |
-| [OI-045](#oi-045) | 已知限制 | 无路线图行 |
+| [OI-047](#oi-047) | 未实现 | 022、026、030、032、042 |
+| [OI-048](#oi-048) | 已知限制 | 无路线图行 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -835,7 +835,7 @@
 - 关联需求: [REQ-06.04](../roadmap/REQUIREMENTS.md)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - 来源 PR: 计划 022
 - 当前状态: 未测试
-- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。在头 `1987f4826f92aaf5794d4678d3d4b43872932a97` 上，Windows Server 2022 通过了受限令牌枚举。这关闭了 [ERR-020](modules/strata-services.md#err-020)。同一作业中 `missing_image_probe_records_creation_start_type_and_deletion` 失败：`WinStrata022Probe` 的 `service.start-type` 计数是 0。该缺陷是 [ERR-021](modules/strata-services.md#err-021)。`OpenServiceW` 拿到的服务名没有结尾 NUL，配置读取可能失败，两次采样的启动类型都停在 `Unknown`。那条断言没有执行到创建之后的启动失败和删除。下面的验收条件尚未满足。本项是 OI-043，因为编号时计划 025 占用 OI-040、OI-041 和 OI-042。那两项仍开放的缺口现在是 OI-044 和 OI-045。OI-042 仍只对 Server 2022 的健康作业关闭。计划 020 的环境存储限制仍是 OI-039。
+- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。在头 `1987f4826f92aaf5794d4678d3d4b43872932a97` 上，Windows Server 2022 通过了受限令牌枚举。这关闭了 [ERR-020](modules/strata-services.md#err-020)。同一作业中 `missing_image_probe_records_creation_start_type_and_deletion` 失败：`WinStrata022Probe` 的 `service.start-type` 计数是 0。该缺陷是 [ERR-021](modules/strata-services.md#err-021)。`OpenServiceW` 拿到的服务名没有结尾 NUL，配置读取可能失败，两次采样的启动类型都停在 `Unknown`。那条断言没有执行到创建之后的启动失败和删除。下面的验收条件尚未满足。本项是 OI-043，因为编号时计划 025 占用 OI-040、OI-041 和 OI-042。那两项仍开放的缺口现在是 OI-047 和 OI-048。OI-042 仍只对 Server 2022 的健康作业关闭。计划 020 的环境存储限制仍是 OI-039。
 - 负责 PR: 022 负责把 Windows 工作区作业记入记录。E2E-03 和 E2E-14 保持开放。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows Server 2022 的服务控制管理器，运行计划 022 的插件测试
@@ -884,12 +884,12 @@
 - 验收标准: 场景文本
 - 关闭条件: 登记与文件相符。空表不关闭它。
 
-<a id="oi-044"></a>
+<a id="oi-047"></a>
 
-## OI-044
+## OI-047
 
 - 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md) 和 PL-13
-- 来源 PR: 计划 025，`plugins/strata-health`。这一行原来是 OI-040。它被改号，因为未合并的 [PR #33](https://github.com/zemeng5208/winstrata/pull/33) 和 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 已经使用 OI-040，而 main 上的计划 022 占用 OI-043。
+- 来源 PR: 计划 025，`plugins/strata-health`。这一行原来是 OI-040，随后是 OI-044。现在是 OI-047，因为 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 的头 `d90fb398e8d700e814e19f7737417f0336a988be` 使用 OI-044 和 OI-045，[PR #33](https://github.com/zemeng5208/winstrata/pull/33) 的头 `e4f2eb637f7d575167ee587629999d81fa6dd0eb` 使用 OI-046。main 占用 OI-043。
 - 当前状态: 未实现
 - 未完成原因: 计划 025 从插件宿主已附着的总线和调度器以及插件可用性读取故障、队列、延迟和丢失。它不读取服务或驱动快照、混合存储容量、磁盘健康，也不绘制界面页。
 - 负责 PR: 022 负责服务和驱动状态，026 负责调节，030 和 032 负责存储和磁盘健康，042 负责仪表盘呈现。本计划不修改 `PLAN.md`，也不把这些编号加进计划 025。
@@ -898,12 +898,12 @@
 - 验收标准: 该计划记录来自其自身来源的读数。E2E-08 和 E2E-15 不由计划 025 关闭。
 - 关闭条件: 这些记录存在，或所有者收窄 PL-13。计划 025 的队列报告不关闭它。
 
-<a id="oi-045"></a>
+<a id="oi-048"></a>
 
-## OI-045
+## OI-048
 
 - 关联需求: [REQ-08.02](../roadmap/REQUIREMENTS.md) 和 [REQ-05.02](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 025。这一行原来是 OI-041。它被改号，因为未合并的 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 已经使用 OI-041。
+- 来源 PR: 计划 025。这一行原来是 OI-041，随后是 OI-045。现在是 OI-048，因为 [PR #34](https://github.com/zemeng5208/winstrata/pull/34) 的头 `d90fb398e8d700e814e19f7737417f0336a988be` 使用 OI-044 和 OI-045。
 - 当前状态: 已知限制
 - 未完成原因: 文件和注册表采集器仍使用计划 009 创建的独立总线。StrataHealth 只读取附着在 `PluginHost` 上的总线和调度器。把那些采集器改到另一条总线会改变它们的投递，因此本计划不做。
 - 负责 PR: 无路线图行。若一条总线必须覆盖采集器队列，由所有者指定后续计划。本次变更不把这项工作交给计划 026。

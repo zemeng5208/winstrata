@@ -53,8 +53,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
 | [OI-042](#oi-042) | Closed on Windows Server 2022 | Clients remain [OI-001](#oi-001), plan 049 |
 | [OI-043](#oi-043) | Untested | 022 |
-| [OI-044](#oi-044) | Unimplemented | 022, 026, 030, 032, 042 |
-| [OI-045](#oi-045) | Known limitation | No roadmap row |
+| [OI-047](#oi-047) | Unimplemented | 022, 026, 030, 032, 042 |
+| [OI-048](#oi-048) | Known limitation | No roadmap row |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -835,7 +835,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - Source PR: plan 022
 - Current state: untested
-- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. On head `1987f4826f92aaf5794d4678d3d4b43872932a97`, Windows Server 2022 passed the restricted-token enumeration. That closed [ERR-020](modules/strata-services.md#err-020). The same job failed `missing_image_probe_records_creation_start_type_and_deletion`: `service.start-type` for `WinStrata022Probe` was 0. That defect is [ERR-021](modules/strata-services.md#err-021). `OpenServiceW` received a service name without a terminating NUL, so the config read could fail and both samples stayed `Unknown`. Creation's later failed start and deletion were not reached. The acceptance below is not met. This item is OI-043 because plan 025 held OI-040, OI-041, and OI-042 when this row was numbered. Those open gaps are now OI-044 and OI-045. OI-042 stays closed for the Server 2022 health job. Plan 020's environment-store limit remains OI-039.
+- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. On head `1987f4826f92aaf5794d4678d3d4b43872932a97`, Windows Server 2022 passed the restricted-token enumeration. That closed [ERR-020](modules/strata-services.md#err-020). The same job failed `missing_image_probe_records_creation_start_type_and_deletion`: `service.start-type` for `WinStrata022Probe` was 0. That defect is [ERR-021](modules/strata-services.md#err-021). `OpenServiceW` received a service name without a terminating NUL, so the config read could fail and both samples stayed `Unknown`. Creation's later failed start and deletion were not reached. The acceptance below is not met. This item is OI-043 because plan 025 held OI-040, OI-041, and OI-042 when this row was numbered. Those open gaps are now OI-047 and OI-048. OI-042 stays closed for the Server 2022 health job. Plan 020's environment-store limit remains OI-039.
 - Responsible PR: 022 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows Server 2022 Service Control Manager running the plan 022 plugin tests
@@ -884,12 +884,12 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: the scenario text
 - Close conditions: the register and the files match. Not closed by the empty table.
 
-<a id="oi-044"></a>
+<a id="oi-047"></a>
 
-## OI-044
+## OI-047
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-13
-- Source PR: plan 025, `plugins/strata-health`. This row was OI-040. It moved because open [PR #33](https://github.com/zemeng5208/winstrata/pull/33) and open [PR #34](https://github.com/zemeng5208/winstrata/pull/34) already use OI-040, and plan 022 on main holds OI-043.
+- Source PR: plan 025, `plugins/strata-health`. This row was OI-040, then OI-044. It is OI-047 because [PR #34](https://github.com/zemeng5208/winstrata/pull/34) head `d90fb398e8d700e814e19f7737417f0336a988be` uses OI-044 and OI-045, and [PR #33](https://github.com/zemeng5208/winstrata/pull/33) head `e4f2eb637f7d575167ee587629999d81fa6dd0eb` uses OI-046. Main holds OI-043.
 - Current state: unimplemented
 - Reason it is incomplete: plan 025 reads faults, queues, latency and loss from the bus and scheduler attached to the plugin host and from plugin availability. It does not read service or driver snapshots, hybrid capacity, drive health, or paint a GUI page.
 - Responsible PR: 022 for service and driver state, 026 for regulation, 030 and 032 for storage and drive health, and 042 for dashboard presentation. This plan does not edit `PLAN.md` and does not add those IDs to plan 025.
@@ -898,12 +898,12 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: that plan records the reading from its own source. E2E-08 and E2E-15 are not closed by plan 025.
 - Close conditions: those records exist, or the owner narrows PL-13. Not closed by the plan 025 queue report.
 
-<a id="oi-045"></a>
+<a id="oi-048"></a>
 
-## OI-045
+## OI-048
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and [REQ-05.02](../roadmap/REQUIREMENTS.md)
-- Source PR: plan 025. This row was OI-041. It moved because open [PR #34](https://github.com/zemeng5208/winstrata/pull/34) already uses OI-041.
+- Source PR: plan 025. This row was OI-041, then OI-045. It is OI-048 because [PR #34](https://github.com/zemeng5208/winstrata/pull/34) head `d90fb398e8d700e814e19f7737417f0336a988be` uses OI-044 and OI-045.
 - Current state: known limitation
 - Reason it is incomplete: file and registry collectors keep the separate buses created by plan 009. StrataHealth reads only the bus and scheduler attached to `PluginHost`. Retargeting those collectors would change their delivery, so this plan does not do it.
 - Responsible PR: no roadmap row. The owner assigns a follow-up if one bus must cover collector queues. Plan 026 does not receive that work from this change.
