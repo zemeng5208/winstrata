@@ -39,7 +39,7 @@ Independently build, version, manage, load on demand, and unload drivers. Candid
 - Share object IDs, references, and events through declared capabilities and versioned services. Validate required and optional dependencies, cycles, disablement, degradation, recovery, and independent updates. Access other modules through contracts.
 - Core indexes global search, related queries, and objects. Plugins provide business views. Trace source records, computations, confidence and coverage.
 
-See the [v1 protocol](PROTOCOLS.md) for event keys, object references, gap markers, diagnostics and compatibility rules.
+See the [v1 protocol](PROTOCOLS.md) for event keys, object references, gap markers, diagnostics and compatibility rules. Bounded scheduling, the event bus and the minimum queue protection are the [Core runtime](CORE-RUNTIME.md).
 
 ### Build constraints
 

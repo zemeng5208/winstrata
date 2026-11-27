@@ -1,6 +1,9 @@
+mod bus;
 mod files;
 mod migration;
 mod platform;
+mod runtime;
+mod schedule;
 mod storage;
 
 use platform::Anchor;
@@ -13,6 +16,12 @@ use storage::{
     validate_path,
 };
 
+pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
+pub use runtime::{
+    Limits, MAX_ADMISSION_WAIT, MAX_QUEUE, MAX_SUBSCRIPTIONS, MAX_TASK_TIMEOUT, MAX_WORKERS,
+    Runtime, RuntimeError,
+};
+pub use schedule::{Cancel, Scheduler, SchedulerStats, Task, TaskId};
 pub use storage::Settings;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -342,7 +351,10 @@ impl Core {
 }
 
 #[cfg(test)]
-mod tests;
+mod recovery_tests;
 
 #[cfg(test)]
-mod recovery_tests;
+mod runtime_tests;
+
+#[cfg(test)]
+mod tests;
