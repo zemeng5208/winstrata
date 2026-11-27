@@ -165,3 +165,21 @@ fn public_open_uses_the_child_process_xdg_state_directory() {
             .is_file()
     );
 }
+
+#[cfg(windows)]
+#[test]
+fn case_variant_paths_reselect_the_same_workspace_and_cannot_create_nested_replacements() {
+    let fixture = Fixture::new();
+    let locator = fixture.0.join("locator");
+    let root = fixture.0.join("MixedCase");
+    let alias = fixture.0.join("mixedcase");
+    let mut core = Core::open_at(&locator, Some(&root)).unwrap();
+    core.select_directory(&alias).unwrap();
+    assert_eq!(core.storage_state(), &StorageState::Ready);
+    let config = root.join(core.current_user()).join("core.json");
+    fs::write(config, b"{}").unwrap();
+    assert!(core.settings().is_err());
+    let nested = alias.join("new");
+    assert!(core.select_empty_directory(&nested).is_err());
+    assert!(!nested.exists());
+}

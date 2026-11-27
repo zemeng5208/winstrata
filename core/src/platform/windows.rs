@@ -16,7 +16,7 @@ use windows_sys::Wdk::Storage::FileSystem::{
 };
 use windows_sys::Win32::Foundation::{
     GENERIC_READ, GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE, OBJ_CASE_INSENSITIVE,
-    RtlNtStatusToDosError, UNICODE_STRING,
+    OBJ_DONT_REPARSE, RtlNtStatusToDosError, UNICODE_STRING,
 };
 use windows_sys::Win32::Storage::FileSystem::{
     CREATE_NEW, CreateFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_NORMAL,
@@ -175,6 +175,8 @@ struct Pin {
 #[derive(Clone, Debug)]
 pub(crate) struct Anchor {
     pin: Arc<Pin>,
+    _leaf_guard: Option<Arc<OwnedHandle>>,
+    ntfs: bool,
     path: PathBuf,
 }
 
@@ -201,6 +203,22 @@ fn handle_key(handle: HANDLE) -> io::Result<(u64, u128)> {
     ))
 }
 
+// NTFS 只允许在空目录上建立重解析点。后代持有直接子项的防删除句柄后，祖先无法变空，
+// 只需保留共享写句柄。非私有目录作为叶节点时仍保留严格句柄，供检查和下一次相对打开。
+fn select_pins(
+    first: OwnedHandle,
+    relaxed: Option<OwnedHandle>,
+    private: bool,
+) -> io::Result<(OwnedHandle, Option<Arc<OwnedHandle>>)> {
+    let Some(relaxed) = relaxed else {
+        return Ok((first, None));
+    };
+    if handle_key(first.as_raw_handle())? != handle_key(relaxed.as_raw_handle())? {
+        return Err(io::Error::other("directory identity changed"));
+    }
+    Ok((relaxed, (!private).then(|| Arc::new(first))))
+}
+
 fn verify_directory(handle: HANDLE) -> io::Result<()> {
     let mut attrs = FILE_ATTRIBUTE_TAG_INFO::default();
     unsafe {
@@ -222,8 +240,9 @@ fn verify_directory(handle: HANDLE) -> io::Result<()> {
     Ok(())
 }
 
-fn volume_root(handle: HANDLE) -> io::Result<PathBuf> {
+fn volume_root(handle: HANDLE) -> io::Result<(PathBuf, bool)> {
     let mut flags = 0;
+    let mut filesystem = [0u16; 32];
     unsafe {
         check(GetVolumeInformationByHandleW(
             handle,
@@ -232,8 +251,8 @@ fn volume_root(handle: HANDLE) -> io::Result<PathBuf> {
             null_mut(),
             null_mut(),
             &mut flags,
-            null_mut(),
-            0,
+            filesystem.as_mut_ptr(),
+            filesystem.len() as u32,
         ))?;
     }
     if flags & FILE_PERSISTENT_ACLS == 0 {
@@ -265,7 +284,12 @@ fn volume_root(handle: HANDLE) -> io::Result<PathBuf> {
     {
         return Err(invalid_path());
     }
-    Ok(PathBuf::from(text))
+    let len = filesystem
+        .iter()
+        .position(|&c| c == 0)
+        .unwrap_or(filesystem.len());
+    let ntfs = String::from_utf16_lossy(&filesystem[..len]).eq_ignore_ascii_case("NTFS");
+    Ok((PathBuf::from(text), ntfs))
 }
 
 impl Anchor {
@@ -280,29 +304,37 @@ impl Anchor {
             return Err(invalid_path());
         }
         let root = [units[0], 58, 92, 0];
-        // 每级持有不共享写入或删除的目录句柄。文件从已验证的私有叶目录下打开。
-        let raw = unsafe {
-            CreateFileW(
-                root.as_ptr(),
-                OPEN_RIGHTS,
-                FILE_SHARE_READ,
-                null(),
-                OPEN_EXISTING,
-                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-                null_mut(),
-            )
+        let open = |share| -> io::Result<OwnedHandle> {
+            let raw = unsafe {
+                CreateFileW(
+                    root.as_ptr(),
+                    OPEN_RIGHTS,
+                    share,
+                    null(),
+                    OPEN_EXISTING,
+                    FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                    null_mut(),
+                )
+            };
+            if raw == INVALID_HANDLE_VALUE {
+                return Err(io::Error::last_os_error());
+            }
+            Ok(unsafe { OwnedHandle::from_raw_handle(raw) })
         };
-        if raw == INVALID_HANDLE_VALUE {
-            return Err(io::Error::last_os_error());
-        }
-        let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
-        verify_directory(raw)?;
-        let path = volume_root(raw)?;
+        let first = open(FILE_SHARE_READ)?;
+        verify_directory(first.as_raw_handle())?;
+        let (path, ntfs) = volume_root(first.as_raw_handle())?;
+        let relaxed = ntfs
+            .then(|| open(FILE_SHARE_READ | FILE_SHARE_WRITE))
+            .transpose()?;
+        let (handle, guard) = select_pins(first, relaxed, false)?;
         let mut anchor = Self {
             pin: Arc::new(Pin {
                 handle,
                 _parent: None,
             }),
+            _leaf_guard: guard,
+            ntfs,
             path,
         };
         let tail = &units[3..];
@@ -333,7 +365,7 @@ impl Anchor {
             Length: size_of::<OBJECT_ATTRIBUTES>() as u32,
             RootDirectory: self.pin.handle.as_raw_handle(),
             ObjectName: &component,
-            Attributes: OBJ_CASE_INSENSITIVE,
+            Attributes: OBJ_CASE_INSENSITIVE | OBJ_DONT_REPARSE,
             SecurityDescriptor: access.as_ref().map_or(null(), |sd| sd.descriptor().cast()),
             SecurityQualityOfService: null(),
         };
@@ -371,22 +403,21 @@ impl Anchor {
             FILE_SHARE_READ,
         )?;
         verify_directory(first.as_raw_handle())?;
-        let handle = if let Some(access) = access {
+        if let Some(access) = access {
             access.verify(first.as_raw_handle())?;
-            // 保留首次严格句柄直至相对打开且比较文件标识。私有目录允许所有者写入子项，仍禁止共享删除。
-            let pinned = open(FILE_OPEN, FILE_SHARE_READ | FILE_SHARE_WRITE)?;
-            if handle_key(pinned.as_raw_handle())? != handle_key(first.as_raw_handle())? {
-                return Err(io::Error::other("private directory identity changed"));
-            }
-            pinned
-        } else {
-            first
-        };
+        }
+        let relaxed = (private || self.ntfs)
+            .then(|| open(FILE_OPEN, FILE_SHARE_READ | FILE_SHARE_WRITE))
+            .transpose()?;
+        let (handle, guard) = select_pins(first, relaxed, private)?;
+        verify_directory(self.pin.handle.as_raw_handle())?;
         Ok(Self {
             pin: Arc::new(Pin {
                 handle,
                 _parent: Some(Arc::clone(&self.pin)),
             }),
+            _leaf_guard: guard,
+            ntfs: self.ntfs,
             path: self.path.join(name),
         })
     }

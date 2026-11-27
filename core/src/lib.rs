@@ -235,10 +235,27 @@ impl Core {
         Ok(())
     }
 
+    fn is_selected_directory(&self, root: &Path) -> io::Result<bool> {
+        let Some(selected) = self.selected_root() else {
+            return Ok(false);
+        };
+        if selected == root {
+            return Ok(true);
+        }
+        // 盘符别名与大小写不同也可能指向当前目录；以实际目录身份判定是否为重选。
+        match (
+            data_dir(selected, &self.user, false),
+            data_dir(root, &self.user, false),
+        ) {
+            (Ok(current), Ok(candidate)) => current.same_directory(&candidate),
+            _ => Ok(false),
+        }
+    }
+
     pub fn select_directory(&mut self, root: &Path) -> io::Result<()> {
         self.refresh_location()?;
         let target_path = self.check_destination(root)?;
-        if self.selected_root() == Some(root) {
+        if self.is_selected_directory(root)? {
             let result = self.bind().and_then(|(dir, _)| {
                 capacity(&dir, 1)?;
                 files::probe(&dir)

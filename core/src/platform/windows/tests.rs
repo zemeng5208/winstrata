@@ -70,6 +70,21 @@ fn private_leaf_pins_ancestors_and_owns_new_files() {
 }
 
 #[test]
+fn pinned_private_directory_leaves_sibling_names_writable_on_ntfs() {
+    let fixture = Fixture::new();
+    fs::create_dir(fixture.0.join("sibling")).unwrap();
+    let leaf = Anchor::open(&fixture.0)
+        .unwrap()
+        .child("private".as_ref(), true, true)
+        .unwrap();
+    if leaf.ntfs {
+        fs::rename(fixture.0.join("sibling"), fixture.0.join("renamed")).unwrap();
+        assert!(fixture.0.join("renamed").is_dir());
+    }
+    assert!(fs::rename(leaf.io_path(), fixture.0.join("moved-private")).is_err());
+}
+
+#[test]
 fn existing_broad_acl_and_junction_are_rejected_without_modification() {
     let fixture = Fixture::new();
     fs::create_dir(fixture.0.join("ordinary")).unwrap();
