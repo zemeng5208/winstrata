@@ -1,6 +1,7 @@
 mod bus;
 mod file_registry;
 mod files;
+mod hybrid;
 mod migration;
 mod network;
 mod platform;
@@ -22,6 +23,11 @@ use storage::{
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
 pub use file_registry::{
     Channel, ChannelView, CollectError, FILE_PROVIDER, FileRegistry, REGISTRY_PROVIDER,
+};
+pub use hybrid::{
+    Batch, CapacityReport, CaptureWrite, Confidence, DataClass, Hybrid, ObjectRecord, Point,
+    RecordRef, Recovery, Relation, RiskTag as HybridRiskTag, Snapshot, SnapshotEntry,
+    StoredCapture,
 };
 pub use network::{
     DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
@@ -342,6 +348,36 @@ impl Core {
             }
         };
         self.publish(root, &target, &config)
+    }
+
+    // 在当前用户目录打开混合存储。卷错误会暂停会话；记录内容错误不会。
+    pub fn open_hybrid(&mut self) -> io::Result<Hybrid> {
+        let (dir, _) = self.active(1)?;
+        match Hybrid::open(&dir) {
+            Ok(store) => Ok(store),
+            Err(error) => {
+                if hybrid::suspends(&error) {
+                    self.suspend(&error);
+                }
+                Err(error)
+            }
+        }
+    }
+
+    // 把一批混合记录写入已打开的存储。卷错误会暂停会话并停止实时模式。
+    pub fn commit_hybrid(&mut self, store: &mut Hybrid, batch: Batch) -> io::Result<u64> {
+        if let StorageState::NeedsDirectory { kind, detail } = &self.state {
+            return Err(io::Error::new(*kind, detail.clone()));
+        }
+        match store.commit(batch) {
+            Ok(commit) => Ok(commit),
+            Err(error) => {
+                if hybrid::suspends(&error) {
+                    self.suspend(&error);
+                }
+                Err(error)
+            }
+        }
     }
 
     // 用户明确选择新的空工作区，原卷离线时仍能开始工作；此操作不代表已迁移历史。

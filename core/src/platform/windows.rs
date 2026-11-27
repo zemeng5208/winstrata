@@ -205,6 +205,22 @@ fn handle_key(handle: HANDLE) -> io::Result<(u64, u128)> {
     ))
 }
 
+pub(super) fn retry_unknown_revision<T>(mut op: impl FnMut() -> io::Result<T>) -> io::Result<T> {
+    let mut attempt = 0;
+    loop {
+        match op() {
+            Ok(value) => return Ok(value),
+            // 1305 是安全描述符修订暂时读不出来。1336 是同一读取里 ACL 结构暂时无效。
+            // 两者都发生在所有者和 ACE 比较之前。比较失败仍返回拒绝访问，不重试，也不放宽。
+            Err(error) if matches!(error.raw_os_error(), Some(1305 | 1336)) && attempt < 3 => {
+                std::thread::sleep(std::time::Duration::from_millis(1 << attempt));
+                attempt += 1;
+            }
+            Err(error) => return Err(error),
+        }
+    }
+}
+
 // NTFS 只允许在空目录上建立重解析点。后代持有直接子项的防删除句柄后，祖先无法变空，
 // 只需保留共享写句柄。非私有目录作为叶节点时仍保留严格句柄，供检查和下一次相对打开。
 fn select_pins(
@@ -354,6 +370,10 @@ impl Anchor {
     }
 
     pub(crate) fn child(&self, name: &OsStr, create: bool, private: bool) -> io::Result<Self> {
+        retry_unknown_revision(|| self.open_child(name, create, private))
+    }
+
+    fn open_child(&self, name: &OsStr, create: bool, private: bool) -> io::Result<Self> {
         let mut units: Vec<_> = name.encode_wide().collect();
         valid_name(&units)?;
         let length = (units.len() * 2) as u16;

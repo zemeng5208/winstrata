@@ -197,6 +197,10 @@ fn sddl_text(descriptor: *mut c_void) -> io::Result<String> {
 
 impl User {
     fn verify(&self, handle: HANDLE, directory: bool) -> io::Result<()> {
+        super::retry_unknown_revision(|| self.verify_once(handle, directory))
+    }
+
+    fn verify_once(&self, handle: HANDLE, directory: bool) -> io::Result<()> {
         let mut owner = null_mut();
         let mut acl = null_mut();
         let mut descriptor = null_mut();

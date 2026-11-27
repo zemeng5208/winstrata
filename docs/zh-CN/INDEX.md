@@ -11,7 +11,7 @@
 - [Windows x64 交叉构建探针](architecture/WINDOWS_CROSS_BUILD.md)
 - [平台可行性验证](architecture/PLATFORM_FEASIBILITY.md)
 - [事件、对象、错误与版本契约](architecture/PROTOCOLS.md)
-- [Core 当前用户配置与存储](architecture/CORE-STORAGE.md)
+- [Core 当前用户配置与混合存储](architecture/CORE-STORAGE.md)
 - [Core 调度与事件总线](architecture/CORE-RUNTIME.md)
 - [受控服务、受控 IPC 与驱动管理](architecture/SERVICE-KERNEL.md)
 - [文件与注册表采集](architecture/FILE-REGISTRY.md)

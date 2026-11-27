@@ -1,6 +1,6 @@
-# Core 的用户配置与存储
+# Core 的用户配置与混合存储
 
-[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006)
+[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006) · [计划 012](../roadmap/PLAN.md#pr-012)
 
 PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存储。调用方使用实际运行进程的操作系统账号身份。Windows 从进程令牌读取用户 SID，Linux 使用有效 UID。
 
@@ -19,6 +19,22 @@ PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存�
 
 设置和定位文件的 JSON 上限为 64 KiB。未知版本、损坏内容以及已有的宽泛权限会导致操作失败，已有文件可供恢复。选择空监视范围会停止实时状态。此次迁移验证普通文件的内容、目录结构及用户隔离，遇到 NTFS 命名数据流会停止。Windows 文件系统实测覆盖 NTFS；ReFS 尚未实测。空间检查比较当前账户可用字节数与本次写入的需求，实际写入错误也会暂停持久化。
 
+## 混合记录
+
+计划 012 在已经选定的用户目录中保存五类记录和一份索引。`Core::open_hybrid` 打开 `<用户目录>/data/{databases,events,metrics,captures,snapshots,indexes}`。`core.json` 仍与 `data` 同级。调用方用 `Batch` 组装一次变更，再调用 `Core::commit_hybrid`。总线不订阅存储，也不写磁盘；需要保留的事件由调用方放入批次。
+
+每类载荷只写入对应目录的分段 `s{编号}.wsg`。`indexes/journal.wsj` 记录提交序号、分段水位，以及每条记录的位置和 CRC，不复制载荷。默认分段为 1 MiB，允许 256 字节到 16 MiB。单条记录可以独占一个超过该上限的分段。单条载荷上限为 1 MiB，单次提交编码上限为 8 MiB，对象正文上限为 256 KiB。打开时根据日志重建内存索引。不完整的日志尾部会被截断。CRC 完整但载荷校验或结构失败的提交，连同它之后的提交一起回退。查询会重新读取字节，并拒绝损坏的内容。同一次进程中的写入失败会删除新建分段，并把已有分段恢复到写入前的长度。
+
+- 结构化目录保存对象和关系。正文相同的对象不会再次追加，相同关系也不会增加提交。
+- 事件保存协议 JSON。同一来源的重复序号会在写入前被拒绝。
+- 时序使用时间戳的二阶差分和数值差分，并用 zigzag 变长整数编码。
+- 抓包写入小端 PCAPNG。节头块魔数为 `0x0A0D0D0A`，接口块使用纳秒时间分辨率，增强包块的注释保存风险标签。没有标签的包在任何写入之前被拒绝。时间戳必须大于或等于 0。链路类型变化时更换分段。
+- 快照只保存路径和状态标识，不保存文件内容，也不根据这些路径写文件系统。完整快照没有基线，增量快照指向基线。`materialize_snapshot` 沿这条链合并路径。空路径、`..`、NUL、超过 4096 字节的路径、重复路径和超过 8192 项都会被拒绝。
+
+`set_retention` 按 `DataClass` 保存天数。`None` 表示继续永久保留，`Some(0)` 会被拒绝。这个调用不删除数据。清理和配额执行属于计划 030。`capacity` 分别统计六个目录里普通文件的字节，抓包单独计数。`reserve` 使用既有的 `storage::capacity`。用 `u64::MAX` 调用会返回空间不足，测试没有为此写满物理磁盘。卷错误会暂停 Core 会话并停止实时模式。`InvalidInput` 和 `InvalidData` 不暂停会话。
+
+计划 006 的迁移会复制用户目录中的普通私有文件。混合存储文件在权限为 `0600` 且没有额外硬链接时，会随该用户目录一起迁移。
+
 ## 验证范围
 
-在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。Windows 10/11 客户端验收、数据库及事件格式迁移、加密备份与恢复以及端到端监视由后续计划覆盖。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。
+在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。计划 012 在 Linux 上额外覆盖上一节的写入、查询、分段、索引、容量和损坏回退；本机 Windows 测试、Windows 10/11 客户端、ReFS、加密备份与恢复以及端到端监视仍未完成。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。

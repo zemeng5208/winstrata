@@ -11,7 +11,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Windows x64 cross-build probe](architecture/WINDOWS_CROSS_BUILD.md)
 - [Platform feasibility](architecture/PLATFORM_FEASIBILITY.md)
 - [Event, object, error and version contracts](architecture/PROTOCOLS.md)
-- [Current-user Core configuration and storage](architecture/CORE-STORAGE.md)
+- [Current-user Core configuration and hybrid storage](architecture/CORE-STORAGE.md)
 - [Core scheduling and event bus](architecture/CORE-RUNTIME.md)
 - [Privileged service, controlled IPC and driver management](architecture/SERVICE-KERNEL.md)
 - [File and registry collection](architecture/FILE-REGISTRY.md)
