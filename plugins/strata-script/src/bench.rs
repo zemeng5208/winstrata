@@ -794,7 +794,11 @@ impl Bench {
                     "presets": self.preset_files(),
                 })
             }
-            Err(code) => self.fail(&code),
+            Err(code) => {
+                let _ = child.child.kill();
+                let _ = child.child.wait();
+                self.fail(&code)
+            }
         }
     }
 

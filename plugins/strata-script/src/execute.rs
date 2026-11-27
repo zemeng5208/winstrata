@@ -83,13 +83,13 @@ pub(crate) fn spawn_debug(
 pub(crate) fn wait_pause(state: &Path, child: &mut Child) -> Result<Pause, String> {
     let pause = state.join("debug").join("pause.json");
     let started = Instant::now();
+    let mut saw_partial = false;
     loop {
         if pause.is_file() {
-            let text = fs::read_to_string(&pause).map_err(|_| "faulted".to_owned())?;
-            let value: serde_json::Value = serde_json::from_str(&text).map_err(|_| "faulted")?;
-            let _ = fs::remove_file(&pause);
-            let line = value["line"].as_u64().ok_or("faulted")? as u32;
-            return Ok(Pause::Line(line));
+            match read_pause_line(&pause) {
+                Some(line) => return Ok(Pause::Line(line)),
+                None => saw_partial = true,
+            }
         }
         if let Some(status) = child.try_wait().map_err(|_| "faulted".to_owned())? {
             return Ok(Pause::Exited(status.code().unwrap_or(1)));
@@ -97,10 +97,18 @@ pub(crate) fn wait_pause(state: &Path, child: &mut Child) -> Result<Pause, Strin
         if started.elapsed() > DEBUG_WAIT {
             let _ = child.kill();
             let _ = child.wait();
-            return Err("not_paused".to_owned());
+            return Err(if saw_partial { "faulted" } else { "not_paused" }.to_owned());
         }
         thread::sleep(Duration::from_millis(20));
     }
+}
+
+fn read_pause_line(pause: &Path) -> Option<u32> {
+    let text = fs::read_to_string(pause).ok()?;
+    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let line = value["line"].as_u64()? as u32;
+    let _ = fs::remove_file(pause);
+    Some(line)
 }
 
 pub(crate) fn signal_debug(state: &Path, action: &str) -> io::Result<()> {
@@ -395,3 +403,57 @@ globalThis.__ws_line = (line) => {
 }
 await import(pathToFileURL(job.wrapped).href)
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_partial_pause_file_is_read_after_it_is_complete() {
+        let root = std::env::temp_dir().join(format!(
+            "winstrata-pause-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        fs::create_dir_all(root.join("debug")).unwrap();
+        let pause = root.join("debug").join("pause.json");
+        fs::write(&pause, b"").unwrap();
+        let mut child = linger();
+        let state = root.clone();
+        let reader = thread::spawn(move || {
+            let result = wait_pause(&state, &mut child);
+            let _ = child.kill();
+            let _ = child.wait();
+            result
+        });
+        thread::sleep(Duration::from_millis(60));
+        fs::write(&pause, br#"{"line":2}"#).unwrap();
+        let pause_result = reader.join().unwrap();
+        let _ = fs::remove_dir_all(&root);
+        match pause_result {
+            Ok(Pause::Line(line)) => assert_eq!(line, 2),
+            Ok(Pause::Exited(code)) => panic!("child exited {code}"),
+            Err(code) => panic!("{code}"),
+        }
+    }
+
+    fn linger() -> Child {
+        let mut command = if cfg!(windows) {
+            let mut command = Command::new("ping");
+            command.args(["-n", "6", "127.0.0.1"]);
+            command
+        } else {
+            let mut command = Command::new("sleep");
+            command.arg("3");
+            command
+        };
+        command
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        command.spawn().expect("linger")
+    }
+}
