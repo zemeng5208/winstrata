@@ -19,13 +19,13 @@ use windows_sys::Win32::Foundation::{
     RtlNtStatusToDosError, UNICODE_STRING,
 };
 use windows_sys::Win32::Storage::FileSystem::{
-    BY_HANDLE_FILE_INFORMATION, CREATE_NEW, CreateFileW, FILE_ATTRIBUTE_DIRECTORY,
-    FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_REPARSE_POINT, FILE_ATTRIBUTE_TAG_INFO,
-    FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FILE_READ_ATTRIBUTES,
-    FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TRAVERSE, FileAttributeTagInfo,
-    GetDiskFreeSpaceExW, GetFileInformationByHandle, GetFileInformationByHandleEx,
-    GetFinalPathNameByHandleW, GetVolumeInformationByHandleW, OPEN_EXISTING, READ_CONTROL,
-    SYNCHRONIZE, VOLUME_NAME_GUID,
+    CREATE_NEW, CreateFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_NORMAL,
+    FILE_ATTRIBUTE_REPARSE_POINT, FILE_ATTRIBUTE_TAG_INFO, FILE_FLAG_BACKUP_SEMANTICS,
+    FILE_FLAG_OPEN_REPARSE_POINT, FILE_ID_INFO, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE,
+    FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TRAVERSE, FileAttributeTagInfo, FileIdInfo,
+    GetDiskFreeSpaceExW, GetFileInformationByHandleEx, GetFinalPathNameByHandleW,
+    GetVolumeInformationByHandleW, OPEN_EXISTING, READ_CONTROL, ReOpenFile, SYNCHRONIZE,
+    VOLUME_NAME_GUID,
 };
 use windows_sys::Win32::System::Com::{CoCreateGuid, CoTaskMemFree};
 use windows_sys::Win32::System::IO::IO_STATUS_BLOCK;
@@ -180,6 +180,27 @@ pub(crate) struct Anchor {
 }
 
 const OPEN_RIGHTS: u32 = FILE_TRAVERSE | FILE_READ_ATTRIBUTES | SYNCHRONIZE;
+
+pub(crate) fn file_key(file: &File) -> io::Result<(u64, u128)> {
+    handle_key(file.as_raw_handle())
+}
+
+fn handle_key(handle: HANDLE) -> io::Result<(u64, u128)> {
+    let mut id = FILE_ID_INFO::default();
+    // 在持有对象句柄期间读取完整 128 位文件标识，避免丢失 ReFS 的标识高位。
+    unsafe {
+        check(GetFileInformationByHandleEx(
+            handle,
+            FileIdInfo,
+            (&mut id as *mut FILE_ID_INFO).cast(),
+            size_of::<FILE_ID_INFO>() as u32,
+        ))?;
+    }
+    Ok((
+        id.VolumeSerialNumber,
+        u128::from_le_bytes(id.FileId.Identifier),
+    ))
+}
 
 fn verify_directory(handle: HANDLE) -> io::Result<()> {
     let mut attrs = FILE_ATTRIBUTE_TAG_INFO::default();
@@ -345,9 +366,25 @@ impl Anchor {
         }
         let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
         verify_directory(raw)?;
-        if let Some(access) = access {
+        let handle = if let Some(access) = access {
             access.verify(raw)?;
-        }
+            // 首次句柄排除了已有的写入或删除句柄。仅在确认当前用户独享 DACL 后，
+            // 重新打开同一个对象以便用户重命名或发布其子文件；目录本身仍不共享删除。
+            let reopened = unsafe {
+                ReOpenFile(
+                    raw,
+                    OPEN_RIGHTS,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                )
+            };
+            if reopened == INVALID_HANDLE_VALUE {
+                return Err(io::Error::last_os_error());
+            }
+            unsafe { OwnedHandle::from_raw_handle(reopened) }
+        } else {
+            handle
+        };
         Ok(Self {
             pin: Arc::new(Pin {
                 handle,
@@ -358,21 +395,8 @@ impl Anchor {
     }
 
     pub(crate) fn same_directory(&self, other: &Self) -> io::Result<bool> {
-        fn key(pin: &Pin) -> io::Result<(u32, u32, u32)> {
-            let mut info = BY_HANDLE_FILE_INFORMATION::default();
-            unsafe {
-                check(GetFileInformationByHandle(
-                    pin.handle.as_raw_handle(),
-                    &mut info,
-                ))?;
-            }
-            Ok((
-                info.dwVolumeSerialNumber,
-                info.nFileIndexHigh,
-                info.nFileIndexLow,
-            ))
-        }
-        Ok(key(&self.pin)? == key(&other.pin)?)
+        Ok(handle_key(self.pin.handle.as_raw_handle())?
+            == handle_key(other.pin.handle.as_raw_handle())?)
     }
 
     pub(crate) fn io_path(&self) -> &Path {

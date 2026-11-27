@@ -6,7 +6,20 @@ use std::path::{Path, PathBuf};
 
 use crate::platform::Anchor;
 
+type FileKey = (u64, u128);
+
 const STAGING: &str = ".winstrata-migration.partial";
+
+fn is_staging_name(name: &OsStr) -> bool {
+    #[cfg(windows)]
+    {
+        name.eq_ignore_ascii_case(STAGING)
+    }
+    #[cfg(target_os = "linux")]
+    {
+        name == OsStr::new(STAGING)
+    }
+}
 
 fn invalid(message: &'static str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -18,7 +31,58 @@ enum Kind {
     File,
 }
 
+#[cfg(windows)]
+fn reject_named_streams(path: &Path) -> io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Foundation::{ERROR_HANDLE_EOF, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::Storage::FileSystem::{
+        FindClose, FindFirstStreamW, FindNextStreamW, FindStreamInfoStandard,
+        WIN32_FIND_STREAM_DATA,
+    };
+    let path: Vec<_> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    let mut data = WIN32_FIND_STREAM_DATA::default();
+    // SAFETY: 路径以 NUL 结尾，系统只写入指定结构；所有已打开的枚举句柄均在返回前关闭。
+    let iter = unsafe {
+        FindFirstStreamW(
+            path.as_ptr(),
+            FindStreamInfoStandard,
+            (&mut data as *mut WIN32_FIND_STREAM_DATA).cast(),
+            0,
+        )
+    };
+    let end = || {
+        let e = io::Error::last_os_error();
+        if e.raw_os_error() == Some(ERROR_HANDLE_EOF as i32) {
+            Ok(())
+        } else {
+            Err(e)
+        }
+    };
+    if iter == INVALID_HANDLE_VALUE {
+        return end();
+    }
+    let result = loop {
+        let name = data
+            .cStreamName
+            .split(|&c| c == 0)
+            .next()
+            .unwrap_or_default();
+        if !name.iter().copied().eq("::$DATA".encode_utf16()) {
+            break Err(invalid("migration does not support named Windows streams"));
+        }
+        // SAFETY: 首次枚举成功后，iter 与 data 在整个循环中保持有效。
+        if unsafe { FindNextStreamW(iter, (&mut data as *mut WIN32_FIND_STREAM_DATA).cast()) } == 0
+        {
+            break end();
+        }
+    };
+    unsafe { FindClose(iter) };
+    result
+}
+
 fn entries(dir: &Anchor) -> io::Result<BTreeMap<OsString, Kind>> {
+    #[cfg(windows)]
+    reject_named_streams(dir.io_path())?;
     fs::read_dir(dir.io_path())?
         .map(|entry| {
             let entry = entry?;
@@ -36,6 +100,8 @@ fn entries(dir: &Anchor) -> io::Result<BTreeMap<OsString, Kind>> {
             let kind = if metadata.is_dir() {
                 Kind::Directory
             } else if metadata.is_file() {
+                #[cfg(windows)]
+                reject_named_streams(&entry.path())?;
                 Kind::File
             } else {
                 return Err(invalid("migration requires regular files and directories"));
@@ -59,14 +125,14 @@ fn directory_at(root: &Anchor, relative: &Path, private: bool) -> io::Result<Opt
 }
 
 #[cfg(target_os = "linux")]
-fn file_identity(file: &File) -> io::Result<((u64, u64), u64)> {
+fn file_identity(file: &File) -> io::Result<(FileKey, u64)> {
     use std::os::unix::fs::MetadataExt;
     let metadata = file.metadata()?;
-    Ok(((metadata.dev(), metadata.ino()), metadata.nlink()))
+    Ok(((metadata.dev(), metadata.ino().into()), metadata.nlink()))
 }
 
 #[cfg(windows)]
-fn file_identity(file: &File) -> io::Result<((u64, u64), u64)> {
+fn file_identity(file: &File) -> io::Result<(FileKey, u64)> {
     use std::mem::MaybeUninit;
     use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::Storage::FileSystem::GetFileInformationByHandle;
@@ -76,14 +142,10 @@ fn file_identity(file: &File) -> io::Result<((u64, u64), u64)> {
         return Err(io::Error::last_os_error());
     }
     let info = unsafe { info.assume_init() };
-    let index = (u64::from(info.nFileIndexHigh) << 32) | u64::from(info.nFileIndexLow);
-    Ok((
-        (info.dwVolumeSerialNumber.into(), index),
-        info.nNumberOfLinks.into(),
-    ))
+    Ok((crate::platform::file_key(file)?, info.nNumberOfLinks.into()))
 }
 
-fn directory_id(dir: &Anchor) -> io::Result<(u64, u64)> {
+fn directory_id(dir: &Anchor) -> io::Result<FileKey> {
     let mut options = OpenOptions::new();
     options.read(true);
     #[cfg(windows)]
@@ -102,7 +164,7 @@ fn directory_id(dir: &Anchor) -> io::Result<(u64, u64)> {
 // 使用卷和文件标识检测别名、目录环及嵌套目标，避免依赖大小写或路径拼写。
 fn inspect_tree(
     root: &Anchor,
-    ids: &mut HashSet<(u64, u64)>,
+    ids: &mut HashSet<FileKey>,
     destination: Option<&Anchor>,
 ) -> io::Result<u64> {
     let mut missing_bytes = 0u64;
@@ -125,7 +187,7 @@ fn inspect_tree(
             BTreeMap::new()
         };
         for (name, kind) in entries(dir)? {
-            if destination.is_some() && name.eq_ignore_ascii_case(STAGING) {
+            if destination.is_some() && is_staging_name(&name) {
                 return Err(invalid(
                     "source contains the reserved migration staging name",
                 ));
@@ -178,7 +240,7 @@ fn regular(path: &Path) -> io::Result<File> {
     Ok(file)
 }
 
-fn compare(source: &Path, other: &Path, prefix: bool) -> io::Result<()> {
+fn compare(source: &Path, other: &Path, prefix: bool) -> io::Result<File> {
     let mut source = regular(source)?;
     let mut other = crate::files::open_existing(other, false)?;
     let mut actual = [0; 16 * 1024];
@@ -196,7 +258,7 @@ fn compare(source: &Path, other: &Path, prefix: bool) -> io::Result<()> {
     if !prefix && source.read(&mut expected[..1])? != 0 {
         return Err(invalid("migration file lengths differ"));
     }
-    Ok(())
+    Ok(other)
 }
 
 #[cfg(target_os = "linux")]
@@ -276,7 +338,7 @@ fn transfer_directory(
 
     let mut children = Vec::new();
     for (name, kind) in src {
-        if name.eq_ignore_ascii_case(STAGING) {
+        if is_staging_name(&name) {
             return Err(invalid("reserved source entry"));
         }
         let target = destination.io_path().join(&name);
@@ -287,7 +349,11 @@ fn transfer_directory(
         }
         let original = source.io_path().join(&name);
         if dst.contains_key(&name) {
-            compare(&original, &target, false)?;
+            let _checked = compare(&original, &target, false)?;
+            #[cfg(target_os = "linux")]
+            if verify_only {
+                _checked.sync_all()?;
+            }
         }
         if staged.contains_key(&name) {
             let partial = stage
@@ -316,9 +382,7 @@ fn transfer_directory(
         fs::remove_dir(destination.io_path().join(stage_name))?;
     }
     #[cfg(target_os = "linux")]
-    if !verify_only {
-        File::open(destination.io_path())?.sync_all()?;
-    }
+    File::open(destination.io_path())?.sync_all()?;
     Ok(children)
 }
 
@@ -347,6 +411,9 @@ pub(crate) fn copy_and_verify(source: &Anchor, destination: &Anchor) -> io::Resu
             }
         }
     }
+    // 私有工作目录可能在本次选择时首次创建，连同其父目录的名称记录一起落盘。
+    #[cfg(target_os = "linux")]
+    File::open(destination.io_path().join(".."))?.sync_all()?;
     Ok(())
 }
 
@@ -441,6 +508,50 @@ mod tests {
             fs::hard_link(source.io_path().join("file"), target.io_path().join("file")).unwrap();
             assert!(copy_and_verify(source, target).is_err());
             assert_eq!(fs::read(source.io_path().join("file")).unwrap(), b"keep");
+        });
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn existing_destination_must_be_private_and_new_copies_are_owner_only() {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        with_workspaces(|source, target| {
+            let original = source.io_path().join("data");
+            let copy = target.io_path().join("data");
+            fs::write(&original, b"private workspace").unwrap();
+            fs::set_permissions(&original, fs::Permissions::from_mode(0o644)).unwrap();
+            fs::write(&copy, b"private workspace").unwrap();
+            fs::set_permissions(&copy, fs::Permissions::from_mode(0o644)).unwrap();
+            assert_eq!(
+                copy_and_verify(source, target).unwrap_err().kind(),
+                io::ErrorKind::PermissionDenied
+            );
+            fs::remove_file(&copy).unwrap();
+            copy_and_verify(source, target).unwrap();
+            assert_eq!(fs::metadata(copy).unwrap().mode() & 0o777, 0o600);
+        });
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn rejects_named_file_and_directory_streams_without_losing_source_data() {
+        with_workspaces(|source, target| {
+            let data = source.io_path().join("data");
+            fs::write(&data, b"payload").unwrap();
+            let folder = source.child(OsStr::new("folder"), true, true).unwrap();
+            let folder_path = folder.io_path().to_owned();
+            drop(folder);
+            for path in [data, folder_path] {
+                let mut name = path.into_os_string();
+                name.push(":fixture-stream");
+                let stream = PathBuf::from(name);
+                fs::write(&stream, b"named data").unwrap();
+                let error = copy_and_verify(source, target).unwrap_err();
+                assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+                assert_eq!(fs::read(&stream).unwrap(), b"named data");
+                assert!(!target.io_path().join("data").exists());
+                fs::remove_file(stream).unwrap();
+            }
         });
     }
 

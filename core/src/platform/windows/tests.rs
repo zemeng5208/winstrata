@@ -62,6 +62,10 @@ fn private_leaf_pins_ancestors_and_owns_new_files() {
     assert!(fs::rename(&fixture.0, fixture.0.with_extension("moved")).is_err());
     let file = private_file_create(&leaf.io_path().join("owner.dat")).unwrap();
     verify_private_file(&file).unwrap();
+    drop(file);
+    let renamed = leaf.io_path().join("moved.dat");
+    fs::rename(leaf.io_path().join("owner.dat"), &renamed).unwrap();
+    fs::hard_link(&renamed, leaf.io_path().join("alias.dat")).unwrap();
     assert!(leaf.available().unwrap() > 0);
 }
 
@@ -120,4 +124,91 @@ fn invalid_path_components_are_never_opened() {
     ] {
         assert!(Anchor::open(Path::new(path)).is_err());
     }
+}
+
+#[test]
+fn restricted_token_can_read_its_control_but_cannot_open_private_data() {
+    use windows_sys::Win32::Security::Authorization::ConvertStringSidToSidW;
+    use windows_sys::Win32::Security::{
+        CreateRestrictedToken, DISABLE_MAX_PRIVILEGE, ImpersonateLoggedOnUser, RevertToSelf,
+        SID_AND_ATTRIBUTES, TOKEN_DUPLICATE, TOKEN_QUERY,
+    };
+    use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+
+    let fixture = Fixture::new();
+    let base = Anchor::open(&fixture.0).unwrap();
+    let leaf = base.child("private".as_ref(), true, true).unwrap();
+    let private_path = leaf.io_path().join("marker");
+    let mut marker = private_file_create(&private_path).unwrap();
+    std::io::Write::write_all(&mut marker, b"private fixture").unwrap();
+    drop(marker);
+    assert_eq!(fs::read(&private_path).unwrap(), b"private fixture");
+
+    // 使用资源管理器 SID 命名空间的临时限制标识；不创建系统账户或组。
+    let random = fresh_id().unwrap();
+    let parts: Vec<_> = random
+        .as_bytes()
+        .chunks_exact(8)
+        .map(|chunk| {
+            u32::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    let restricting_sid = format!("S-1-9-{}", parts.join("-"));
+    let control_path = base.io_path().join("control");
+    fs::write(&control_path, b"public fixture").unwrap();
+    for (name, access) in [(".", "RX"), ("control", "R")] {
+        succeeds(
+            system_command("icacls.exe")
+                .current_dir(&fixture.0)
+                .args([name, "/grant", &format!("*{restricting_sid}:({access})")])
+                .output()
+                .unwrap(),
+        );
+    }
+
+    let wide: Vec<u16> = restricting_sid.encode_utf16().chain([0]).collect();
+    let mut raw_sid = null_mut();
+    let mut unrestricted = null_mut();
+    let mut restricted = null_mut();
+    unsafe {
+        check(ConvertStringSidToSidW(wide.as_ptr(), &mut raw_sid)).unwrap();
+        let _sid = security::LocalBlock(raw_sid);
+        check(OpenProcessToken(
+            GetCurrentProcess(),
+            TOKEN_QUERY | TOKEN_DUPLICATE,
+            &mut unrestricted,
+        ))
+        .unwrap();
+        let parent = OwnedHandle::from_raw_handle(unrestricted);
+        let limiting = SID_AND_ATTRIBUTES {
+            Sid: raw_sid,
+            Attributes: 0,
+        };
+        check(CreateRestrictedToken(
+            parent.as_raw_handle(),
+            DISABLE_MAX_PRIVILEGE,
+            0,
+            null(),
+            0,
+            null(),
+            1,
+            &limiting,
+            &mut restricted,
+        ))
+        .unwrap();
+    }
+    let token = unsafe { OwnedHandle::from_raw_handle(restricted) };
+    // 仅在短命专用线程中模拟当前令牌的受限副本；恢复身份后再断言测试结果。
+    let (allowed, denied) = std::thread::spawn(move || {
+        unsafe { check(ImpersonateLoggedOnUser(token.as_raw_handle())).unwrap() };
+        let result = (fs::read(control_path), fs::read(private_path));
+        unsafe { check(RevertToSelf()).unwrap() };
+        result
+    })
+    .join()
+    .unwrap();
+    assert_eq!(allowed.unwrap(), b"public fixture");
+    assert_eq!(denied.unwrap_err().kind(), io::ErrorKind::PermissionDenied);
 }

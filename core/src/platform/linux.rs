@@ -78,6 +78,8 @@ impl Anchor {
         let directory = match open() {
             Err(error) if create && error.kind() == io::ErrorKind::NotFound => {
                 let mode = if private { 0o700 } else { 0o755 };
+                // O_PATH 不能用于 fsync。先固定可同步的父句柄，再创建目录项。
+                let parent_to_sync = File::open(self.io_path())?;
                 // SAFETY: 父句柄和名称有效；在目录创建时同时设置权限。
                 if unsafe { libc::mkdirat(parent, name.as_ptr(), mode) } == -1 {
                     let error = io::Error::last_os_error();
@@ -85,6 +87,7 @@ impl Anchor {
                         return Err(error);
                     }
                 }
+                parent_to_sync.sync_all()?;
                 open()?
             }
             result => result?,
@@ -205,6 +208,24 @@ mod tests {
         fs::set_permissions(child.io_path(), fs::Permissions::from_mode(0o750)).unwrap();
         let error = base.child(OsStr::new("private"), false, true).unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    #[test]
+    fn creation_requires_a_syncable_parent_before_publishing_a_child() {
+        let temp = TestDirectory::new();
+        let base = Anchor::open(&temp.0).unwrap();
+        fs::set_permissions(&temp.0, fs::Permissions::from_mode(0o300)).unwrap();
+        // 有些测试环境具备越过权限位的能力，按真实的句柄打开结果判断。
+        let can_sync = File::open(&temp.0).is_ok();
+        let created = base.child(OsStr::new("durable"), true, true);
+        fs::set_permissions(&temp.0, fs::Permissions::from_mode(0o700)).unwrap();
+        if can_sync {
+            created.unwrap();
+        } else {
+            assert_eq!(created.unwrap_err().kind(), io::ErrorKind::PermissionDenied);
+            assert!(!temp.0.join("durable").exists());
+            base.child(OsStr::new("durable"), true, true).unwrap();
+        }
     }
 
     #[test]
