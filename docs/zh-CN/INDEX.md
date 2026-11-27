@@ -11,6 +11,7 @@
 - [Windows x64 交叉构建探针](architecture/WINDOWS_CROSS_BUILD.md)
 - [平台可行性验证](architecture/PLATFORM_FEASIBILITY.md)
 - [事件、对象、错误与版本契约](architecture/PROTOCOLS.md)
+- [Core 当前用户配置与存储](architecture/CORE-STORAGE.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [网络与数据策略](architecture/DATA.md)
 - [前端设计与主题](architecture/FRONTEND.md)

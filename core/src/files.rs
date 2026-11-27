@@ -120,6 +120,24 @@ pub(crate) fn create_private(path: &Path) -> io::Result<File> {
 #[cfg(windows)]
 pub(crate) use crate::platform::private_file_create as create_private;
 
+pub(crate) fn verify_session(dir: &Anchor, held: &File) -> io::Result<()> {
+    let current = open_existing(&control_path(dir, "session.lock")?, false)?;
+    #[cfg(windows)]
+    let same = crate::platform::file_key(held)? == crate::platform::file_key(&current)?;
+    #[cfg(target_os = "linux")]
+    let same = {
+        use std::os::unix::fs::MetadataExt;
+        let a = held.metadata()?;
+        let b = current.metadata()?;
+        (a.dev(), a.ino()) == (b.dev(), b.ino())
+    };
+    if same {
+        Ok(())
+    } else {
+        Err(invalid("locator session lock was replaced"))
+    }
+}
+
 pub(crate) fn lock(dir: &Anchor, name: &str) -> io::Result<File> {
     let path = control_path(dir, name)?;
     let file = match create_private(&path) {

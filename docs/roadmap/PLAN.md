@@ -25,7 +25,7 @@ Accept after PR 000 is in effect, enforced gates and feasibility risks are under
 | PR | Scope | Direct prerequisites | Acceptance evidence |
 |---|---|---|---|
 | <a id="pr-005"></a>005 | protocols for event, object, error and version contracts | 002,003,004 | Verify real examples, version and error compatibility, and source and gap semantics. |
-| <a id="pr-006"></a>006 | core config, paths, current-user identity and run state | 005 | Test real permissions, migration prerequisites, manual storage fallback and user isolation. |
+| <a id="pr-006"></a>006 | core config, paths, current-user identity and run state | 005 | Test real permissions, migration prerequisites, manual storage fallback and user isolation. [Implementation and verification scope](../architecture/CORE-STORAGE.md) |
 | <a id="pr-007"></a>007 | core bounded scheduling, bus, backpressure and minimum resource protection | 005 | Measure real event throughput and queues, cancel tasks, record gaps and check for leaks. |
 | <a id="pr-008"></a>008 | services and kernel for controlled IPC, privileges and driver management | 005,006,007 | Test Windows load and unload, identity, permissions, and fault handling with the GUI unprivileged. |
 | <a id="pr-009"></a>009 | kernel and core for file and registry collection | 008 | Observe real file and registry changes with source, accuracy, stability and on-demand loading. |

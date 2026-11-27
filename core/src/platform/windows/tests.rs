@@ -126,6 +126,32 @@ fn invalid_path_components_are_never_opened() {
     }
 }
 
+fn set_fixture_acl(path: &Path, sddl: &str) -> io::Result<()> {
+    use windows_sys::Win32::Security::Authorization::{
+        ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
+    };
+    use windows_sys::Win32::Security::{
+        DACL_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION, SetFileSecurityW,
+    };
+    let sddl: Vec<_> = sddl.encode_utf16().chain([0]).collect();
+    let path: Vec<_> = path.as_os_str().encode_wide().chain([0]).collect();
+    let mut raw = null_mut();
+    unsafe {
+        check(ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            sddl.as_ptr(),
+            SDDL_REVISION_1,
+            &mut raw,
+            null_mut(),
+        ))?;
+        let _descriptor = security::LocalBlock(raw);
+        check(SetFileSecurityW(
+            path.as_ptr(),
+            DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+            raw,
+        ))
+    }
+}
+
 #[test]
 fn restricted_token_can_read_its_control_but_cannot_open_private_data() {
     use windows_sys::Win32::Security::Authorization::ConvertStringSidToSidW;
@@ -136,14 +162,6 @@ fn restricted_token_can_read_its_control_but_cannot_open_private_data() {
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
     let fixture = Fixture::new();
-    let base = Anchor::open(&fixture.0).unwrap();
-    let leaf = base.child("private".as_ref(), true, true).unwrap();
-    let private_path = leaf.io_path().join("marker");
-    let mut marker = private_file_create(&private_path).unwrap();
-    std::io::Write::write_all(&mut marker, b"private fixture").unwrap();
-    drop(marker);
-    assert_eq!(fs::read(&private_path).unwrap(), b"private fixture");
-
     // 使用资源管理器 SID 命名空间的临时限制标识；不创建系统账户或组。
     let random = fresh_id().unwrap();
     let parts: Vec<_> = random
@@ -156,17 +174,27 @@ fn restricted_token_can_read_its_control_but_cannot_open_private_data() {
         })
         .collect();
     let restricting_sid = format!("S-1-9-{}", parts.join("-"));
+    let user = current_id().unwrap();
+    set_fixture_acl(
+        &fixture.0,
+        &format!("D:P(A;OICI;FA;;;{user})(A;;FRFX;;;{restricting_sid})"),
+    )
+    .expect("grant traversal to the fixture root");
+    let base = Anchor::open(&fixture.0).unwrap();
+    let leaf = base.child("private".as_ref(), true, true).unwrap();
+    let private_path = leaf.io_path().join("marker");
+    let mut marker = private_file_create(&private_path).unwrap();
+    std::io::Write::write_all(&mut marker, b"private fixture").unwrap();
+    drop(marker);
+    assert_eq!(fs::read(&private_path).unwrap(), b"private fixture");
+
     let control_path = base.io_path().join("control");
     fs::write(&control_path, b"public fixture").unwrap();
-    for (name, access) in [(".", "RX"), ("control", "R")] {
-        succeeds(
-            system_command("icacls.exe")
-                .current_dir(&fixture.0)
-                .args([name, "/grant", &format!("*{restricting_sid}:({access})")])
-                .output()
-                .unwrap(),
-        );
-    }
+    set_fixture_acl(
+        &control_path,
+        &format!("D:P(A;;FA;;;{user})(A;;FR;;;{restricting_sid})"),
+    )
+    .expect("grant read to the positive control");
 
     let wide: Vec<u16> = restricting_sid.encode_utf16().chain([0]).collect();
     let mut raw_sid = null_mut();

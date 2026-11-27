@@ -31,11 +31,17 @@ pub enum StorageState {
 pub struct Core {
     user: String,
     locator_path: PathBuf,
-    locator: Anchor,
-    _session: File,
+    session: File,
     location: Option<Location>,
     state: StorageState,
     run: RunState,
+}
+
+impl Drop for Core {
+    fn drop(&mut self) {
+        // 正常关闭时主动解锁，避免 Linux 并发 fork 到 exec 之间短暂继承同一打开文件描述。
+        let _ = self.session.unlock();
+    }
 }
 
 impl Core {
@@ -52,11 +58,11 @@ impl Core {
         let locator = Anchor::open(parent)?.child(OsStr::new("WinStrata"), true, true)?;
         let session = files::lock(&locator, "session.lock")?;
         let location = Location::read(&locator)?;
+        drop(locator);
         let mut core = Self {
             user,
             locator_path: parent.join("WinStrata"),
-            locator,
-            _session: session,
+            session,
             location,
             state: StorageState::NeedsDirectory {
                 kind: ErrorKind::NotFound,
@@ -114,11 +120,22 @@ impl Core {
         result
     }
 
+    fn locator(&self) -> io::Result<Anchor> {
+        let parent = self
+            .locator_path
+            .parent()
+            .expect("locator is beneath the OS state directory");
+        let dir = Anchor::open(parent)?.child(OsStr::new("WinStrata"), false, true)?;
+        files::verify_session(&dir, &self.session)?;
+        Ok(dir)
+    }
+
     fn bind(&self) -> io::Result<(Anchor, Config)> {
         let location = self
             .location
             .as_ref()
             .ok_or_else(|| io::Error::new(ErrorKind::NotFound, "select a storage directory"))?;
+        self.locator()?;
         location.bind(&self.user)
     }
 
@@ -172,15 +189,18 @@ impl Core {
 
     // 原子更名后若目录同步失败，下一次选择以磁盘上实际发布的指针为准。
     fn refresh_location(&mut self) -> io::Result<()> {
-        let result = Location::read(&self.locator).and_then(|location| {
-            if self.location.is_some() && location.is_none() {
-                return Err(io::Error::new(
-                    ErrorKind::NotFound,
-                    "the saved storage locator is missing",
-                ));
-            }
-            Ok(location)
-        });
+        let result = self
+            .locator()
+            .and_then(|dir| Location::read(&dir))
+            .and_then(|location| {
+                if self.location.is_some() && location.is_none() {
+                    return Err(io::Error::new(
+                        ErrorKind::NotFound,
+                        "the saved storage locator is missing",
+                    ));
+                }
+                Ok(location)
+            });
         match result {
             Ok(location) => {
                 self.location = location;
@@ -196,13 +216,16 @@ impl Core {
     fn check_destination(&self, root: &Path) -> io::Result<PathBuf> {
         validate_path(root)?;
         let leaf = root.join(&self.user);
-        require_disjoint(&leaf, &self.locator_path, &self.locator)?;
+        require_disjoint(&leaf, &self.locator_path, &self.locator()?)?;
         Ok(leaf)
     }
 
     fn publish(&mut self, root: &Path, config: &Config) -> io::Result<()> {
         let location = Location::new(root, config);
-        if let Err(error) = files::write_json(&self.locator, POINTER, &location) {
+        if let Err(error) = self
+            .locator()
+            .and_then(|dir| files::write_json(&dir, POINTER, &location))
+        {
             self.suspend(&error);
             return Err(error);
         }
@@ -288,3 +311,6 @@ impl Core {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod recovery_tests;
