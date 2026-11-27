@@ -259,6 +259,9 @@ try {
       },
     }],
   })
+  const bundled = path.join(output, 'shell.js')
+  const script = (await readFile(bundled, 'utf8')).replace(/[ \t]+$/gm, '')
+  await writeFile(bundled, script)
   const { text, stamp } = await sourceText()
   const css = await compileCss(modules, [...new Set(candidatesFrom(text))])
   await mkdir(output, { recursive: true })
