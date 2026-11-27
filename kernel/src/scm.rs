@@ -7,7 +7,7 @@ use std::thread;
 
 use windows_sys::Win32::Foundation::{
     ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_SERVICE_DOES_NOT_EXIST,
-    ERROR_SERVICE_EXISTS, GetLastError, LocalFree,
+    ERROR_SERVICE_EXISTS, ERROR_SERVICE_MARKED_FOR_DELETE, GetLastError, LocalFree,
 };
 use windows_sys::Win32::Security::Authorization::ConvertStringSidToSidW;
 use windows_sys::Win32::Security::{
@@ -227,13 +227,30 @@ fn service_control_manager_refuses_to_start_a_missing_kernel_image_and_the_entry
     assert_ne!(deleted, 0, "DeleteService failed: {}", unsafe {
         GetLastError()
     });
-    let gone = unsafe { OpenServiceW(manager.0, name.as_ptr(), SERVICE_START) };
-    let gone_error = unsafe { GetLastError() };
-    if !gone.is_null() {
-        unsafe { CloseServiceHandle(gone) };
-        panic!("probe service still exists");
+    // 并发的驱动枚举会占着服务控制管理器。DeleteService 成功后，条目要等那些调用结束才消失。
+    assert_probe_removed(manager.0, &name);
+}
+
+fn assert_probe_removed(manager: windows_sys::Win32::System::Services::SC_HANDLE, name: &[u16]) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    loop {
+        let gone = unsafe { OpenServiceW(manager, name.as_ptr(), SERVICE_START) };
+        if gone.is_null() {
+            let gone_error = unsafe { GetLastError() };
+            if gone_error == ERROR_SERVICE_DOES_NOT_EXIST {
+                return;
+            }
+            if gone_error != ERROR_SERVICE_MARKED_FOR_DELETE {
+                panic!("OpenServiceW failed with Win32 error {gone_error}");
+            }
+        } else {
+            unsafe { CloseServiceHandle(gone) };
+        }
+        if std::time::Instant::now() >= deadline {
+            panic!("probe service still exists");
+        }
+        thread::sleep(std::time::Duration::from_millis(50));
     }
-    assert_eq!(gone_error, ERROR_SERVICE_DOES_NOT_EXIST);
 }
 
 #[test]
