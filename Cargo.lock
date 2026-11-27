@@ -272,6 +272,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "winstrata-strata-tag"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "winstrata-core",
+ "winstrata-kernel",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-strata-trace"
 version = "0.1.0"
 dependencies = [

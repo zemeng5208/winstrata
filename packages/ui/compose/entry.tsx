@@ -7,6 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { ScriptPage } from './script-page'
+import { TagPage } from './tag-page'
 import { OverviewPage, PluginsPage, ServicePage, SettingsPage, Shell } from './shell'
 
 const rootRoute = createRootRoute({ component: Shell })
@@ -35,12 +36,18 @@ const scriptsRoute = createRoute({
   path: '/scripts',
   component: ScriptPage,
 })
+const tagsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/tags',
+  component: TagPage,
+})
 const routeTree = rootRoute.addChildren([
   overviewRoute,
   pluginsRoute,
   serviceRoute,
   settingsRoute,
   scriptsRoute,
+  tagsRoute,
 ])
 const router = createRouter({
   routeTree,

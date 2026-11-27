@@ -26,6 +26,8 @@
 
 工作台使用五个既有权限名：`event.publish`、`event.subscribe`、`history.read`、`plugin.call` 和 `storage.private`。`declare` 把一个名称放入待授权。`grant` 只接受仍在待授权中的权限。`revoke` 把它放回待授权。一次运行要记录 `emit` 之前必须已有 `event.publish`。事件触发执行之前必须已有 `event.subscribe`。子进程获得其私有目录的写访问之前必须已有 `storage.private`。
 
+工作台操作 `tag` 不执行解释器。它要求脚本已启用，并且该脚本自己拥有 `plugin.call` 授权。`strata.script` 的清单不获得 `plugin.call`。有该授权时，操作返回 `code` `tag_request`，宿主以 actor `script` 把它转给 `strata.tag`。没有该授权时返回 `permission_denied`，并且不写标记。见[标记插件](TAG.md)。
+
 ## 触发
 
 手动触发是 `run`。事件触发是 `ingest`，并且事件记号必须匹配。定时触发的 `every_ms` 至少为 200，只在本进程内的后台线程上运行。条件触发的 `field` 是 `count`，`cmp` 是 `gte` 或 `eq`。插件暂停，以及脚本暂停或禁用，都会跳过触发。`strata.process` 和 `strata.registry` 的采集保持不变。

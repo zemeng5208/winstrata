@@ -3,6 +3,7 @@
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
 //! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse`、`strata.health` 与 `strata.budget` 只在同目录存在对应程序时登记为已安装且默认禁用。
 //! `strata.script` 只在同目录存在 `winstrata-strata-script` 时登记，并且在启用前保持禁用。
+//! `strata.tag` 只在同目录存在 `winstrata-strata-tag` 时登记，并且在启用前保持禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
@@ -15,6 +16,7 @@ mod language;
 mod process;
 mod registry;
 mod sandbox;
+mod tag;
 mod trace;
 
 use std::collections::HashMap;
@@ -35,6 +37,7 @@ use winstrata_strata_trace::PLUGIN_ID as TRACE_ID;
 
 use crate::bus::{EventBus, Filter};
 use crate::files;
+use crate::network::{PacketLedger, DEFAULT_PACKET_CAP};
 use crate::platform::Anchor;
 use crate::schedule::SchedulerHandle;
 
@@ -397,7 +400,10 @@ struct StoredEntry {
 pub struct PluginHost {
     root: Anchor,
     runtime: PathBuf,
+    user: String,
     epoch: String,
+    packets: PacketLedger,
+    packet_cap: usize,
     entries: Vec<Installed>,
     live: HashMap<String, Live>,
     bus: Option<EventBus>,
@@ -442,7 +448,7 @@ impl Drop for PluginHost {
 }
 
 impl PluginHost {
-    pub(crate) fn open(dir: Anchor, runtime: &Path) -> Result<Self, PluginError> {
+    pub(crate) fn open(dir: Anchor, runtime: &Path, user: &str) -> Result<Self, PluginError> {
         let runtime = fs::canonicalize(runtime).map_err(|error| {
             PluginError::new(
                 "runtime_missing",
@@ -460,7 +466,10 @@ impl PluginHost {
         let mut host = Self {
             root: dir,
             runtime,
+            user: user.to_owned(),
             epoch,
+            packets: PacketLedger::memory_only(),
+            packet_cap: DEFAULT_PACKET_CAP,
             entries: Vec::new(),
             live: HashMap::new(),
             bus: None,
@@ -499,7 +508,19 @@ impl PluginHost {
         host.seed_pulse_collector()?;
         host.seed_health_collector()?;
         host.seed_budget_collector()?;
+        host.seed_tag_collector()?;
         Ok(host)
+    }
+
+    /// 把原始字节留在内存。这不会创建文件。
+    pub fn stage_packet(&mut self, bytes: Vec<u8>) -> Result<u64, PluginError> {
+        if bytes.is_empty() || bytes.len() > 65_536 {
+            return Err(PluginError::new(
+                "invalid_input",
+                "packet bytes are empty or too large",
+            ));
+        }
+        Ok(self.packets.stage(crate::network::PacketClass::Plain, bytes))
     }
 
     pub fn attach_bus(&mut self, bus: EventBus) {
@@ -954,6 +975,14 @@ impl PluginHost {
     ) -> Result<String, PluginError> {
         self.running(id)?;
         let provider = self.resolve_provider(id, capability)?;
+        if provider == tag::PLUGIN && capability == "tag.apply" {
+            let (actor, actor_id) = tag::actor_for(id, &self.user);
+            return self.tag_apply(actor, &actor_id, payload);
+        }
+        if provider == tag::PLUGIN && capability == "tag.policy" {
+            let (actor, actor_id) = tag::actor_for(id, &self.user);
+            return self.tag_policy(actor, &actor_id, payload);
+        }
         let mut frame = PluginFrame::request("invoke");
         frame.capability = Some(capability.to_owned());
         frame.payload = Some(self.invoke_payload(&provider, capability, payload)?);
@@ -977,6 +1006,11 @@ impl PluginHost {
             .ok_or_else(|| PluginError::new("invalid_record", "plugin returned no result"))?;
         if provider == budget::PLUGIN && capability == "budget.regulate" {
             self.apply_budget(&detail)?;
+        }
+        if provider == SCRIPT_PLUGIN && capability == "script.workbench" {
+            if let Some(done) = self.forward_script_tag(&detail)? {
+                return Ok(done);
+            }
         }
         Ok(detail)
     }
@@ -1406,6 +1440,13 @@ impl PluginHost {
                     PluginError::new(
                         "runtime_missing",
                         "budget collector is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == tag::PLUGIN {
+                tag::beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "tag program is not beside the plugin runtime",
                     )
                 })?
             } else {
@@ -2122,6 +2163,158 @@ impl PluginHost {
         )
     }
 
+    fn seed_tag_collector(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            tag::PLUGIN,
+            tag::MANIFEST,
+            "winstrata-strata-tag",
+            "tag manifest is not the official plugin",
+        )
+    }
+
+    fn tag_apply(&mut self, actor: &str, actor_id: &str, payload: &str) -> Result<String, PluginError> {
+        self.running(tag::PLUGIN)?;
+        let paused = self
+            .live
+            .get(tag::PLUGIN)
+            .is_some_and(|live| live.paused);
+        let capture = tag_capture(payload)
+            .map(|id| self.capture_path(id))
+            .transpose()?;
+        let prepared = tag::prepare_apply(
+            actor,
+            actor_id,
+            payload,
+            paused,
+            unix_ns(),
+            &mut self.packets,
+            capture,
+        )?;
+        let detail = self.invoke_tag("tag.apply", &prepared.request, prepared.path.as_deref())?;
+        self.publish_tag(&detail)?;
+        Ok(detail)
+    }
+
+    fn tag_policy(&mut self, actor: &str, actor_id: &str, payload: &str) -> Result<String, PluginError> {
+        self.running(tag::PLUGIN)?;
+        let prepared = tag::prepare_policy(actor, actor_id, payload, unix_ns(), self.packet_cap)?;
+        let detail = self.invoke_tag("tag.policy", &prepared.request, None)?;
+        if let Some((policy, cap)) = prepared.policy {
+            self.packets.set_policy(policy);
+            if cap != self.packet_cap {
+                self.packets.set_cap(cap);
+                self.packet_cap = cap;
+            }
+        }
+        Ok(detail)
+    }
+
+    fn invoke_tag(
+        &mut self,
+        capability: &str,
+        payload: &str,
+        rollback: Option<&std::path::Path>,
+    ) -> Result<String, PluginError> {
+        let mut frame = PluginFrame::request("invoke");
+        frame.capability = Some(capability.to_owned());
+        frame.payload = Some(payload.to_owned());
+        let reply = match self.exchange(tag::PLUGIN, &frame) {
+            Ok(reply) => reply,
+            Err(error) => {
+                if let Some(path) = rollback {
+                    let _ = fs::remove_file(path);
+                }
+                return Err(error);
+            }
+        };
+        let pid = self.live.get(tag::PLUGIN).map(Live::pid).unwrap_or(0);
+        if reply.pid != Some(pid) || reply.ok != Some(true) {
+            if let Some(path) = rollback {
+                let _ = fs::remove_file(path);
+            }
+            return Err(PluginError::new(
+                static_code(reply.code.as_deref()),
+                reply
+                    .detail
+                    .unwrap_or_else(|| "plugin rejected the call".to_owned()),
+            ));
+        }
+        reply
+            .detail
+            .ok_or_else(|| PluginError::new("invalid_record", "plugin returned no result"))
+    }
+
+    fn forward_script_tag(&mut self, detail: &str) -> Result<Option<String>, PluginError> {
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(detail) else {
+            return Ok(None);
+        };
+        if value.get("code").and_then(serde_json::Value::as_str) != Some("tag_request") {
+            return Ok(None);
+        }
+        let script = value.get("id").and_then(serde_json::Value::as_str).unwrap_or("");
+        if !self.live.contains_key(tag::PLUGIN) {
+            return Ok(Some(
+                serde_json::json!({
+                    "ok": false,
+                    "code": "tag_unavailable",
+                    "id": script,
+                    "safety": "none"
+                })
+                .to_string(),
+            ));
+        }
+        let payload = serde_json::json!({
+            "kind": value.get("kind").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "subject": value.get("subject").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "packet": value.get("packet").and_then(serde_json::Value::as_u64).unwrap_or(0),
+            "reason": value.get("reason").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "source": value.get("source").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "confidence": value.get("confidence").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "evidence": value.get("evidence").and_then(serde_json::Value::as_str).unwrap_or(""),
+            "attribution": value.get("attribution").and_then(serde_json::Value::as_str).unwrap_or(""),
+        })
+        .to_string();
+        if payload.len() > 1024 || payload.chars().any(char::is_control) {
+            return Err(PluginError::new(
+                "invalid_record",
+                "script tag does not fit a plugin frame",
+            ));
+        }
+        Ok(Some(self.tag_apply("script", script, &payload)?))
+    }
+
+    fn publish_tag(&mut self, detail: &str) -> Result<(), PluginError> {
+        let value: serde_json::Value = serde_json::from_str(detail)
+            .map_err(|_| PluginError::new("invalid_record", "tag result is not json"))?;
+        let code = value.get("code").and_then(serde_json::Value::as_str).unwrap_or("");
+        let Some(event_type) = tag::event_type(code) else {
+            return Ok(());
+        };
+        let Some(bus) = self.bus.clone() else {
+            return Ok(());
+        };
+        let sequence = {
+            let live = self.live.get_mut(tag::PLUGIN).ok_or_else(|| {
+                PluginError::new("not_running", "plugin process is not running")
+            })?;
+            let next = live.sequence.checked_add(1).ok_or_else(|| {
+                PluginError::new("resource_limit", "tag sequence is exhausted")
+            })?;
+            live.sequence = next;
+            next
+        };
+        let event = tag::observation(&self.epoch, sequence, event_type, &value)?;
+        bus.publish(event)
+            .map_err(|error| PluginError::new(error.error.code(), error.error.detail()))?;
+        Ok(())
+    }
+
+    fn capture_path(&self, id: u64) -> Result<PathBuf, PluginError> {
+        let dir = self.tree_path("state", tag::PLUGIN)?.join("captures");
+        fs::create_dir_all(&dir)?;
+        Ok(dir.join(format!("p{id}.bin")))
+    }
+
     fn invoke_payload(
         &mut self,
         provider: &str,
@@ -2393,6 +2586,17 @@ impl PluginHost {
             fs::remove_dir_all(path)?;
         }
         Ok(())
+    }
+}
+
+fn tag_capture(payload: &str) -> Option<u64> {
+    let value: serde_json::Value = serde_json::from_str(payload).ok()?;
+    if value.get("kind").and_then(serde_json::Value::as_str) != Some("packet") {
+        return None;
+    }
+    match value.get("packet").and_then(serde_json::Value::as_u64) {
+        Some(id) if id > 0 => Some(id),
+        _ => None,
     }
 }
 

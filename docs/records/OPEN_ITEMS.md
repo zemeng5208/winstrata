@@ -61,6 +61,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-049](#oi-049) | Server 2022 probe recorded on `01f26d1`; Windows 10/11 stay [OI-001](#oi-001) | 023 |
 | [OI-050](#oi-050) | Untested on the authoring host | 026 |
 | [OI-051](#oi-051) | Unimplemented | 030, 031, 032, 016, 042 |
+| [OI-052](#oi-052) | Untested on the authoring host | 029 |
+| [OI-053](#oi-053) | Unimplemented | 045 |
+| [OI-054](#oi-054) | Untested | 029 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -603,7 +606,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-04](../roadmap/ACCEPTANCE.md#e2e-04)
 - Source PR: plan 011
 - Current state: not done
-- Reason it is incomplete: topology, discovery, tagging, and export were not run
+- Reason it is incomplete: plan 029 tagged one real flow and proved the untagged packet gate. Topology, discovery, and PCAPNG export were not run
 - Responsible PR: 031
 - Handoff owner: repository owner zemeng5208
 - Verification environment: an authorized Windows network
@@ -931,6 +934,48 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the later plan's own run, on the source that produces that budget
 - Acceptance criteria: that plan records the budget from its own source, or the owner narrows PL-15
 - Close conditions: those records exist. Not closed by the CPU, memory, and queue test in plan 026. Not an exemption.
+
+<a id="oi-052"></a>
+
+## OI-052
+
+- Related requirement: [REQ-10.01](../roadmap/REQUIREMENTS.md) and PL-24
+- Source PR: plan 029, `plugins/strata-tag`
+- Current state: untested
+- Reason it is incomplete: the Linux authoring host did not execute `cargo test --locked --workspace` for `winstrata-strata-tag` on Windows. Pid 1 is tini. A Linux pass is not a Windows pass. The `x86_64-pc-windows-msvc` target is not installed on this host, so this row is not a type-check result either.
+- Responsible PR: 029, on the Windows workspace job for this plan's review head
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job for this plan's review head, `cargo test --locked --workspace`
+- Acceptance criteria: that job passes the `winstrata-strata-tag` tests, including `manual_script_and_plugin_tags_keep_untagged_packets_off_disk` and `tag_stays_absent_until_the_binary_is_beside_the_runtime`
+- Close conditions: that job is recorded against this plan's review head. A Linux pass does not close it. This row does not close [OI-001](#oi-001), [E2E-04](#e2e-04), or [OI-054](#oi-054). It is not an exemption.
+
+<a id="oi-053"></a>
+
+## OI-053
+
+- Related requirement: [REQ-10.01](../roadmap/REQUIREMENTS.md) and PL-24
+- Source PR: plan 029, `plugins/strata-tag`
+- Current state: unimplemented
+- Reason it is incomplete: the host would stamp actor `agent` only when the caller is `strata.mcp`. That plugin is not installed. Plan 029 does not fake an agent tag. Manual, script, and third-party plugin attribution are implemented.
+- Responsible PR: 045
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the plan 045 run, with `strata.mcp` installed and calling `tag.apply`
+- Acceptance criteria: a call from `strata.mcp` records actor `agent`, `actor_id` `strata.mcp`, and `safety` `none`, and it still cannot persist an untagged packet
+- Close conditions: that run is recorded. Not closed by the user, script, or plugin tags in plan 029. Not an exemption.
+
+<a id="oi-054"></a>
+
+## OI-054
+
+- Related requirement: [REQ-10.01](../roadmap/REQUIREMENTS.md) and PL-24
+- Source PR: plan 029, `plugins/strata-tag`
+- Current state: untested
+- Reason it is incomplete: no Windows session opened the official tag page. The Linux bridge test only checks that `tag-apply` stays idle before a storage location and that `enable` stays forbidden. Plan 027 holds [OI-044](#oi-044). This page session is OI-054.
+- Responsible PR: 029, on a Windows session that opens `/tags`
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows 10 or 11 x64, the official shell, with `strata.tag` not started by the page
+- Acceptance criteria: the page shows the idle state, sends only `tag-apply`, and does not send `enable` or `grant`. A Linux bridge test does not close it.
+- Close conditions: that session is recorded. This row does not close [OI-001](#oi-001) or [E2E-04](#e2e-04). It is not an exemption.
 
 <a id="e2e-17"></a>
 

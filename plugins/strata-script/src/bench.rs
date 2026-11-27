@@ -165,6 +165,7 @@ impl Bench {
             "export" => self.export_script(&value),
             "import" => self.import_script(&value),
             "ingest" => self.ingest(&value),
+            "tag" => self.request_tag(&value),
             _ => self.fail("rejected"),
         }
     }
@@ -555,6 +556,58 @@ impl Bench {
             return self.fail("faulted");
         }
         json!({"ok": true, "id": id, "kind": kind, "presets": self.preset_files()})
+    }
+
+    fn request_tag(&mut self, value: &Value) -> Value {
+        let id = value["id"].as_str().unwrap_or("").to_owned();
+        let Some(index) = self.index(&id) else {
+            return self.fail("missing");
+        };
+        if !self.scripts[index].enabled || self.scripts[index].paused {
+            return self.fail("disabled");
+        }
+        if !self.scripts[index]
+            .grants
+            .iter()
+            .any(|item| item == "plugin.call")
+        {
+            return self.fail("permission_denied");
+        }
+        let kind = value["kind"].as_str().unwrap_or("");
+        let subject = value["subject"].as_str().unwrap_or("");
+        let reason = value["reason"].as_str().unwrap_or("");
+        let source = value["source"].as_str().unwrap_or("");
+        let confidence = value["confidence"].as_str().unwrap_or("");
+        let evidence = value["evidence"].as_str().unwrap_or("");
+        let attribution = value["attribution"].as_str().unwrap_or("");
+        let packet = value["packet"].as_u64().unwrap_or(0);
+        if !matches!(
+            kind,
+            "event" | "packet" | "file" | "process" | "software" | "registry" | "system"
+        ) || !tag_field(subject, 256)
+            || !tag_field(reason, 128)
+            || !tag_field(source, 128)
+            || !tag_field(confidence, 128)
+            || !tag_field(evidence, 256)
+            || !matches!(attribution, "observed" | "inferred" | "unknown")
+            || (kind == "packet" && packet == 0)
+        {
+            return self.fail("rejected");
+        }
+        json!({
+            "ok": true,
+            "code": "tag_request",
+            "id": id,
+            "kind": kind,
+            "subject": subject,
+            "packet": packet,
+            "reason": reason,
+            "source": source,
+            "confidence": confidence,
+            "evidence": evidence,
+            "attribution": attribution,
+            "presets": self.preset_files(),
+        })
     }
 
     fn run_manual(&mut self, value: &Value) -> Value {
@@ -1039,6 +1092,12 @@ fn name_token(name: &str) -> bool {
         && bytes
             .iter()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(*byte, b'_' | b'-'))
+}
+
+fn tag_field(value: &str, max: usize) -> bool {
+    (1..=max).contains(&value.len())
+        && value.trim() == value
+        && !value.chars().any(char::is_control)
 }
 
 fn event_token(name: &str) -> bool {

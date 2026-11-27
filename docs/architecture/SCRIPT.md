@@ -26,6 +26,8 @@ Run, debug, and triggers execute the real interpreters the host passes at spawn,
 
 The workbench uses the five existing permission names: `event.publish`, `event.subscribe`, `history.read`, `plugin.call`, and `storage.private`. `declare` puts a name in pending. `grant` accepts only a pending permission. `revoke` returns it to pending. `event.publish` is required before a run may record an emit. `event.subscribe` is required before an event trigger fires. `storage.private` is required before the child is given write access to its private directory.
 
+The workbench operation `tag` does not execute an interpreter. It requires an enabled script and that script's own `plugin.call` grant. The manifest of `strata.script` does not gain `plugin.call`. With the grant, the operation returns `code` `tag_request` and the host forwards it to `strata.tag` as actor `script`. Without the grant it returns `permission_denied` and writes no tag. See [Tag plugin](TAG.md).
+
 ## Triggers
 
 A manual trigger is `run`. An event trigger is `ingest` with a matching event token. A schedule trigger uses `every_ms` of at least 200, on a background thread inside this process only. A condition trigger uses `field` `count` and `cmp` `gte` or `eq`. Plugin pause, and script pause or disable, skip triggers. Collection by `strata.process` and `strata.registry` stays unchanged.

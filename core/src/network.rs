@@ -216,6 +216,28 @@ impl PacketLedger {
         }
         Ok(())
     }
+
+    /// 切换留存策略不会放宽为全量落盘。调用方只能传入这两种策略。
+    pub fn set_policy(&mut self, policy: DiskPolicy) {
+        self.policy = policy;
+    }
+
+    /// 缩小上限时释放最旧的已保留字节。已经释放的编号仍然可以查到。
+    pub fn set_cap(&mut self, cap_bytes: usize) {
+        self.cap_bytes = cap_bytes;
+        while self.retained_bytes() > self.cap_bytes {
+            let Some(index) = self
+                .packets
+                .iter()
+                .position(|packet| !packet.bytes.is_empty())
+            else {
+                break;
+            };
+            self.packets[index].bytes.clear();
+            self.packets[index].released = true;
+            self.discarded += 1;
+        }
+    }
 }
 
 fn qualifies(tag: &RiskTag) -> bool {
