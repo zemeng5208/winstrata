@@ -1,5 +1,5 @@
 [workspace]
-members = ["apps/desktop", "core", "kernel", "plugins/strata-process", "plugins/strata-registry", "protocols", "runtimes", "runtimes/shim", "services", "toolchains/dev"]
+members = ["apps/desktop", "core", "kernel", "plugins/strata-process", "plugins/strata-pulse", "plugins/strata-registry", "protocols", "runtimes", "runtimes/shim", "services", "toolchains/dev"]
 resolver = "3"
 
 [workspace.package]

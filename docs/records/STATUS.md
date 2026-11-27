@@ -312,6 +312,16 @@ On this Linux restack, Rust 1.100.0 and Node.js 24.22.3, `RUSTFLAGS="-Dwarnings"
 
 This restack's own Linux, Windows, Workspace, and published `winstrata/merge-policy` checks are not back yet, so this record is not the review head. OI-016 and E2E-02 stay open.
 
+## PR 024 verification
+
+Plan 024 starts from main `2b4912a715a957b48e5451514a3a6d8393203545`, the merge of GitHub PR #27. Parents are `857115ebbdc364358e6487609b59c56be80b2e3c` and `6b07f3f1240622a38f39f11f79abe60a9855a005`. The branch is `pr/024-strata-pulse`. `PLAN.md` is unchanged. The requested merge position is immediately after plan 023 and before plan 025. Direct prerequisites 010, 012, 014, and 016 are on this main. Plan 023 is not on this main, so the predecessor-order merge policy is expected to fail until 023 is on main. This plan does not implement 020, 021, 022, 023, 025, 026, 027, or 032.
+
+On this Linux x86_64 host, Rust 1.100.0, Python 3.12.3, and Node.js 24.22.3, `cargo build --locked --workspace` then `RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` passed 67 Core tests, 23 kernel tests, 14 protocol library tests, 2 protocol integration tests, 3 language tests, 5 runtime lifecycle tests, 7 service tests, 5 desktop tests, 1 `winstrata-strata-process` test, 8 `winstrata-strata-pulse` unit tests, 1 `winstrata-strata-pulse` observe test, and 3 `winstrata-strata-registry` tests. `WINSTRATA_NODE` pointed at Node.js 24.22.3. The `node` already on `PATH` is v22.23.4. The observe test required a measured memory total, available memory no greater than that total, used memory equal to the difference, a CPU delta from 0 through 1,000,000 ppm, a process count of at least one, a baseline CPU reading with no value in the first history line, peaks for memory total, a committed hybrid series `pulse.memory.total.bytes`, and no hybrid series for an unsupported GPU reading. Pause held the sample count. Disable wrote `joined`.
+
+This host has no cpufreq, thermal zone, hwmon, power supply, RAPL, or DRM directory, so those readings are unsupported. `RUSTFLAGS="-Dwarnings" cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-core -p winstrata-runtime -p winstrata-strata-pulse` type-checked the Windows CPU, memory, frequency, battery, and process path. Those Windows tests were not executed. GPU utilization, VRAM, and thermal on Windows stay `unsupported` with reason `reader_absent`. That is [OI-039](OPEN_ITEMS.md#oi-039). E2E-08 is not complete. `Cargo.lock` adds the path package `winstrata-strata-pulse` and no new external crate version. The official shell was not changed. [GUI_SOURCES.md](GUI_SOURCES.md) is unchanged. Fluent UI and Astryx were not added.
+
+This record's own Linux, Windows, Workspace, and published `winstrata/merge-policy` checks are not back yet, so this record is not the review head.
+
 ## Handover
 
 The owner merged plan 013 as `a2471d5fc13f0a307ee39d2629c454aea4537809` at 2026-11-27T15:48:53Z. Parents are `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` and `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`. Tree `68a5db4598a9659a437368289d368ce60dd5b7d2`. That main failed Windows workspace checks. See [ERR-005](modules/core.md#err-005).
@@ -330,7 +340,11 @@ The owner merged plan 017 as [GitHub PR #28](https://github.com/zemeng5208/winst
 
 The owner merged plan 018 as [GitHub PR #26](https://github.com/zemeng5208/winstrata/pull/26), commit `857115ebbdc364358e6487609b59c56be80b2e3c`, at 2026-11-27T20:02:11Z. Parents are `88249119943516437819d93eb7f7bcd50c3b45b8` and `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`. Tree `e3504f162f67459ddfed19ffa0e17ed71186f551`. The signature verifies as GitHub. This record does not attach a CI URL to that merge. E2E-02 and E2E-03 stay open.
 
-The current handover is plan 019 on branch `pr/019-strata-registry`. The requested merge position is immediately after plan 018 and before plan 020. Plan 018 is on main `857115ebbdc364358e6487609b59c56be80b2e3c`. This plan does not start plan 020. The four gates on this restack are not back yet. The owner merges. This agent does not.
+Plan 019 was handed over on branch `pr/019-strata-registry`. The requested merge position was immediately after plan 018 and before plan 020. Plan 018 was on main `857115ebbdc364358e6487609b59c56be80b2e3c`. That plan does not start plan 020.
+
+The owner merged plan 019 as [GitHub PR #27](https://github.com/zemeng5208/winstrata/pull/27), commit `2b4912a715a957b48e5451514a3a6d8393203545`, at 2026-11-28T04:14:12+08:00. Parents are `857115ebbdc364358e6487609b59c56be80b2e3c` and `6b07f3f1240622a38f39f11f79abe60a9855a005`. Tree `a7fd4fc430af6f5f4cf864e65de7fff0dcf2e8c7`. This record does not attach a CI URL to that merge. OI-016 and E2E-02 stay open.
+
+The current handover is plan 024 on branch `pr/024-strata-pulse`. The requested merge position is immediately after plan 023 and before plan 025. Direct prerequisites 010, 012, 014, and 016 are on main `2b4912a715a957b48e5451514a3a6d8393203545`. Plan 023 is not on this main. This plan does not implement 023, 025, or 026, and it does not change `PLAN.md`. The four gates on this branch are not back yet. The owner merges. This agent does not.
 
 ## PR 018 verification
 

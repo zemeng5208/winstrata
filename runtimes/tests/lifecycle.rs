@@ -111,15 +111,23 @@ fn storage_must_be_selected_before_plugins_open() {
     }
 }
 
-fn process_collector_present() -> bool {
+fn adjacent_collector(stem: &str) -> bool {
     let name = if cfg!(windows) {
-        "winstrata-strata-process.exe"
+        format!("{stem}.exe")
     } else {
-        "winstrata-strata-process"
+        stem.to_owned()
     };
     runtime()
         .parent()
         .is_some_and(|dir| dir.join(name).is_file())
+}
+
+fn process_collector_present() -> bool {
+    adjacent_collector("winstrata-strata-process")
+}
+
+fn pulse_collector_present() -> bool {
+    adjacent_collector("winstrata-strata-pulse")
 }
 
 #[test]
@@ -134,6 +142,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         .collect();
     assert_eq!(builtins.len(), 25);
     let seeded = process_collector_present();
+    let pulse_seeded = pulse_collector_present();
     let registry = builtins
         .iter()
         .find(|report| report.id == "strata.registry")
@@ -145,6 +154,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         if report.id == "strata.registry" {
             true
         } else if report.id == "strata.process" && seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.pulse" && pulse_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else {
             report.phase == "implementation_absent"
@@ -160,6 +171,17 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             "builtin_retained"
         );
     }
+    if pulse_seeded {
+        assert_eq!(
+            host.uninstall("strata.pulse").unwrap_err().code(),
+            "builtin_retained"
+        );
+    } else {
+        assert_eq!(
+            host.enable("strata.pulse").unwrap_err().code(),
+            "implementation_absent"
+        );
+    }
     assert_eq!(
         builtins
             .iter()
@@ -171,10 +193,6 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     assert_eq!(
         host.uninstall("strata.rescue").unwrap_err().code(),
         "builtin_retained"
-    );
-    assert_eq!(
-        host.enable("strata.pulse").unwrap_err().code(),
-        "implementation_absent"
     );
     let reserved = scratch.dir("reserved");
     write_package(

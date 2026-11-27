@@ -32,7 +32,7 @@
 | REQ-07.01 | 识别自动与手动的软件生命周期会话 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [035](PLAN.md#pr-035) | [03](ACCEPTANCE.md#e2e-03) | 规划中 |
 | REQ-07.02 | 归因软件档案、残留依据及磁盘占用 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [035](PLAN.md#pr-035) | [03](ACCEPTANCE.md#e2e-03), [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-07.03 | 追溯真实依赖、签名、完整性和来源 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [033](PLAN.md#pr-033), [034](PLAN.md#pr-034) | [03](ACCEPTANCE.md#e2e-03), [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-08.01 | 展示受支持的 CPU、GPU、内存、电源与传感器历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [024](PLAN.md#pr-024) | [08](ACCEPTANCE.md#e2e-08) | 规划中 |
+| REQ-08.01 | 展示受支持的 CPU、GPU、内存、电源与传感器历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [024](PLAN.md#pr-024) | [08](ACCEPTANCE.md#e2e-08) | [脉冲计数器](../architecture/PULSE.md)采样 CPU、内存、负载和这台主机实际暴露的硬件计数器，保留历史，并标注不支持的读数。磁盘健康仍属于计划 032。健康和预算仍属于计划 025 和 026。E2E-08 未完成。 |
 | REQ-08.02 | 诊断和调节资源，保留可追溯降级记录 | [DATA](../architecture/DATA.md#section-8) | [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-08.03 | 计量磁盘健康、逻辑及物理写入和 I/O | [DATA](../architecture/DATA.md#section-8) | [032](PLAN.md#pr-032), [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-09.01 | 观测可用接口并归因入站和出站连接 | [DATA](../architecture/DATA.md#section-7) | [011](PLAN.md#pr-011), [031](PLAN.md#pr-031) | [04](ACCEPTANCE.md#e2e-04) | [网络源](../architecture/NETWORK-SOURCES.md)在用户态观测接口和 TCP/UDP 方向。只有采样到的 TLS 记录才记录加密，否则快照记录采样缺口。原始包留在内存，除非一个合格标记点名一个报文。拓扑、发现和 PCAPNG 导出仍属于 PR 031。E2E-04 未完成。Windows Server 2022 运行了现场交换。环回流量对原始套接字不可见，因此没有在那里观察到加密。没有运行 Windows 10/11。 |

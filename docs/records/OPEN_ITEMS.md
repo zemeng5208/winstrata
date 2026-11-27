@@ -50,6 +50,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
+| [OI-039](#oi-039) | Untested | 024, then 048 for the load scenario |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -648,7 +649,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08)
 - Source PR: plan 007
 - Current state: not done
-- Reason it is incomplete: CPU, GPU, memory, and budget behavior were not run as this scenario
+- Reason it is incomplete: Plan 024 records CPU, memory, and the counters this Linux host exposes, and labels the rest unsupported. The scenario still needs an authorized load, StrataHealth, StrataBudget, SSD counters, and a Windows run.
 - Responsible PR: 048
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows under an authorized load
@@ -808,6 +809,20 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the proposal's own measured evidence, recorded before implementation
 - Acceptance criteria: [the proposal section](../roadmap/ACCEPTANCE.md#gui-proposal)
 - Close conditions: the owner approves a verified proposal, or records that the capability is withdrawn. Not closed by naming a candidate.
+
+<a id="oi-039"></a>
+
+## OI-039
+
+- Related requirement: [REQ-08.01](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 024
+- Current state: untested
+- Reason it is incomplete: this collector reads Windows CPU, memory, processor frequency, battery percent, and process working set through Win32. Windows GPU utilization, dedicated VRAM, thermal zones, RAPL, and perf counters stay `unsupported` with reason `reader_absent` because this collector has no reader for those APIs. This Linux host did not execute the Windows tests. It also has no sysfs GPU, cpufreq, thermal, hwmon, battery, or RAPL source, so those Linux readings are `unsupported` with `no_counter` or the matching absent reason. That is the honest result on this host, not a Windows run.
+- Responsible PR: 024 for the Windows GPU, VRAM, and thermal readers. Plan 032 remains drive health. Plan 048 remains the authorized-load scenario.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows 10 or 11 x64 with a GPU, running `cargo test --locked --workspace` and the pulse observe test
+- Acceptance criteria: that run records measured CPU and memory. GPU utilization, VRAM, and temperature are measured from a named API, or `unsupported` because that API reported the counter absent. `reader_absent` does not remain for a counter the API can read.
+- Close conditions: the Windows run is recorded and the reader no longer returns `reader_absent` for a counter that API read. This row does not close E2E-08 or plan 032.
 
 <a id="e2e-17"></a>
 

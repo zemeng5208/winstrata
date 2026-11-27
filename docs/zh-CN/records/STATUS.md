@@ -312,6 +312,16 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 这次换基自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。OI-016 和 E2E-02 仍开放。
 
+## PR 024 验证
+
+计划 024 从 main `2b4912a715a957b48e5451514a3a6d8393203545` 开始，即 GitHub PR #27 的合并。父提交是 `857115ebbdc364358e6487609b59c56be80b2e3c` 和 `6b07f3f1240622a38f39f11f79abe60a9855a005`。分支是 `pr/024-strata-pulse`。`PLAN.md` 未改。请求的合并位置是紧接计划 023 之后、计划 025 之前。直接前提 010、012、014 和 016 已在这个 main 上。计划 023 不在这个 main 上，因此在 023 进入 main 之前，前序合并策略预期失败。本计划不实现 020、021、022、023、025、026、027 或 032。
+
+在这台 Linux x86_64 主机上，Rust 1.100.0、Python 3.12.3 和 Node.js 24.22.3。`cargo build --locked --workspace` 之后，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 67 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试、5 个桌面测试、1 个 `winstrata-strata-process` 测试、8 个 `winstrata-strata-pulse` 单元测试、1 个 `winstrata-strata-pulse` 观测测试和 3 个 `winstrata-strata-registry` 测试。`WINSTRATA_NODE` 指向 Node.js 24.22.3。`PATH` 上原有的 `node` 是 v22.23.4。观测测试要求测得的内存总量、不超过总量的可用内存、等于二者之差的已用内存、0 到 1,000,000 ppm 的 CPU 差分、至少为 1 的进程数、首行历史里没有数值的 CPU 基线、内存总量峰值、已提交的混合序列 `pulse.memory.total.bytes`，以及不支持的 GPU 读数没有对应的混合序列。暂停期间采样计数不变。禁用写入了 `joined`。
+
+这台主机没有 cpufreq、温度区、hwmon、电源、RAPL 或 DRM 目录，因此这些读数是不支持。`RUSTFLAGS="-Dwarnings" cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-core -p winstrata-runtime -p winstrata-strata-pulse` 对 Windows 的 CPU、内存、频率、电池和进程路径做了类型检查。这些 Windows 测试没有执行。Windows 上的 GPU 利用率、显存和温度保持 `unsupported`，原因是 `reader_absent`。见 [OI-039](OPEN_ITEMS.md#oi-039)。E2E-08 未完成。`Cargo.lock` 增加路径包 `winstrata-strata-pulse`，没有新增外部 crate 版本。官方外壳没有改动。[GUI_SOURCES.md](GUI_SOURCES.md) 没有变化。没有加入 Fluent UI 或 Astryx。
+
+这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。
+
 ## 交接
 
 所有者于 2026-11-27T15:48:53Z 将计划 013 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树为 `68a5db4598a9659a437368289d368ce60dd5b7d2`。当时的 main Windows 工作区检查失败。见 [ERR-005](modules/core.md#err-005)。
@@ -330,7 +340,11 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T20:02:11Z 将计划 018 作为 [GitHub PR #26](https://github.com/zemeng5208/winstrata/pull/26) 合并为 `857115ebbdc364358e6487609b59c56be80b2e3c`。父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8` 和 `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`。文件树 `e3504f162f67459ddfed19ffa0e17ed71186f551`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-02 和 E2E-03 仍开放。
 
-当前交接点是计划 019，分支 `pr/019-strata-registry`。请求的合并位置是紧接计划 018 之后、计划 020 之前。计划 018 已在 main `857115ebbdc364358e6487609b59c56be80b2e3c` 上。本计划不开始计划 020。这次换基的四项门禁还没有回来。所有者合并。本 Agent 不合并。
+计划 019 的交接点曾是分支 `pr/019-strata-registry`。请求的合并位置是紧接计划 018 之后、计划 020 之前。计划 018 当时在 main `857115ebbdc364358e6487609b59c56be80b2e3c` 上。该计划不开始计划 020。
+
+所有者于 2026-11-28T04:14:12+08:00 将计划 019 作为 [GitHub PR #27](https://github.com/zemeng5208/winstrata/pull/27) 合并为 `2b4912a715a957b48e5451514a3a6d8393203545`。父提交是 `857115ebbdc364358e6487609b59c56be80b2e3c` 和 `6b07f3f1240622a38f39f11f79abe60a9855a005`。文件树 `a7fd4fc430af6f5f4cf864e65de7fff0dcf2e8c7`。这份记录不为该合并提交附加 CI 地址。OI-016 和 E2E-02 仍开放。
+
+当前交接点是计划 024，分支 `pr/024-strata-pulse`。请求的合并位置是紧接计划 023 之后、计划 025 之前。直接前提 010、012、014 和 016 已在 main `2b4912a715a957b48e5451514a3a6d8393203545` 上。计划 023 不在这个 main 上。本计划不实现 023、025 或 026，也不修改 `PLAN.md`。这个分支的四项门禁还没有回来。所有者合并。本 Agent 不合并。
 
 ## PR 018 验证
 
