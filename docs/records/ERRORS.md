@@ -37,7 +37,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 
 `plugins/strata-script` has no open error. [ERR-022](modules/strata-script.md#err-022) stays in its register. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
 
-Plan 028 keeps its module register at [Filter plugin](modules/strata-filter.md). That file records no error yet. [OI-052](OPEN_ITEMS.md#oi-052) and [OI-053](OPEN_ITEMS.md#oi-053) are the Windows filter gaps and are not error ids.
+Plan 028 keeps its module register at [Filter plugin](modules/strata-filter.md). That file records no error yet. [OI-052](OPEN_ITEMS.md#oi-052) is closed for the Windows Server 2022 job on `bc009ea2ee3481ae8a9fea295c246380249cd32a`. [OI-053](OPEN_ITEMS.md#oi-053) remains the Windows page gap. Neither is an error id.
 
 Plan 023 keeps its module register at [Startup plugin](modules/strata-startup.md). That file records no error yet. [OI-049](OPEN_ITEMS.md#oi-049) is the Windows startup gap and is not an error id.
 

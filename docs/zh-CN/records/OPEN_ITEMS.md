@@ -61,7 +61,7 @@
 | [OI-049](#oi-049) | `01f26d1` 上的 Server 2022 探测已记录；Windows 10/11 仍属于 [OI-001](#oi-001) | 023 |
 | [OI-050](#oi-050) | 编写主机未测试 | 026 |
 | [OI-051](#oi-051) | 未实现 | 030、031、032、016、042 |
-| [OI-052](#oi-052) | 编写主机未测试 | 028 |
+| [OI-052](#oi-052) | 头 `bc009ea` 的 Windows Server 2022 已关闭 | 028 |
 | [OI-053](#oi-053) | 未测试 | 028 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
@@ -940,13 +940,13 @@
 
 - 关联需求: [REQ-13.01](../roadmap/REQUIREMENTS.md) 和 [REQ-13.02](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 028，`plugins/strata-filter`
-- 当前状态: 未测试
-- 未完成原因: Linux 编写主机没有执行 Windows 过滤测试。pid 1 是 tini。Linux 上 `gui_script_batch_io_and_self_recursion` 通过不是 Windows 通过。本项是 OI-052，因为 OI-039 至 OI-051 已经占用。
+- 当前状态: 头 `bc009ea2ee3481ae8a9fea295c246380249cd32a` 上的 Windows Server 2022 作业已经关闭本项
+- 未完成原因: Linux 编写主机没有执行 Windows 过滤测试。pid 1 是 tini。Linux 上 `gui_script_batch_io_and_self_recursion` 通过不是 Windows 通过。本项是 OI-052，因为 OI-039 至 OI-051 已经占用。满足本行的结果是该头上的 Windows 工作区作业，镜像 `windows-2022`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46082494823/job/140784426136)。2026-11-27T23:28:02Z 的日志显示 `gui_script_batch_io_and_self_recursion ... ok`，过滤库测试通过 4 项。同一作业显示 `filter_page_stays_idle_and_does_not_create_plugins_before_a_location ... ok`。这个空闲桥测试不关闭 [OI-053](#oi-053)。
 - 负责 PR: 028，本计划审查头上的 Windows 工作区作业
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 本计划审查头上的 Windows 工作区作业，`cargo test --locked --workspace`
 - 验收标准: 该作业通过 `winstrata-strata-filter` 测试，包括 `gui_script_batch_io_and_self_recursion`
-- 关闭条件: 该作业记在本计划的审查头上。Linux 通过不关闭它。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04)、[E2E-05](#e2e-05)、[E2E-07](#e2e-07) 或 [E2E-08](#e2e-08)。这不是豁免。
+- 关闭条件: 对头 `bc009ea2ee3481ae8a9fea295c246380249cd32a` 已经由上面的作业满足。Linux 通过不关闭它。本行不关闭 [OI-001](#oi-001)、[OI-053](#oi-053)、[E2E-04](#e2e-04)、[E2E-05](#e2e-05)、[E2E-07](#e2e-07) 或 [E2E-08](#e2e-08)。这不是豁免。Windows 10 和 Windows 11 仍属于 [OI-001](#oi-001)。
 
 <a id="oi-053"></a>
 

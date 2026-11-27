@@ -32,4 +32,4 @@
 
 ## 本计划之外
 
-计划 029、030 和 038 不在本计划内。标记持久化、删除和快照比较仍留在那些计划。磁盘、网络和存储预算仍是 [OI-051](../records/OPEN_ITEMS.md#oi-051)。这台 Linux 编写主机没有执行 Windows 过滤测试。那是 [OI-052](../records/OPEN_ITEMS.md#oi-052)。官方过滤页没有在 Windows 上打开。那是 [OI-053](../records/OPEN_ITEMS.md#oi-053)。[E2E-04](../roadmap/ACCEPTANCE.md#e2e-04)、[E2E-05](../roadmap/ACCEPTANCE.md#e2e-05)、[E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) 和 [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08) 仍待完成。
+计划 029、030 和 038 不在本计划内。标记持久化、删除和快照比较仍留在那些计划。磁盘、网络和存储预算仍是 [OI-051](../records/OPEN_ITEMS.md#oi-051)。头 `bc009ea2ee3481ae8a9fea295c246380249cd32a` 上的 Windows Server 2022 工作区作业通过了过滤测试。这关闭该头上的 [OI-052](../records/OPEN_ITEMS.md#oi-052)。官方过滤页没有在 Windows 上打开。那是 [OI-053](../records/OPEN_ITEMS.md#oi-053)。[E2E-04](../roadmap/ACCEPTANCE.md#e2e-04)、[E2E-05](../roadmap/ACCEPTANCE.md#e2e-05)、[E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) 和 [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08) 仍待完成。
