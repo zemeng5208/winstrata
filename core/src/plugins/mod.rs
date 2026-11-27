@@ -293,7 +293,7 @@ struct StoredEntry {
 }
 
 pub struct PluginHost {
-    root: PathBuf,
+    root: Anchor,
     runtime: PathBuf,
     epoch: String,
     entries: Vec<Installed>,
@@ -314,7 +314,7 @@ impl Drop for PluginHost {
 }
 
 impl PluginHost {
-    pub(crate) fn open(dir: &Anchor, runtime: &Path) -> Result<Self, PluginError> {
+    pub(crate) fn open(dir: Anchor, runtime: &Path) -> Result<Self, PluginError> {
         let runtime = fs::canonicalize(runtime).map_err(|error| {
             PluginError::new(
                 "runtime_missing",
@@ -327,12 +327,10 @@ impl PluginHost {
                 "plugin runtime is not a file",
             ));
         }
-        // Linux 句柄路径在目录关闭后失效。Windows 的 canonicalize 会加上
-        // `\\?\` 前缀，而目录锚点只接受普通盘符路径。
-        let root = reopenable_directory(dir.io_path())?;
+        // 目录已经由调用方固定。再按路径打开会与现有共享模式冲突，Windows 返回占用错误。
         let epoch = crate::platform::fresh_id()?;
         let mut host = Self {
-            root,
+            root: dir,
             runtime,
             epoch,
             entries: Vec::new(),
@@ -1436,7 +1434,7 @@ impl PluginHost {
     }
 
     fn read_entries(&mut self) -> Result<(), PluginError> {
-        let anchor = self.anchor()?;
+        let anchor = self.anchor();
         let stored = match files::read_json::<StoredHost>(&anchor, "host.json") {
             Ok(stored) => stored,
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
@@ -1505,7 +1503,7 @@ impl PluginHost {
                 })
                 .collect(),
         };
-        files::write_json(&self.anchor()?, "host.json", &stored)?;
+        files::write_json(self.anchor(), "host.json", &stored)?;
         Ok(())
     }
 
@@ -1530,14 +1528,14 @@ impl PluginHost {
             ));
         }
         let dir = self
-            .anchor()?
+            .anchor()
             .child(std::ffi::OsStr::new("history"), true, true)?;
         // 句柄路径在目录关闭后失效，历史文件必须落在真实目录上。
         Ok(fs::canonicalize(dir.io_path())?.join(format!("{id}.jsonl")))
     }
 
-    fn anchor(&self) -> Result<Anchor, PluginError> {
-        Ok(Anchor::open(&self.root)?)
+    fn anchor(&self) -> &Anchor {
+        &self.root
     }
 
     fn ensure_dir(&self, tree: &str, id: &str) -> Result<Anchor, PluginError> {
@@ -1545,7 +1543,7 @@ impl PluginHost {
             return Err(PluginError::new("invalid_input", "plugin path is not safe"));
         }
         let parent = self
-            .anchor()?
+            .anchor()
             .child(std::ffi::OsStr::new(tree), true, true)?;
         Ok(parent.child(std::ffi::OsStr::new(id), true, true)?)
     }
@@ -1602,7 +1600,7 @@ impl PluginHost {
             return Err(PluginError::new("invalid_input", "plugin path is not safe"));
         }
         let parent = self
-            .anchor()?
+            .anchor()
             .child(std::ffi::OsStr::new(tree), true, true)?;
         let path = fs::canonicalize(parent.io_path())?.join(id);
         if path.exists() {
@@ -1621,24 +1619,6 @@ fn static_code(code: Option<&str>) -> &'static str {
         Some("faulted") => "faulted",
         _ => "rejected",
     }
-}
-
-fn reopenable_directory(path: &Path) -> io::Result<PathBuf> {
-    let canonical = fs::canonicalize(path)?;
-    #[cfg(windows)]
-    {
-        use std::os::windows::ffi::{OsStrExt, OsStringExt};
-        let wide: Vec<u16> = canonical.as_os_str().encode_wide().collect();
-        const PREFIX: &[u16] = &[92, 92, 63, 92];
-        if wide.starts_with(PREFIX) && wide.len() >= PREFIX.len() + 3 {
-            let rest = &wide[PREFIX.len()..];
-            if matches!(rest[0], 65..=90 | 97..=122) && rest[1] == 58 && matches!(rest[2], 47 | 92)
-            {
-                return Ok(PathBuf::from(std::ffi::OsString::from_wide(rest)));
-            }
-        }
-    }
-    Ok(canonical)
 }
 
 fn official(id: &str) -> Option<&'static OfficialPlugin> {

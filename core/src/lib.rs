@@ -396,7 +396,7 @@ impl Core {
         let plugins = dir
             .child(OsStr::new("plugins"), true, true)
             .map_err(|error| PluginError::new("storage_unavailable", error.to_string()))?;
-        PluginHost::open(&plugins, runtime)
+        PluginHost::open(plugins, runtime)
     }
 
     // 在当前用户目录打开混合存储。卷错误会暂停会话；记录内容错误不会。
