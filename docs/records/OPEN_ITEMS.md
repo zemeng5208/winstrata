@@ -27,7 +27,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-013](#oi-013) | Untested | 016 |
 | [OI-014](#oi-014) | Unaccepted | 008 follow-up |
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
-| [OI-016](#oi-016) | Known limitation | 019, 021 |
+| [OI-016](#oi-016) | Partly tested | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
 | [OI-018](#oi-018) | Untested | 021 |
 | [OI-019](#oi-019) | Partly tested | 015 |
@@ -269,13 +269,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
-- Current state: known limitation
-- Reason it is incomplete: the user-mode APIs do not report those fields. The limit does not forbid a later approved kernel callback.
-- Responsible PR: 019 and 021
+- Current state: partly tested
+- Reason it is incomplete: plan 019 records user-mode before/after values for current-user and local-machine keys. `precision_ns` and the acting process are still omitted. A signed registry callback was not loaded. Plan 021 still owns the file side.
+- Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
-- Verification environment: the Windows watch or a later approved kernel callback
-- Acceptance criteria: before/after attribution is tested in the responsible plan, or the omitted fields stay documented
-- Close conditions: the responsible plan's evidence is recorded. Not marked as kernel attribution.
+- Verification environment: the Windows file watch or a later approved kernel callback
+- Acceptance criteria: plan 021 tests its before/after attribution, or the omitted fields stay documented
+- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution.
 
 <a id="oi-017"></a>
 

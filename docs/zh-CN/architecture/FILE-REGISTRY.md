@@ -20,7 +20,7 @@
 
 只有第一次读取或通知已经挂起之后，才会发出启动完成信号。调用方最多等待 2 秒。若注册表通知在基线快照和第一次武装之间已经触发，线程发布一条 `lost` 缺口并重新取样。这些值不能逐条归因。之后的 `lost` 缺口不会停止监视。读取、武装或快照的硬失败会发布 `source_failure`，记录健康错误并退出线程。`FileRegistry::view` 和 `subscribe` 在健康错误已设置时把就绪通道改为失败。`release` 不这样做，因此失败的线程仍可被停止。
 
-Win32 `ERROR_NOTIFY_ENUM_DIR`（1022）和长度为 0 的成功读取都是没有区间的 `lost` 缺口。`ERROR_OPERATION_ABORTED`（995）是取消。单元测试覆盖了这一分类。本计划没有在真实监视中故意撑满 16 KiB 缓冲区。
+Win32 `ERROR_NOTIFY_ENUM_DIR`（1022）和长度为 0 的成功读取都是没有区间的 `lost` 缺口。`ERROR_OPERATION_ABORTED`（995）是取消。单元测试覆盖了这一分类。本计划没有在真实监视中故意撑满 16 KiB 缓冲区。计划 019 在[注册表插件](REGISTRY.md)中记录当前用户和本机的变更前后归因。计划 009 仍然只监视一个 HKCU 子键。
 
 ## 协议字段
 
@@ -32,4 +32,4 @@ Win32 `ERROR_NOTIFY_ENUM_DIR`（1022）和长度为 0 的成功读取都是没�
 
 ## 仍保留的限制
 
-没有加载或卸载已签名驱动。没有在 Secure Boot 和 HVCI 下验证。本变更没有测试 Windows 10 和 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。E2E-02 仍要求在选定磁盘、其他用户和更完整的文件与注册表场景上通过 GUI 查询。变更前后的插件归因仍属于 PR 019。文件插件仍属于 PR 021。
+没有加载或卸载已签名驱动。没有在 Secure Boot 和 HVCI 下验证。本变更没有测试 Windows 10 和 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。E2E-02 仍要求在选定磁盘、其他用户和更完整的文件与注册表场景上通过 GUI 查询。计划 019 记录了用户态的变更前后插件归因。文件插件仍属于 PR 021。
