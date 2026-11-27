@@ -1,6 +1,6 @@
 # Per-user Core configuration and hybrid storage
 
-[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012) · [Plan 013](../roadmap/PLAN.md#pr-013)
+[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012) · [Plan 013](../roadmap/PLAN.md#pr-013) · [Plan 014](../roadmap/PLAN.md#pr-014)
 
 PR 006 provides the local Core session, its settings and the storage needed to reopen them. The caller gets the identity of the running OS account. Windows uses the process token's user SID and Linux uses the effective UID.
 
@@ -46,6 +46,10 @@ A sealed record is `WSE1`, a 12-byte nonce, the ciphertext and a 16-byte tag. Th
 `change_password` rewraps the current data key. `rotate_keys` creates a new data key, rewrites each referenced record at the same length, then rewraps the vault. A crash between the rewrite and the rewrap can leave new ciphertext under the old wrap. If rewrap fails in-process, Core tries to write the previous key back. This is not a crash-safe rotation.
 
 `backup_full` and `backup_incremental` write one `WSB1` package outside the user directory. The package copies regular files and a CRC of each file. An incremental package stores files whose length or CRC changed since a full package of the same user and workspace, plus paths removed since that package. Backup and restore are refused while monitoring is live. Backup is allowed while locked, and the package keeps ciphertext. Restore checks the user, workspace, configuration and every file CRC, and rejects `..` before writing. The recorded device id does not have to match the destination. There is no plaintext export, plugin export, time-range split, or deletion quota here. Those remain plans 038, 042 and 030.
+
+## Plugin control files
+
+`Core::open_at` is public so a caller can name the locator directory. `Core::open()` still uses the operating-system locator. After storage is selected, `Core::open_plugins` creates `<user>/plugins`. The host state, history, packages, recovery copies, and private plugin directories are regular files in that directory. They are not written into `vault.wsv`. This plan does not encrypt them. The [plugin host](PLUGINS.md) describes their lifecycle.
 
 ## Verification scope
 

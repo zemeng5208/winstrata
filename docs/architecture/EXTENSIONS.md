@@ -6,6 +6,8 @@
 
 ## Plugin and script system
 
+Plan 014 records the native contract and process lifecycle in [Plugins](PLUGINS.md). The 25 collectors, user opt-in, Python and TypeScript/JavaScript SDKs, OS containment, the shared market, and signed transactional rollback remain later plans.
+
 Manage each plugin's load, start, pause, stop, disable, update, and recovery independently. Third-party plugins can be uninstalled. Built-ins remain installed. Disable stops exclusive subscriptions, resources, and tasks and preserves history. Shared collection uses references. Support live install, replacement, disable, and update without restarting the GUI or Windows where safe. Report driver restart requirements. Verify compatible dependencies, data and config migration, and transactional rollback.
 
 Declare capabilities, dependencies, events, services, UI components, pages, navigation and dashboard widgets, permissions, locale resources, MCP, and script interfaces. A manifest file is a candidate. Format, protocol fields, runtime and IPC require approval. Installation grants scoped permissions, updates request new permissions, and revocation takes effect at any time. Audit file and directory reads, registry, capture, discovery, outbound network, process and system state, history, plugin communication, dedicated storage, and GUI. Deny undeclared or indirect privilege.
