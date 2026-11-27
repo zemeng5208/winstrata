@@ -54,7 +54,7 @@ Windows 可以打开 `IPPROTO_IP` 的 `SOCK_RAW`，并且不设置 `SIO_RCVALL`�
 
 ## 边界
 
-生产环境的 Core 不依赖 kernel crate。kernel crate 不依赖 Core。Core 的测试可以把 kernel 用作开发依赖。没有新增 crate 版本。Linux 使用已经批准的 `libc` 0.2.191。Windows 使用已经批准的 `windows-sys` 0.61.2，并启用这些 API 所需的 IpHelper、Ndis 和 WinSock 特性。
+Core 依赖 kernel crate，因为计划 009 的文件和注册表采集在那里运行。kernel crate 不依赖 Core。没有新增 crate 版本。Linux 使用已经批准的 `libc` 0.2.191。Windows 使用已经批准的 `windows-sys` 0.61.2，并启用这些 API 所需的 IpHelper、Ndis 和 WinSock 特性。
 
 文件、注册表、进程、线程和模块采集仍属于计划 009 和 010。共享存储是 012。静态加密是 013。插件契约是 014。拓扑、发现、PCAPNG 导出和产品风险标记体验仍属于计划 031。REQ-09.02、REQ-10.02 和 REQ-10.03 不属于本计划。E2E-04 未完成。
 

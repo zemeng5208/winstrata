@@ -54,7 +54,7 @@ This plan also does not persist untagged connection metadata. That retention cho
 
 ## Boundaries
 
-Production Core does not depend on the kernel crate. The kernel crate does not depend on Core. Core tests may use the kernel as a development dependency. No new crate version is added. Linux uses the already approved `libc` 0.2.191. Windows uses the already approved `windows-sys` 0.61.2 and enables the IpHelper, Ndis and WinSock features those APIs require.
+Core depends on the kernel crate because plan 009 runs file and registry collection there. The kernel crate does not depend on Core. No new crate version is added. Linux uses the already approved `libc` 0.2.191. Windows uses the already approved `windows-sys` 0.61.2 and enables the IpHelper, Ndis and WinSock features those APIs require.
 
 File, registry, process, thread and module collection remain plans 009 and 010. Shared storage is 012. Encryption at rest is 013. Plugin contracts are 014. Topology, discovery, PCAPNG export and the product risk-tag experience remain plan 031. REQ-09.02, REQ-10.02 and REQ-10.03 are not this plan. E2E-04 is not complete.
 
