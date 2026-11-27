@@ -146,5 +146,5 @@
 - 根因: `commit_plugin_metrics` 把规范化后的状态路径传给 `Anchor::open`。Windows 上这条路径以 `\\?\` 开头，而锚点只接受盘符路径，因此每次指标提交都失败。
 - 影响: Windows 上的历史仍留在私有文件里，计划 012 的序列没有写入。Windows 工作区检查失败，因此 Workspace 检查失败。
 - 修复计划: 打开锚点前去掉规范化路径上的 `\\?\` 盘符前缀。目录形状检查保留。脉冲观测测试保留。
-- 重测结果: 尚未记录。包含这项修复的提交上的 Windows 工作区作业是重测。
-- 当前状态: 未解决
+- 重测结果: 在 `c827132aa9d072a0239594d12729e53c2ec81eff` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过，包括 `counters_history_and_unsupported_readings_survive_pause_and_disable`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171555)。该头的 Linux 工作区检查和 Workspace 检查也通过。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171180) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738791133)。该头已发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 022 must merge before plan 024”。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46068086984)。该顺序结果是预期的，不是这项缺陷。这份较晚的记录只是写下该重测，所以它自己的四项门禁不是那些结果。
+- 当前状态: 已解决
