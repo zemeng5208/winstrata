@@ -1,8 +1,11 @@
-//! 原生插件的清单、权限、依赖和进程生命周期。
+//! 插件清单、权限、依赖和进程生命周期。
 //!
-//! 官方 25 个身份保留在目录中。本计划不装入它们的采集实现。第三方包以独立进程运行。
+//! 官方 25 个身份保留在目录中。本计划不装入它们的采集实现。
+//! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
+mod language;
 mod process;
+mod sandbox;
 
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
@@ -20,7 +23,9 @@ use crate::bus::{EventBus, Filter};
 use crate::files;
 use crate::platform::Anchor;
 
-use process::Live;
+pub use language::LanguageRequirement;
+use language::{Toolchain, entry_name, language_runtime, shim_beside, supported_runtime};
+use process::{Live, native_command};
 
 const MAX_INSTALLED: usize = 256;
 const MAX_RUNNING: usize = 64;
@@ -300,6 +305,7 @@ pub struct PluginHost {
     live: HashMap<String, Live>,
     bus: Option<EventBus>,
     starting: Vec<String>,
+    languages: Option<Toolchain>,
 }
 
 impl Drop for PluginHost {
@@ -309,6 +315,7 @@ impl Drop for PluginHost {
             if let Some(live) = self.live.remove(&id) {
                 live.finish();
             }
+            self.release_environment(&id);
         }
     }
 }
@@ -337,6 +344,7 @@ impl PluginHost {
             live: HashMap::new(),
             bus: None,
             starting: Vec::new(),
+            languages: None,
         };
         host.read_entries()?;
         Ok(host)
@@ -344,6 +352,19 @@ impl PluginHost {
 
     pub fn attach_bus(&mut self, bus: EventBus) {
         self.bus = Some(bus);
+    }
+
+    /// 绑定项目声明的解释器和 SDK。语言插件在绑定前不能安装。
+    pub fn bind_languages(
+        &mut self,
+        python: &Path,
+        node: &Path,
+        sdk: &Path,
+        requirement: &LanguageRequirement,
+    ) -> Result<(), PluginError> {
+        let shim = shim_beside(&self.runtime);
+        self.languages = Some(Toolchain::bind(python, node, sdk, &shim, requirement)?);
+        Ok(())
     }
 
     pub fn list(&self) -> Vec<PluginReport> {
@@ -374,6 +395,7 @@ impl PluginHost {
         let files = read_package(package)?;
         let manifest = manifest_from(&files)?;
         self.reject_install(&manifest)?;
+        self.require_entry(&manifest, &files)?;
         if self.entries.len() >= MAX_INSTALLED {
             return Err(PluginError::new(
                 "resource_limit",
@@ -495,6 +517,7 @@ impl PluginHost {
         self.absent(id)?;
         let files = read_package(package)?;
         let manifest = manifest_from(&files)?;
+        self.require_entry(&manifest, &files)?;
         self.prepare_update(id, &manifest)?;
         self.write_tree("staging", id, &files)?;
         if self.live.contains_key(id) {
@@ -880,12 +903,7 @@ impl PluginHost {
         }
         let manifest_path = self.member_path("packages", id, "manifest.json")?;
         let state_path = self.tree_path("state", id)?;
-        let mut live = Live::spawn(
-            &self.runtime,
-            &manifest_path,
-            &state_path,
-            manifest.plugin_version,
-        )?;
+        let mut live = self.spawn_plugin(&manifest, &manifest_path, &state_path)?;
         let reply = match live.exchange(&PluginFrame::request("ping")) {
             Ok(reply) => reply,
             Err(error) => {
@@ -931,12 +949,7 @@ impl PluginHost {
     fn probe_staged(&self, manifest: &Manifest) -> Result<Live, PluginError> {
         let manifest_path = self.member_path("staging", manifest.id.as_str(), "manifest.json")?;
         let state_path = self.tree_path("state", manifest.id.as_str())?;
-        let mut live = Live::spawn(
-            &self.runtime,
-            &manifest_path,
-            &state_path,
-            manifest.plugin_version,
-        )?;
+        let mut live = self.spawn_plugin(manifest, &manifest_path, &state_path)?;
         match live.exchange(&PluginFrame::request("ping")) {
             Ok(reply) if reply.ok == Some(true) && reply.pid == Some(live.pid()) => Ok(live),
             Ok(_) | Err(_) => {
@@ -961,10 +974,23 @@ impl PluginHost {
                 "update package is a different plugin",
             ));
         }
-        if manifest.runtime.as_str() != "native" {
+        if !supported_runtime(manifest.runtime.as_str()) {
             return Err(PluginError::new(
                 "unsupported_runtime",
-                "only the native runtime can be updated here",
+                "plugin runtime is not supported",
+            ));
+        }
+        let installed = self.manifest_file(id)?;
+        if installed.runtime.as_str() != manifest.runtime.as_str() {
+            return Err(PluginError::new(
+                "invalid_manifest",
+                "plugin runtime cannot change in an update",
+            ));
+        }
+        if language_runtime(manifest.runtime.as_str()) && self.languages.is_none() {
+            return Err(PluginError::new(
+                "toolchain_missing",
+                "language toolchain is not bound",
             ));
         }
         let entry = self.entry(id)?;
@@ -1056,6 +1082,7 @@ impl PluginHost {
             entry.availability = availability.to_owned();
         }
         self.save()?;
+        self.release_environment(id);
         if code != 0 {
             return Err(PluginError::new(
                 "unhealthy",
@@ -1063,6 +1090,50 @@ impl PluginHost {
             ));
         }
         Ok(())
+    }
+
+    fn release_environment(&self, id: &str) {
+        let Ok(state) = self.tree_path("state", id) else {
+            return;
+        };
+        let environment = state.join("env");
+        if environment.exists() {
+            let _ = fs::remove_dir_all(environment);
+        }
+    }
+
+    fn require_entry(
+        &self,
+        manifest: &Manifest,
+        files: &[(String, Vec<u8>)],
+    ) -> Result<(), PluginError> {
+        if let Some(entry) = entry_name(manifest.runtime.as_str()) {
+            if !files.iter().any(|(name, _)| name == entry) {
+                return Err(PluginError::new(
+                    "invalid_manifest",
+                    "language package is missing its entry",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn spawn_plugin(
+        &self,
+        manifest: &Manifest,
+        manifest_path: &Path,
+        state: &Path,
+    ) -> Result<Live, PluginError> {
+        if manifest.runtime.as_str() == "native" {
+            return Live::spawn(
+                native_command(&self.runtime, manifest_path, state),
+                manifest.plugin_version,
+            );
+        }
+        let tools = self.languages.as_ref().ok_or_else(|| {
+            PluginError::new("toolchain_missing", "language toolchain is not bound")
+        })?;
+        language::launch(tools, manifest, manifest_path, state, self.root.io_path())
     }
 
     fn stop_live(mut live: Live, op: &str) -> i32 {
@@ -1274,10 +1345,16 @@ impl PluginHost {
     }
 
     fn reject_install(&self, manifest: &Manifest) -> Result<(), PluginError> {
-        if manifest.runtime.as_str() != "native" {
+        if !supported_runtime(manifest.runtime.as_str()) {
             return Err(PluginError::new(
                 "unsupported_runtime",
-                "this host only loads the native runtime",
+                "plugin runtime is not supported",
+            ));
+        }
+        if language_runtime(manifest.runtime.as_str()) && self.languages.is_none() {
+            return Err(PluginError::new(
+                "toolchain_missing",
+                "language toolchain is not bound",
             ));
         }
         if manifest.kind != PluginKind::ThirdParty {

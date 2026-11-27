@@ -1,6 +1,6 @@
 # 原生插件契约与生命周期
 
-[English](../../architecture/PLUGINS.md) · [文档索引](../INDEX.md) · [Rust 宿主](../../../core/src/plugins/mod.rs) · [运行时](../../../runtimes/src/main.rs) · [计划 014](../roadmap/PLAN.md#pr-014)
+[English](../../architecture/PLUGINS.md) · [文档索引](../INDEX.md) · [Rust 宿主](../../../core/src/plugins/mod.rs) · [运行时](../../../runtimes/src/main.rs) · [语言运行时](RUNTIMES.md) · [计划 014](../roadmap/PLAN.md#pr-014)
 
 计划 014 增加原生包契约、依赖检查和进程生命周期。25 个官方身份保留在目录中。它们的采集实现、界面、用户选择启用、语言 SDK、操作系统隔离、市场和签名回退仍属于后续计划。
 
@@ -10,7 +10,7 @@
 
 插件 id 为 1 到 64 字节。它以小写字母开头，随后只使用小写字母、数字、`.` 或 `-`。它不能包含 `..`，也不能以 `.` 结尾。能力、事件和依赖 id 使用同一形式。`exact` 要求版本相等。`compatible` 在主版本 0 时保持同一次版本且修订不低于要求，在主版本 1 及以上时保持同一主版本且次版本和修订不低于要求。更新必须严格更新。
 
-权限为 `event.publish`、`event.subscribe`、`history.read`、`plugin.call` 和 `storage.private`。只有 `strata.rescue` 可以把 `rescue` 设为真。其他清单这样设置时返回 `rescue_isolated`。本宿主安装的包，`kind` 必须是 `third_party`，`runtime` 必须是 `native`。
+权限为 `event.publish`、`event.subscribe`、`history.read`、`plugin.call` 和 `storage.private`。只有 `strata.rescue` 可以把 `rescue` 设为真。其他清单这样设置时返回 `rescue_isolated`。本宿主安装的包，`kind` 必须是 `third_party`。`runtime` 是 `native`，或[语言运行时](RUNTIMES.md)中的一种。
 
 宿主和插件进程在标准输入输出上一次交换一帧：小端 `u32` 长度加 JSON，长度为 1 到 65,536 字节。操作是 `ping`、`pause`、`resume`、`stop`、`disable`、`emit`、`invoke`、`read_state`、`fault` 和 `result`。文本字段最多 1,024 字节，不能包含控制字符。运行时报告自己的进程 id。宿主把它与 `Child::id()` 比较。
 
@@ -83,4 +83,4 @@
 
 ## 本计划未完成的部分
 
-本计划实际运行的隔离是独立进程、私有目录，以及一个插件失败时另一个插件继续运行。这不是 AppContainer、Job Object 或 seccomp 沙箱。Python、TypeScript 和 JavaScript 运行时及 SDK 属于计划 015。官方默认界面属于计划 016。首次启用选择属于计划 017。25 个采集实现属于计划 018 至 047。市场属于计划 043。签名更新和事务回退属于计划 044。救援行为属于计划 047。完整 GUI 替换是 [AG-64](../AGENTS.md#ag-64)，记为计划 053。这里没有实现它，它也不是计划 016 的验收。计划 053 不另加实现计划编号。E2E-06、E2E-11 和 E2E-15 未完成。证据见[工程记录](../records/STATUS.md)。
+计划 014 对原生运行时实际使用的隔离是独立进程、私有目录，以及一个插件失败时另一个插件继续运行。这不是 AppContainer、Job Object 或 seccomp 沙箱。语言运行时及其操作系统隔离属于[计划 015](RUNTIMES.md)。官方默认界面属于计划 016。首次启用选择属于计划 017。25 个采集实现属于计划 018 至 047。市场属于计划 043。签名更新和事务回退属于计划 044。救援行为属于计划 047。完整 GUI 替换是 [AG-64](../AGENTS.md#ag-64)，记为计划 053。这里没有实现它，它也不是计划 016 的验收。计划 053 不另加实现计划编号。E2E-06、E2E-11 和 E2E-15 未完成。证据见[工程记录](../records/STATUS.md)。

@@ -39,7 +39,8 @@ pub use network::{
     flow_event, interface_event,
 };
 pub use plugins::{
-    DependencyStatus, OFFICIAL, OfficialPlugin, PluginError, PluginHost, PluginReport,
+    DependencyStatus, LanguageRequirement, OFFICIAL, OfficialPlugin, PluginError, PluginHost,
+    PluginReport,
 };
 pub use process::{
     MODULE_LOADED, MODULE_UNLOADED, PROCESS_EXITED, PROCESS_PROVIDER, PROCESS_SERVICE,

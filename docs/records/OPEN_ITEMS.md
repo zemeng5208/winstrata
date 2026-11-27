@@ -30,7 +30,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-016](#oi-016) | Known limitation | 019, 021 |
 | [OI-017](#oi-017) | Untested | 031 |
 | [OI-018](#oi-018) | Untested | 021 |
-| [OI-019](#oi-019) | Untested | 015 |
+| [OI-019](#oi-019) | Partly tested | 015 |
 | [OI-020](#oi-020) | Untested | 015, 048 |
 | [OI-021](#oi-021) | Known limitation | 050 |
 | [OI-022](#oi-022) | Pending decision | Owner |
@@ -311,8 +311,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: plan 004 isolation evidence and [REQ-21.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 004. The platform report says revocation of already-open handles, network access, the registry, and hosting full Python or Node runtimes remain unverified.
-- Current state: untested
-- Reason it is incomplete: the recorded AppContainer probe covered one file grant and revocation around process start
+- Current state: untested on Windows
+- Reason it is incomplete: Linux plan 015 denied sockets, new programs, files outside the ruleset, and inherited descriptors for real Python and Node processes. A handle opened inside the allowed state directory stayed readable after that. The Windows AppContainer, registry, and network test is in the suite and was not executed on the authoring host.
 - Responsible PR: 015
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows AppContainer or the isolation plan 015 selects

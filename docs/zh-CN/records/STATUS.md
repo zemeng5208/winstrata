@@ -33,8 +33,9 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 052 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #17](https://github.com/zemeng5208/winstrata/pull/17) 合并为 `004974215e239f96160b47d3eef40a84c316e802`。父提交为 `a2471d5fc13f0a307ee39d2629c454aea4537809` 与 `a6a22c200eca6d67f5cffff6f370d0537567850e`。进程树测试仍然要求一次真实退出，并等到完整采样能够报告这次退出。该合并提交的 Windows 工作区检查通过。计划 051 不实现这项修复。[主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/46036724064) |
 | PR 051 | 已合并，验收仍有待项 | 所有者于 2026-11-27T17:19:35Z 将 [GitHub PR #18](https://github.com/zemeng5208/winstrata/pull/18) 合并为 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`。被合并的头是 `b855c188c85bb9916bc388232f1469e9b849fcad`。只包含标准和记录。UI Moments 已指定且未验证。这一行不是对 UI Moments 的验收。这份记录不为该合并提交附加 CI 地址。 |
 | PR 014 | 已合并，验收仍有待项 | 所有者将 GitHub PR #20 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。父提交是 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637` 和 `6744e0e0fbdc222fbea19851db5f5e2ed5e8cf25`。这份规范记录不附加 CI 地址，也不关闭 E2E-06。较早的审查头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的 `winstrata/merge-policy` 状态，随后 Windows 插件生命周期测试因共享冲突失败。合并后的树保留已经固定的插件目录。 |
-| PR 053 | 提案 | 仅规范。所有者把它放在 014 之后，直接前置是 014。尚未合并。表的顺序使 015 等待。015 和 016 的直接依赖格未改。 |
-| PR 015–050 | 规划中 | 计划 015 仍先于计划 016。未合并的 GitHub PR #21 是计划 016，头为 `64bd627c362ad025869905441bee7802dda19ac1`，这里不验收它。本次规范变更不修改那个分支，也不把 053 写入它的直接依赖格。 |
+| PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
+| PR 015 | 待审查 | 在计划 014 和 053 之后实现了 [Python、TypeScript 和 JavaScript 运行时](../architecture/RUNTIMES.md)。Linux 在 Landlock 和 seccomp 中运行了真实脚本。头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。 |
+| PR 016–050 | 规划中 | 计划 015 仍先于计划 016。未合并的 GitHub PR #21 是计划 016，头为 `64bd627c362ad025869905441bee7802dda19ac1`，这里不验收它。本次规范变更不修改那个分支，也不把 053 写入它的直接依赖格。计划 016、017 及更晚的计划不属于计划 015。
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
 
 ## PR 000 验证
@@ -164,10 +165,10 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 | ADR-006 | 所有者已确认 | 2026-11-27，所有者把 UI Moments（`guanmo-ai/ui-moments`）指定为额外的指定 UI 来源。三个内置主题保持不变。这次指定复用已有的交互组件和动效。它不批准 Fluent UI 或 Astryx 作为产品依赖，不启动计划 016，也不取代计划 004 对 Amicro、Glasswork 和 shadcn-admin 的测量。UI Moments 在集成前仍需要同样的来源、许可证、WebView2 和性能审查。[前端标准](../architecture/FRONTEND.md#section-9)。[OI-009](OPEN_ITEMS.md#oi-009) |
 | ADR-007 | 提案，尚未生效 | 2026-11-28，所有者决定 GUI 必须可替换，并且官方 GUI 必须保留四个来源、三套主题和来源追踪。提案规则是 [AG-64](../AGENTS.md#ag-64)，指定为计划 053，紧接 014 之后。直接前置是 014。它只在所有者合并后生效。它不选定技术栈，也不实现 GUI。表的顺序使 015 等待；015 和 016 的直接依赖格不写 053。`0accacb` 的产品树没有 GUI 文件。未合并的 PR #21 已检查，未被修改。[来源登记](GUI_SOURCES.md)。[OI-036](OPEN_ITEMS.md#oi-036)。 |
 | AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。计划 008 和 011 都没有增加 INF/CAT 包，也没有加载已签名驱动。在启用 Secure Boot 与 HVCI 的 Windows 上做代表性加载和卸载仍待完成。PR 050 需验证完整 Linux 交叉构建。 |
-| AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。后来的 Windows Server 2022 作业已经执行计划 008 的令牌、管道和 SCM 拒绝检查。普通用户 GUI 仍属于 PR 016，混合运行时隔离属于 PR 015，持续性能属于 PR 048，Windows 10/11 客户端属于 PR 049。 |
+| AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。后来的 Windows Server 2022 作业已经执行计划 008 的令牌、管道和 SCM 拒绝检查。计划 015 已在 Linux 运行语言隔离。它的 Windows 容器测试尚未运行。普通用户 GUI 仍属于 PR 016，持续性能属于 PR 048，Windows 10/11 客户端属于 PR 049。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。计划 011 不持久化未标记连接元数据。 |
 | AS-004 | 已记录的约束 | 计划 007 的工作者池使用 Rust 标准库，因为尚未批准异步运行时包。更换运行时须单独决定依赖。[Core 运行时](../architecture/CORE-RUNTIME.md) |
-| AS-005 | 已记录的限制 | 服务认证的是操作系统用户，不是进程角色。以服务所有者身份运行的进程可以发送角色 `core`。`GuiClient` 只提供状态查询，服务端拒绝 `gui`、`plugin` 和 `script` 的订阅、释放和审计。插件能力隔离仍属于 PR 014 和 PR 015。[服务 IPC](../architecture/SERVICE-KERNEL.md) |
+| AS-005 | 已记录的限制 | 服务认证的是操作系统用户，不是进程角色。以服务所有者身份运行的进程可以发送角色 `core`。`GuiClient` 只提供状态查询，服务端拒绝 `gui`、`plugin` 和 `script` 的订阅、释放和审计。Linux 语言插件不能打开套接字，因此到不了该端点。未进入沙箱的同一用户进程仍然可以。[服务 IPC](../architecture/SERVICE-KERNEL.md) |
 | AS-006 | 已记录的限制 | 计划 009 在用户进程中使用 `ReadDirectoryChangesW` 和 `RegNotifyChangeKeyValue`。这些 API 不报告变更时刻的精度，也不报告操作进程，因此省略 `precision_ns` 和进程字段。没有加载已签名的 minifilter 或注册表回调。该限制不禁止以后经批准的内核回调。[文件与注册表采集](../architecture/FILE-REGISTRY.md) |
 | AS-007 | 已记录的限制 | 计划 010 对进程采样。只在两次采样之间出现并退出的进程不是事件，跟踪器也不为它编造序号缺口。退出时间是采样时间。ETW、内核回调、命令行和服务停止记录不属于本计划。计划 010 分支最初把这项限制记为 AS-006；main 上的 AS-006 已经属于计划 009。[进程来源](../architecture/PROCESS.md) |
 | AS-008 | 已记录的约束 | 计划 012 没有引入 SQLite 或其他新包。结构化对象、事件、时序、快照和抓包使用版本化分段，索引只保存位置和 CRC。换成 SQLite 须单独决定依赖。已合并的计划 010 记录已经使用 AS-007，因此这条约束记为 AS-008。[Core 存储](../architecture/CORE-STORAGE.md) |
@@ -258,6 +259,26 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 Linux x86_64、Rust 1.100.0 和 Intel Xeon 主机上，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过 60 项 Core 测试、23 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。`real_process_tree_pid_lifecycle_and_dedup` 另外单独通过 20 次。Node.js v22.23.4 上的 `node --test .github/scripts/merge-policy.test.mjs` 通过 9 项测试。这些测试接受把 052 插在 013 和 014 之间，并拒绝复用已合并的 013、在 052 之前合并 014、删除 014，以及把 014 相对 015 和相对 050 重排。草稿、合并阻断、过期基线、标题不匹配和缺少所有者评论仍然失败。同一个脚本对着本地 GitHub 替身读取测试合并路线图，并把这些结果写到头提交。那个头上两份路线图读出的顺序都是 013、052、014，行数是 52。计划 051 把自己的行插到 052 后面。合并后的顺序是 013、052、051、014，行数是 53。当前 Node.js 是 v22.23.4，锁定版本是 24.22.3，因此没有运行 `cargo dev doctor` 和 `cargo dev verify`。工作区测试命令是直接运行的。`Cargo.lock` 没有变化。没有新增包。见 [ERR-006](ERRORS.md#err-006)。在 `d180ae58afdfff1ce826875abb577792159e98a7` 上，Linux、Windows 和 Workspace 成功，已发布的策略状态失败，因为当时的 main 没有 052。所有者随后将计划 052 合并为 `004974215e239f96160b47d3eef40a84c316e802`。该合并的 Linux、Windows 和 Workspace 检查通过，“Evaluate merge policy from main” 也成功。写这份记录时，该合并提交的提交状态 API 没有返回状态上下文。没有运行 Windows 10/11 客户端、ETW、已签名 `strata-proc` 加载、E2E-02 和 E2E-03。这台 Linux 主机没有执行 Windows Toolhelp 路径。
 
+## PR 015 验证
+
+计划 015 从 main `90601459c3662a586cc335c234315d54b20422be` 开始，该提交是 GitHub PR #24 的合并。这个 main 已经包含计划 014 的 `0accacbaa2dac43db3845cc8c08f23b4e831c413` 和计划 053。分支是 `pr/015-language-runtimes-5b20`。路线图顺序是 014、053、015、016。它增加 Python、JavaScript 和 TypeScript SDK，按项目文件绑定 Node.js 24.22.3 和同一主版本上不低于 3.11 的 Python，并且只在版本匹配后启动这些解释器。每个插件使用自己的模块。目录模块只有在 `modules.json` 点名后才可见。禁用会删除 Python 环境和进程。撤销 `event.subscribe` 会移除该插件的总线订阅。
+
+在 Linux x86_64、Rust 1.100.0、Python 3.12.3 和 Node.js 24.22.3 上，`WINSTRATA_NODE` 指向该 Node 二进制，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过，包括原有的原生生命周期测试和新增的语言测试。真实 Python 脚本和真实 Node 脚本被拒绝读取规则集之外的文件、打开 TCP 套接字、打开 Unix 套接字和调用 `execve`。继承的描述符得到 `EBADF`。脚本在自己的状态目录里打开的句柄仍然可读。TypeScript `plugin.ts` 通过 Node 的类型剥离返回了载荷。报告版本 1.2.3 的 Node 二进制被拒绝。`cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-core -p winstrata-runtime -p winstrata-shim` 对 AppContainer 和作业路径做了类型检查。这些 Windows 测试没有执行。默认 PATH 上的 Node.js 是 v22.23.4，锁定版本是 24.22.3，因此没有运行 `cargo dev doctor` 和 `cargo dev verify`。工作区测试命令是直接运行的，并使用了锁定的 Node 二进制。`Cargo.lock` 增加路径包 `winstrata-shim`，并把已经锁定的 `libc` 列到 `winstrata-runtime`。没有新增外部包版本。启用了 `windows-sys` 0.61.2 的作业对象、AppContainer 配置文件、环境块和管道功能。
+
+在 `bf9a67b6d0d1e779dfc63fd93597dea7095c6f09` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明是 “Merge order, blockers, and policy files checked”。Windows 工作区检查在 `windows_language_plugins_enforce_the_container_boundary` 失败，Win32 错误 1336，“The access control list (ACL) structure is invalid.” Workspace 因 Windows 失败而失败。授权现在把一条允许项合并进现有 DACL，并应用到已经存在的文件树。
+
+在 `91a5f1dab6157510fb1a4e027fefe8becebbbd47` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 通过了 ACL 合并，随后同一测试在打开 `stderr.log` 时失败，Win32 错误 32，“The process cannot access the file because it is being used by another process.” 父进程已经打开了该文件。Windows 现在把日志留给沙箱进程创建。
+
+在 `f29022e0729b4b6f82efc961bf2cdb4025fd48b5` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 随后同一测试失败，Win32 错误 203，“The system could not find the environment option that was entered.” `CreateEnvironmentBlock` 使用了空令牌。现在改为当前用户令牌，这是计划 004 记录为可以启动的做法。
+
+在 `b4f782e67e40adc6e8d3b48b2df967bba884bda7` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经创建进程，随后 venv 启动器报 “Unable to create process using” 项目 Python。作业只允许一个进程，而该启动器还需要第二个。Windows 现在直接启动项目 Python。一个进程的限制，以及测试对再创建子进程的拒绝，都保持不变。
+
+在 `d8dcc7c77ea10229bd0c2c30b7272f9678f28c56` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 已经启动项目解释器，随后同一测试失败，错误是 `permission_denied: storage must be owned by the current user with its private DACL`。合并包允许项时清掉了 `SE_DACL_PROTECTED`，并多了一条 ACE，宿主下次打开该私有对象就被拒绝。授权现在会在原来已受保护时保留这个保护位。私有 DACL 检查仍然要求所有者的完全控制项，并仍然拒绝其他额外 SID。只有 SID 属于该插件自己的 AppContainer 配置文件时，才接受额外的一条允许项。规范化后变成卷根的授权会被拒绝。分支也包含 main `90601459c3662a586cc335c234315d54b20422be`。
+
+在 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 上，[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140683485683) 于 2026-11-27T18:43:01Z 成功。[Windows](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140683485996) 于 2026-11-27T18:44:13Z 成功。[Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46051444715/job/140684225933) 于 2026-11-27T18:44:20Z 成功。已发布的提交状态 `winstrata/merge-policy` 为成功。说明是 “Merge order, blockers, and policy files checked”。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46051468945)。名为 “Evaluate merge policy from main” 的工作流检查成功，并不是这份已发布状态。那个头是审查头。这份较晚的记录只是写下该结果，所以它自己的四项门禁不是那些结果。
+
+没有运行 Windows 10/11 客户端、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。
+
 ## 交接
 
 所有者于 2026-11-27T15:48:53Z 将计划 013 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树为 `68a5db4598a9659a437368289d368ce60dd5b7d2`。当时的 main Windows 工作区检查失败。见 [ERR-005](modules/core.md#err-005)。
@@ -266,4 +287,6 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者随后于 2026-11-27T17:19:35Z 将计划 051 合并为 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`。它的头是 `b855c188c85bb9916bc388232f1469e9b849fcad`。这份记录不为该合并提交附加 CI 地址。不要关闭 [GitHub PR #11](https://github.com/zemeng5208/winstrata/pull/11)。未验收事项在 [OPEN_ITEMS.md](OPEN_ITEMS.md)。密钥轮换不是崩溃安全的，也没有被验收。Windows 10/11、ReFS、第二台物理设备、第二个操作系统账户、界面锁定、外部 PCAPNG 工具和 E2E-10 仍未核实。
 
-当前交接点为计划 014，分支 `pr/014-plugin-contracts` 已变基到该 main。顺序是 013、052、051，然后 014。它实现原生插件契约、依赖和进程生命周期。计划 015、016 和 017 没有开始。头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的合并策略状态，随后 Windows 插件生命周期测试因操作系统错误 32 失败，Workspace 随之失败。这份记录改为保留已经固定的插件目录。它自己的四项检查尚未返回，所以这份记录还不是审查头。操作系统隔离、25 个采集实现，以及 E2E-06、E2E-11 和 E2E-15 仍未核实。所有者审查本计划。不要合并。
+所有者于 2026-11-27T17:41:19Z 将计划 014 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。所有者随后将计划 053 合并为 `90601459c3662a586cc335c234315d54b20422be`。该 main 是计划 015 的基线。路线图顺序是 014、053、015、016。
+
+当前交接点是计划 015，分支 `pr/015-language-runtimes-5b20`。它增加 Python、JavaScript 和 TypeScript SDK、项目解释器版本声明，以及这些语言进程的操作系统隔离。计划 016 由另一个改动进行。计划 017 没有开始。撰写主机运行了 Linux 语言测试。Windows Server 2022 在 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 上运行了容器测试，该头的四项门禁通过。没有运行 Windows 10/11，以及 E2E-06、E2E-07 和 E2E-12。所有者审查本计划。不要合并。

@@ -149,10 +149,15 @@ dependencies = [
 name = "winstrata-runtime"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "serde_json",
  "winstrata-core",
  "winstrata-protocols",
 ]
+
+[[package]]
+name = "winstrata-shim"
+version = "0.1.0"
 
 [[package]]
 name = "winstrata-service"

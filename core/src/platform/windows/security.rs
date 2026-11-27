@@ -13,7 +13,8 @@ use windows_sys::Win32::Security::Authorization::{
 };
 use windows_sys::Win32::Security::{
     ACCESS_ALLOWED_ACE, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, EqualSid, GetAce,
-    GetSecurityDescriptorControl, GetTokenInformation, INHERITED_ACE, OBJECT_INHERIT_ACE,
+    GetSecurityDescriptorControl, GetSidIdentifierAuthority, GetSidSubAuthority,
+    GetSidSubAuthorityCount, GetTokenInformation, INHERITED_ACE, OBJECT_INHERIT_ACE,
     OWNER_SECURITY_INFORMATION, PSID, SE_DACL_PROTECTED, TOKEN_QUERY, TOKEN_USER, TokenUser,
 };
 use windows_sys::Win32::Storage::FileSystem::FILE_ALL_ACCESS;
@@ -235,34 +236,62 @@ impl User {
                 &mut control,
                 &mut revision,
             ))?;
-            if owner.is_null()
-                || EqualSid(owner, self.sid()) == 0
-                || acl.is_null()
-                || (*acl).AceCount != 1
-            {
+            if owner.is_null() || EqualSid(owner, self.sid()) == 0 || acl.is_null() {
                 return Err(denied());
             }
-            let mut raw = null_mut();
-            check(GetAce(acl, 0, &mut raw))?;
-            // 先确认 ACE 类型；可变长 SID 从 SidStart 开始，边界由 GetSecurityInfo 返回的系统 ACL 保证。
-            let header = &*raw.cast::<windows_sys::Win32::Security::ACE_HEADER>();
-            let flags = u32::from(header.AceFlags);
+            // 私有 DACL 仍只有当前用户这一条完整控制。语言沙箱可以再加一条
+            // 本插件 AppContainer 的允许项。Everyone、Users 或其他 SID 仍然拒绝。
+            let count = (*acl).AceCount;
+            if count == 0 || count > 2 {
+                return Err(denied());
+            }
             let protected = control & SE_DACL_PROTECTED != 0;
-            let expected_flags = if directory {
-                protected && flags == (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)
-            } else {
-                (protected && flags == 0) || (!protected && flags == INHERITED_ACE)
-            };
-            if u32::from(header.AceType) != ACCESS_ALLOWED_ACE_TYPE || !expected_flags {
-                return Err(denied());
+            let mut saw_user = false;
+            for index in 0..count {
+                let mut raw = null_mut();
+                check(GetAce(acl, u32::from(index), &mut raw))?;
+                // 先确认 ACE 类型；可变长 SID 从 SidStart 开始，边界由 GetSecurityInfo 返回的系统 ACL 保证。
+                let header = &*raw.cast::<windows_sys::Win32::Security::ACE_HEADER>();
+                if u32::from(header.AceType) != ACCESS_ALLOWED_ACE_TYPE {
+                    return Err(denied());
+                }
+                let ace = &*raw.cast::<ACCESS_ALLOWED_ACE>();
+                let sid = ptr::addr_of!(ace.SidStart).cast_mut().cast();
+                let flags = u32::from(header.AceFlags);
+                if EqualSid(sid, self.sid()) != 0 {
+                    let expected_flags = if directory {
+                        protected && flags == (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)
+                    } else {
+                        (protected && flags == 0) || (!protected && flags == INHERITED_ACE)
+                    };
+                    if !expected_flags || ace.Mask != FILE_ALL_ACCESS {
+                        return Err(denied());
+                    }
+                    saw_user = true;
+                } else if !app_container_package(sid) {
+                    return Err(denied());
+                }
             }
-            let ace = &*raw.cast::<ACCESS_ALLOWED_ACE>();
-            if ace.Mask != FILE_ALL_ACCESS
-                || EqualSid(ptr::addr_of!(ace.SidStart).cast_mut().cast(), self.sid()) == 0
-            {
+            if !saw_user {
                 return Err(denied());
             }
         }
         Ok(())
+    }
+}
+
+fn app_container_package(sid: PSID) -> bool {
+    unsafe {
+        let authority = GetSidIdentifierAuthority(sid);
+        if authority.is_null() || (*authority).Value != [0, 0, 0, 0, 0, 15] {
+            return false;
+        }
+        let count = GetSidSubAuthorityCount(sid);
+        // S-1-15-2-1 是所有应用包。配置文件 SID 还有一段哈希，子权限更多。
+        if count.is_null() || *count < 8 {
+            return false;
+        }
+        let first = GetSidSubAuthority(sid, 0);
+        !first.is_null() && *first == 2
     }
 }
