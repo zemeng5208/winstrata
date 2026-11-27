@@ -32,7 +32,7 @@ With Node.js or pnpm removed separately from the command search path, the prefli
 
 ## PR 002 verification
 
-On Linux x86_64, the CI bootstrap verified the official Node archive checksum, installed the pinned pnpm, and resolved the approved Rust toolchain. Six Node tests verified plan order, defect blockers, owner confirmation bound to the exact head, and verified test merge parents. The workspace script ran the policy tests and the approved developer commands. The existing Protect main rules are active. Hosted status results and required-rule activation are recorded through the PR and the effective rules.
+On Linux x86_64, the CI bootstrap verified the official Node archive checksum, installed the pinned pnpm, and resolved the approved Rust toolchain. Seven Node tests cover plan order, defect blockers, owner confirmation bound to the exact head, and current test merge and base verification. The local status adapter test checks that the result is published to the same head commit as the GitHub Actions check. The workspace script ran the policy tests and the approved developer commands. The existing Protect main rules are active. Hosted status results and required-rule activation are recorded through the PR and the effective rules.
 
 ## Decisions and open assumptions
 

@@ -42,13 +42,14 @@ export function approvalText(sha) {
   return `Approve gate policy at ${sha}`;
 }
 
-export function policyDecision({ pull, order, merged, blockedIssues, files, comments, ownerId }) {
+export function policyDecision({ pull, order, merged, blockedIssues, files, comments, ownerId, upToDate }) {
   const id = planId(pull);
   const position = order.indexOf(id);
   if (position < 0) return 'PR title and branch must identify a plan ID in the roadmap';
   if (pull.draft) return 'PR is in draft';
   if (pull.labels.some(({ name }) => name === BLOCK_LABEL)) return 'PR has a merge blocker';
   if (blockedIssues.length > 0) return `Repository has open merge-blocked issue #${blockedIssues[0].number}`;
+  if (!upToDate) return 'The PR head must include the current main commit';
 
   const completed = new Set(merged.filter(({ merged_at }) => merged_at).map(planId));
   if (completed.has(id)) return `Plan ${id} already merged`;
@@ -159,7 +160,8 @@ async function main() {
     try {
       const pull = await currentCandidate(api, number, base);
       if (!pull) continue;
-      await status(pull.merge_commit_sha, 'pending', 'Checking merge order and blockers');
+      // GitHub 将 PR 工作流的检查记录关联到头提交。策略状态使用同一提交。
+      await status(pull.head.sha, 'pending', 'Checking merge order and blockers');
       candidates.push(pull);
     } catch (error) {
       errors += 1;
@@ -176,15 +178,19 @@ async function main() {
     const blockedIssues = issues.filter((item) => !item.pull_request);
     for (const pull of candidates) {
       try {
-        const files = await list(api, `pulls/${pull.number}/files`);
+        const [files, comparison] = await Promise.all([
+          list(api, `pulls/${pull.number}/files`),
+          api(`compare/${base}...${pull.head.sha}?per_page=1`),
+        ]);
         const comments = changesPolicy(files)
           ? await list(api, `issues/${pull.number}/comments`)
           : [];
-        const shared = candidates.some((other) =>
-          other.number !== pull.number && other.merge_commit_sha === pull.merge_commit_sha,
+        const shared = open.some((other) =>
+          other.number !== pull.number && other.head.sha === pull.head.sha,
         );
-        const failure = shared ? 'Multiple PRs share this test merge commit' : policyDecision({
+        const failure = shared ? 'Multiple open PRs share this head commit' : policyDecision({
           pull, order, merged, blockedIssues, files, comments, ownerId: repository.owner.id,
+          upToDate: comparison.merge_base_commit?.sha === base,
         });
         const latest = await api(`pulls/${pull.number}`);
         if (latest.state !== 'open' || latest.head.sha !== pull.head.sha ||
@@ -192,7 +198,7 @@ async function main() {
           console.log(`PR #${pull.number}: candidate changed; waiting for the next run`);
           continue;
         }
-        await status(pull.merge_commit_sha, failure ? 'failure' : 'success',
+        await status(pull.head.sha, failure ? 'failure' : 'success',
           failure ?? 'Merge order, blockers, and policy files checked');
         console.log(`PR #${pull.number}: ${failure ?? 'merge policy passed'}`);
       } catch (error) {

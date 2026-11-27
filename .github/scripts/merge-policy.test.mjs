@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import { execFileSync, spawn } from 'node:child_process';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
   approvalText, changesPolicy, isMergeCandidate, policyDecision, roadmapOrder,
@@ -28,7 +33,7 @@ const pull = {
 };
 const input = {
   pull, order: repoPlan, merged: [accepted('000'), accepted('001')],
-  blockedIssues: [], files: [{ filename: 'README.md' }], comments: [], ownerId: 42,
+  blockedIssues: [], files: [{ filename: 'README.md' }], comments: [], ownerId: 42, upToDate: true,
 };
 
 test('real roadmap has ordered plan IDs and detects duplicate IDs', () => {
@@ -67,10 +72,82 @@ test('governance changes need owner approval for the current commit', () => {
   assert.match(policyDecision({ ...input, files: [] }), /complete PR file list/);
 });
 
-test('checks attach to the exact current test merge commit', () => {
+test('policy verifies the actual merge candidate and rejects a stale base', () => {
   const commit = { parents: [{ sha: base }, { sha: head }] };
   assert.equal(isMergeCandidate(commit, pull, base), true);
   assert.equal(isMergeCandidate(commit, pull, candidate), false);
   assert.equal(isMergeCandidate({ parents: [{ sha: base }, { sha: candidate }] }, pull, base), false);
   assert.equal(isMergeCandidate(commit, { ...pull, mergeable: null }, base), false);
+  assert.match(policyDecision({ ...input, upToDate: false }), /current main commit/);
+});
+
+test('policy posts acceptance and blockers on the same head as the workspace check', async () => {
+  const actualBase = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const current = { ...pull, number: 9, base: { ref: 'main', sha: actualBase } };
+  const posts = [];
+  let hasIssue = false;
+
+  const github = createServer(async (request, response) => {
+    const url = new URL(request.url, 'http://localhost');
+    const path = url.pathname.replace(/^\/repos\/test\/winstrata/, '');
+    const routes = {
+      '': { owner: { id: input.ownerId } },
+      '/branches/main': { commit: { sha: actualBase } },
+      '/pulls': url.searchParams.get('state') === 'closed' ? input.merged : [current],
+      '/pulls/9': current,
+      '/pulls/9/files': input.files,
+      '/issues': hasIssue ? [{ number: 90 }] : [],
+      [`/compare/${actualBase}...${head}`]: { merge_base_commit: { sha: actualBase } },
+      [`/git/commits/${candidate}`]: { parents: [{ sha: actualBase }, { sha: head }] },
+    };
+    if (request.method === 'POST') {
+      let body = '';
+      for await (const chunk of request) body += chunk;
+      posts.push([path, JSON.parse(body)]);
+      response.writeHead(201, { 'content-type': 'application/json' }).end('{}');
+    } else if (Object.hasOwn(routes, path)) {
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(routes[path]));
+    } else {
+      response.writeHead(404).end();
+    }
+  });
+
+  const directory = await mkdtemp(join(tmpdir(), 'winstrata-merge-policy.'));
+  try {
+    const eventPath = join(directory, 'event.json');
+    await writeFile(eventPath, JSON.stringify({ pull_request: current }));
+    await new Promise((resolve, reject) => {
+      github.once('error', reject);
+      github.listen(0, '127.0.0.1', resolve);
+    });
+    for (const blocked of [false, true]) {
+      hasIssue = blocked;
+      posts.length = 0;
+      const child = spawn(process.execPath, ['.github/scripts/merge-policy.mjs'], {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          GITHUB_API_URL: `http://127.0.0.1:${github.address().port}`,
+          GITHUB_EVENT_NAME: 'pull_request_target',
+          GITHUB_EVENT_PATH: eventPath,
+          GITHUB_REPOSITORY: 'test/winstrata',
+          GITHUB_RUN_ID: '1',
+          GITHUB_SERVER_URL: 'https://example.test',
+          GITHUB_TOKEN: 'fixture-token',
+        },
+      });
+      const result = await new Promise((resolve, reject) => {
+        child.once('error', reject);
+        child.once('close', resolve);
+      });
+      assert.equal(result, 0);
+      assert.deepEqual(posts.map(([path, data]) => [path, data.context, data.state]), [
+        [`/statuses/${head}`, 'winstrata/merge-policy', 'pending'],
+        [`/statuses/${head}`, 'winstrata/merge-policy', blocked ? 'failure' : 'success'],
+      ]);
+    }
+  } finally {
+    github.close();
+    await rm(directory, { recursive: true, force: true });
+  }
 });

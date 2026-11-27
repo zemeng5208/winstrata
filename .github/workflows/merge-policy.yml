@@ -35,7 +35,7 @@ jobs:
           git init --quiet
           git fetch --depth=1 --no-tags "https://github.com/$GITHUB_REPOSITORY.git" refs/heads/main
           git checkout --quiet --detach FETCH_HEAD
-      - name: Publish policy status for current test merge commits
+      - name: Publish policy status for verified PR heads
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
