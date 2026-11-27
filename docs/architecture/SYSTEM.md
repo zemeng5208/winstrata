@@ -23,7 +23,7 @@ flowchart TD
 
 Core remains installed and supplies GUI hosting, market and plugin lifecycle, capabilities, isolation, events and IPC, shared collection, storage, indexing, configuration, encryption, scheduling, budget floors, errors, updates, and settings. Business capability belongs to plugins. Core stays stable with all plugins disabled and starts dedicated collection and runtimes on demand.
 
-The GUI and Core use ordinary user privileges. The controlled service performs necessary privileged work. Drivers run in kernel mode. Versioned IPC checks identity, current-user ownership, parameters, and capabilities and records audits. Plugins and scripts use capability APIs. Standard plugins receive neither direct driver access nor service privileges. Rescue has a separate explicit contract.
+The GUI and Core use ordinary user privileges. The controlled service performs necessary privileged work. Drivers run in kernel mode. Versioned IPC checks identity, current-user ownership, parameters, and capabilities and records audits. Plugins and scripts use capability APIs. Standard plugins receive neither direct driver access nor service privileges. Rescue has a separate explicit contract. The current service, IPC and driver subscription manager are specified in [Service and kernel control](SERVICE-KERNEL.md).
 
 ### Collection and drivers
 

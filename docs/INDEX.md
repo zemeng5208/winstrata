@@ -13,6 +13,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Event, object, error and version contracts](architecture/PROTOCOLS.md)
 - [Current-user Core configuration and storage](architecture/CORE-STORAGE.md)
 - [Core scheduling and event bus](architecture/CORE-RUNTIME.md)
+- [Privileged service, controlled IPC and driver management](architecture/SERVICE-KERNEL.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)
