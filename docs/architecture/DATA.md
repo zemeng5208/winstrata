@@ -24,6 +24,8 @@ Use structured storage for config, software, objects, and relations, append-only
 
 Default to `D:\WinStrata\`. If D is missing, unwritable or full, require a valid user-selected directory and suspend operations requiring persistence until available. Warn on storage loss and avoid automatic volume switching. Verify migration and retain the source until confirmed. Separate runtime data from source and build files. Under the data root, candidates include databases, events, metrics, captures, snapshots, indexes, plugins, runtimes, config, logs, backups and cache. Resolve all locations centrally. Keep minimal OS registration separate and show path, capacity, filesystem, permission, and migration limitations in the GUI.
 
+Plan 012 places those six `data` directories in each user's private directory. The implemented layout, reads and writes, segments, index, capacity and corruption rollback are specified in [Core storage](CORE-STORAGE.md). No SQLite crate was added. Structured records use versioned segments. Encryption, backup, deletion and capacity cleanup stay outside that plan.
+
 ### Retention and capacity
 
 Default retention is indefinite subject to the raw capture rule. Allow independent retention settings. Expiration authorization semantics, deletion defaults, log accounting boundaries and unit convention require owner approval. Decimal GB/MB, including applicability to structured events, metrics, indexes or backups, is a candidate. Do not use classification to circumvent thresholds. The user must explicitly confirm capacity cleanup independently of configured retention.

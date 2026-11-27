@@ -24,7 +24,7 @@ Each matching subscriber has a bounded queue. Subscriber queues also share `glob
 
 If a matching subscriber cannot accept an event, publish waits up to the admission limit. After that wait it records a loss instead of discarding the event silently. One lost sequence becomes a `lost` gap occupying that sequence and carrying no range. Several consecutive losses become one gap on the last sequence whose range contains the earlier sequences. A type filter records a `filtered` gap in the same shape. Producer gap events still pass a type filter. A device or provider outside the subscription is not a loss for that subscriber. Dropping a subscription releases its unread queue and counts those events as `released`.
 
-The bus is live. A subscriber that joins later does not receive earlier events, and a source identifier does not grant permission. Authenticated transport belongs to PR 008. Durable history belongs to PR 012.
+The bus is live. A subscriber that joins later does not receive earlier events, and a source identifier does not grant permission. Authenticated transport belongs to PR 008. A caller that needs history writes the delivered event to the [hybrid store](CORE-STORAGE.md). The bus itself does not write to disk.
 
 ## Verification scope
 

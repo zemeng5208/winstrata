@@ -41,9 +41,9 @@
 | REQ-10.02 | 未标记原始数据包从采集到释放均不落盘 | [DATA](../architecture/DATA.md#section-7) | [031](PLAN.md#pr-031) | [04](ACCEPTANCE.md#e2e-04), [05](ACCEPTANCE.md#e2e-05) | 规划中 |
 | REQ-10.03 | 配置有界抓包缓冲并导出风险抓包 | [DATA](../architecture/DATA.md#section-7) | [031](PLAN.md#pr-031) | [04](ACCEPTANCE.md#e2e-04) | 规划中 |
 | REQ-11.01 | 默认 D 盘、手动回退与安全迁移 | [DATA](../architecture/DATA.md#section-8) | [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [10](ACCEPTANCE.md#e2e-10) | [Core 选择存储、在失卷后暂停写入并校验文件迁移](../architecture/CORE-STORAGE.md)。Windows 客户端界面按 PR 016 验证。 |
-| REQ-11.02 | 支持结构化、分段、时序、抓包和快照存储 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012) | [05](ACCEPTANCE.md#e2e-05), [10](ACCEPTANCE.md#e2e-10) | 规划中 |
-| REQ-11.03 | 共享标识、唯一源记录与统一索引 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-44) | [012](PLAN.md#pr-012), [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-12.01 | 合格数据默认永久；可配置保留期限 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012), [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) | 规划中 |
+| REQ-11.02 | 支持结构化、分段、时序、抓包和快照存储 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012) | [05](ACCEPTANCE.md#e2e-05), [10](ACCEPTANCE.md#e2e-10) | [Core 混合存储](../architecture/CORE-STORAGE.md)已在 Linux 测试写入、查询、分段、索引、容量和损坏回退。E2E-05、E2E-10 和本机 Windows 测试未完成。 |
+| REQ-11.03 | 共享标识、唯一源记录与统一索引 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-44) | [012](PLAN.md#pr-012), [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 同一标识可以查到对象、关系和事件主体，载荷只保存一份。跨插件搜索仍属 PR 040。E2E-09 未完成。 |
+| REQ-12.01 | 合格数据默认永久；可配置保留期限 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012), [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) | 默认永久保留。各类天数会保存并在重新打开后读回，本计划不删除数据。确认和清理仍属 PR 030。 |
 | REQ-12.02 | 抓包 1 GB、日志 2 GB 提醒；持续记录 1 GB 和 500 MB 按阶重复 | [DATA](../architecture/DATA.md#section-8) | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) | 规划中 |
 | REQ-12.03 | 清理须用户确认，删除后同步索引 | [DATA](../architecture/DATA.md#section-8) | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) | 规划中 |
 | REQ-12.04 | 保留 Core 告警，标记存储不可用，禁止清理外部数据 | [DATA](../architecture/DATA.md#section-8) | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05), [15](ACCEPTANCE.md#e2e-15) | 规划中 |

@@ -21,9 +21,10 @@
 | PR 004 | 平台可行性验证已验收 | 所有者将 [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) 合并为 `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`。文件树与送审提交一致，合并后 Linux、Windows 及策略检查均通过。 |
 | PR 005 | 已验收 | 所有者已合并[公共协议 PR #6](https://github.com/zemeng5208/winstrata/pull/6)。主分支提交 `14a8ec6` 与送审提交 `e446453` 的文件树相同。 |
 | PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
-| PR 007 | 待审查 | 已实现 [Core 调度与事件总线](../architecture/CORE-RUNTIME.md)。所有者审核 `pr/007-core-runtime` 上的[候选 PR #9](https://github.com/zemeng5208/winstrata/pull/9)。 |
-| PR 008–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
-| Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。存储、采集、插件及其他指标仍按各自计划推进。 |
+| PR 007 | 已验收 | 所有者将 [GitHub PR #9](https://github.com/zemeng5208/winstrata/pull/9) 合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。Windows 10/11 客户端、ReFS、加密迁移和已签名驱动仍未验证。 |
+| PR 008–011、013–050 | 规划中 | 计划 008 与 012 在同一基线上并行。本计划不修改特权服务、内核或 IPC。其余按已批准路线图推进。 |
+| PR 012 | 待审查 | 已实现 [Core 混合存储](../architecture/CORE-STORAGE.md)。所有者审核分支 `pr/012-hybrid-storage`。直接前置 006 与 007 已合并。数字合并门禁仍要求 008–011 先合并；该失败不是本计划的代码缺陷。 |
+| Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。采集、插件及其他指标仍按各自计划推进。 |
 
 ## PR 000 验证
 
@@ -71,6 +72,16 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。verify 所调用的工作区测试命令已直接执行。本机尚未运行计划 007 的 Windows 测试。Windows 10/11 客户端、GUI 延迟、持续压力、动态预算、带认证的 IPC、ReFS 和加密迁移均未执行。E2E-08 与 E2E-15 仍待完成。
 
+## PR 012 验证
+
+在 Linux 6.12.113+ x86_64、Rust 与 Cargo 1.100.0、4 个 Intel Xeon 虚拟 CPU 上，`cargo test --locked -p winstrata-core --lib -- --test-threads=8` 通过 35 项 Core 测试，其中 7 项是混合存储测试。`cargo test --locked --workspace -- --test-threads=8` 同时通过这 35 项、11 项协议库测试和 2 项协议集成测试。`cargo build --locked -p winstrata-core` 没有警告。`cargo check --locked --target x86_64-pc-windows-msvc -p winstrata-core` 完成 Windows 类型检查，没有运行 Windows 测试，也没有链接 Windows 程序。
+
+混合存储测试实际写入并读回对象、关系、事件、时序、带风险标签的 PCAPNG 抓包和快照元数据。分段测试把分段上限设为 256 字节。索引测试确认载荷标记在目录树中只出现一次，日志不保存第二份正文。容量测试比较六个目录的普通文件长度。损坏测试改写已提交载荷中的标记，同进程查询返回 `InvalidData` 且不返回正文；重新打开后该提交被回退（`rolled_back_commits` 至少为 1），更早的对象仍在，文件中不再保留损坏标记。实现会把失败提交之后、日志里尚未应用的完整帧一并回退；这次测试没有在损坏提交之后再写入另一个成功提交。截断的日志尾部和截断的分段尾部在重新打开时被截掉，`rolled_back_commits` 为 0。没有标签的抓包在写入前被拒绝，抓包目录保持为空。保留天数会保存并在重新打开后读回，测试数据没有被删除。重复事件序号和失败批次不会增加已提交字节。把日志改为不可写后，`commit_hybrid` 返回拒绝访问，会话进入 `NeedsDirectory` 并停止实时模式；恢复权限并重新选择目录后，先前对象仍在，被拒绝的对象不在。总线投递的事件可以由调用方写入并再次读出。迁移复制该记录，源目录仍然保留它。
+
+Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试界限为 30 秒。同一测试的 Debug 运行耗时 145 毫秒。这是一次提交和一次同步，不是持续写入测量。`reserve(u64::MAX)` 通过既有容量检查返回空间不足，没有填满物理磁盘。本机没有 `tshark`、`tcpdump` 或 `editcap`，外部 PCAPNG 工具没有运行；测试只检查节头魔数 `0x0A0D0D0A` 并用库内解析器回读包字节。
+
+当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此没有运行 `cargo dev doctor` 或 `cargo dev verify`。verify 所调用的 `cargo test --locked --workspace` 已直接执行。锁文件没有新增外部包。Windows 测试、Windows 10/11 客户端、ReFS、加密、E2E-05、E2E-09 和 E2E-10 均未执行。GitHub Actions 在本记录写入时尚未对这个候选头运行。
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
@@ -85,6 +96,7 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 | AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。PR 008 验证产品授权，PR 015 验证混合运行时隔离，PR 016 验证普通用户 GUI，PR 048 验证持续性能，PR 049 验证 Windows 10/11 客户端。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。 |
 | AS-004 | 已记录的约束 | 计划 007 的工作者池使用 Rust 标准库，因为尚未批准异步运行时包。更换运行时须单独决定依赖。[Core 运行时](../architecture/CORE-RUNTIME.md) |
+| AS-005 | 已记录的约束 | 计划 012 没有引入 SQLite 或其他新包。结构化对象、事件、时序、快照和抓包使用版本化分段，索引只保存位置和 CRC。换成 SQLite 须单独决定依赖。[Core 存储](../architecture/CORE-STORAGE.md) |
 
 ## 错误与交接
 
@@ -96,4 +108,4 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-当前交接点为计划 007，分支 `pr/007-core-runtime`，基线为合并提交 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。所有者审核并合并[候选 PR #9](https://github.com/zemeng5208/winstrata/pull/9)。合并策略因“PR title and branch must identify a plan ID in the roadmap”拒绝了 `cursor/core-runtime-007-1c62`。在所有者合并 PR #9 之前，不要开始计划 008。提交 `0dceae00c8693cd84c6c061538206233622a27da` 已通过 Workspace、Linux 工作区、Windows 工作区和 `winstrata/merge-policy`。Windows 10/11 客户端、ReFS、加密迁移和已签名驱动加载仍未核实。下一步是所有者合并后的受控服务与驱动管理计划。
+计划 007 已由所有者合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。当前交接点为计划 012，分支 `pr/012-hybrid-storage`，基线就是该提交。计划 008 在同一基线上并行，不在本计划范围内。`winstrata/merge-policy` 按路线图序号要求 008–011 先于 012 合并；那些计划合并之前，该检查会失败。这不是混合存储的缺陷，本计划也不修改门禁来绕过它。Windows 10/11 客户端、ReFS、加密、外部 PCAPNG 工具、E2E-05、E2E-09、E2E-10 和已签名驱动加载仍未核实。所有者审查本计划。不要合并，也不要在本计划中开始计划 013。
