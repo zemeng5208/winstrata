@@ -267,7 +267,9 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 `bf9a67b6d0d1e779dfc63fd93597dea7095c6f09` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明是 “Merge order, blockers, and policy files checked”。Windows 工作区检查在 `windows_language_plugins_enforce_the_container_boundary` 失败，Win32 错误 1336，“The access control list (ACL) structure is invalid.” Workspace 因 Windows 失败而失败。授权现在把一条允许项合并进现有 DACL，并应用到已经存在的文件树。
 
-在 `91a5f1dab6157510fb1a4e027fefe8becebbbd47` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 通过了 ACL 合并，随后同一测试在打开 `stderr.log` 时失败，Win32 错误 32，“The process cannot access the file because it is being used by another process.” 父进程已经打开了该文件。Windows 现在把日志留给沙箱进程创建。这项修正还没有在 Windows 上执行。
+在 `91a5f1dab6157510fb1a4e027fefe8becebbbd47` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 通过了 ACL 合并，随后同一测试在打开 `stderr.log` 时失败，Win32 错误 32，“The process cannot access the file because it is being used by another process.” 父进程已经打开了该文件。Windows 现在把日志留给沙箱进程创建。
+
+在 `f29022e0729b4b6f82efc961bf2cdb4025fd48b5` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明仍是 “Merge order, blockers, and policy files checked”。Windows 随后同一测试失败，Win32 错误 203，“The system could not find the environment option that was entered.” `CreateEnvironmentBlock` 使用了空令牌。现在改为当前用户令牌，这是计划 004 记录为可以启动的做法。这项修正还没有在 Windows 上执行。
 
 没有运行 Windows 10/11 客户端、修正后的 Windows 容器测试、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。修正后的头上，这份记录自己的四项门禁尚未返回，所以还不是审查头。
 

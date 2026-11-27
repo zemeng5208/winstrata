@@ -209,7 +209,7 @@ mod windows {
     };
     use windows_sys::Win32::Security::{
         CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, OBJECT_INHERIT_ACE, PSID,
-        SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES,
+        SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES, TOKEN_DUPLICATE, TOKEN_QUERY,
     };
     use windows_sys::Win32::Storage::FileSystem::{
         CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_EXECUTE,
@@ -226,10 +226,11 @@ mod windows {
     use windows_sys::Win32::System::Pipes::CreatePipe;
     use windows_sys::Win32::System::Threading::{
         CREATE_NO_WINDOW, CREATE_SUSPENDED, CREATE_UNICODE_ENVIRONMENT, CreateProcessW,
-        DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess,
-        InitializeProcThreadAttributeList, PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
-        PROCESS_INFORMATION, ResumeThread, STARTF_USESTDHANDLES, STARTUPINFOEXW, TerminateProcess,
-        UpdateProcThreadAttribute, WaitForSingleObject,
+        DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT, GetCurrentProcess,
+        GetExitCodeProcess, InitializeProcThreadAttributeList, OpenProcessToken,
+        PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES, PROCESS_INFORMATION, ResumeThread,
+        STARTF_USESTDHANDLES, STARTUPINFOEXW, TerminateProcess, UpdateProcThreadAttribute,
+        WaitForSingleObject,
     };
     use winstrata_protocols::PluginVersion;
 
@@ -382,8 +383,23 @@ mod windows {
             return Err(io_error("AppContainer attribute"));
         }
         startup.lpAttributeList = list.as_mut_ptr().cast();
+        let mut token = null_mut();
+        if unsafe {
+            OpenProcessToken(
+                GetCurrentProcess(),
+                TOKEN_QUERY | TOKEN_DUPLICATE,
+                &mut token,
+            )
+        } == 0
+        {
+            unsafe { DeleteProcThreadAttributeList(list.as_mut_ptr().cast()) };
+            return Err(io_error("current user token"));
+        }
         let mut environment = null_mut();
-        if unsafe { CreateEnvironmentBlock(&mut environment, null_mut(), 0) } == 0 {
+        // 空令牌配出来的环境会让 CreateProcess 返回 203。计划 004 用当前用户令牌避免了这一点。
+        let built = unsafe { CreateEnvironmentBlock(&mut environment, token, 0) };
+        unsafe { CloseHandle(token) };
+        if built == 0 {
             unsafe { DeleteProcThreadAttributeList(list.as_mut_ptr().cast()) };
             return Err(io_error("process environment"));
         }
