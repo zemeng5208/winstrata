@@ -34,7 +34,7 @@ Windows 对 IPv4 和 IPv6 读取 `GetExtendedTcpTable`（`TCP_TABLE_OWNER_PID_AL
 
 Linux 可以打开 `AF_PACKET` `SOCK_RAW`，协议为 `ETH_P_ALL`。`EPERM` 成为带 errno 的 `capture_inaccessible`。套接字已打开但没有带载荷的帧时，记录 `capture_no_payload`。TLS 记录的内容类型是 `0x16`，版本在 `0x0301` 到 `0x0304` 之间，并且长度与记录一致。这样的帧是 `PacketBody::Encrypted`，证据为 `tls-record-header`。其余带载荷的帧是明文。帧只留在内存。超过 2,048 字节的帧会被截断，截断后的帧不能作为完整报文落盘。这条路径上的环回帧是以太网帧，发送和接收各出现一次。空载荷的 TCP 段，包括 SYN，会被丢弃。
 
-Windows 可以打开 `IPPROTO_IP` 的 `SOCK_RAW`，并且不设置 `SIO_RCVALL`。该套接字看不到环回。缓冲区是 IP 包，不是以太网帧。管理员可以打开套接字，但在没有载荷到达时仍然记录 `capture_no_payload`。测试接受已分类的 TLS 记录、带操作系统错误码的 `capture_inaccessible`，或 `capture_no_payload`。看不到字节时记录缺口，不编造加密报文。
+Windows 可以打开 `IPPROTO_IP` 的 `SOCK_RAW`，并且不设置 `SIO_RCVALL`。读取前，它绑定到接口列表中的一个非环回 IPv4 地址；没有这样的地址时绑定 `0.0.0.0`。未绑定的读取返回 Winsock 错误 10022，这个错误不能丢掉连接表；该错误以及之后的读取错误都成为带操作系统错误码的 `capture_inaccessible`。该套接字看不到环回。缓冲区是 IP 包，不是以太网帧。管理员可以打开并绑定套接字，但在没有载荷到达时仍然记录 `capture_no_payload`。测试接受已分类的 TLS 记录、带操作系统错误码的 `capture_inaccessible`，或 `capture_no_payload`。看不到字节时记录缺口，不编造加密报文。
 
 ## 协议投影
 

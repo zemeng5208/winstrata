@@ -18,9 +18,9 @@ use windows_sys::Win32::NetworkManagement::Ndis::{
     IfOperStatusDown, IfOperStatusLowerLayerDown, IfOperStatusUp,
 };
 use windows_sys::Win32::Networking::WinSock::{
-    AF_INET, AF_INET6, AF_UNSPEC, FIONBIO, INVALID_SOCKET, IPPROTO_IP, SOCK_RAW, SOCKADDR,
-    SOCKADDR_IN, SOCKADDR_IN6, SOCKET, WSACleanup, WSADATA, WSAEWOULDBLOCK, WSAGetLastError,
-    WSAStartup, closesocket, ioctlsocket, recv, socket,
+    AF_INET, AF_INET6, AF_UNSPEC, FIONBIO, IN_ADDR, IN_ADDR_0, INVALID_SOCKET, IPPROTO_IP,
+    SOCK_RAW, SOCKADDR, SOCKADDR_IN, SOCKADDR_IN6, SOCKET, WSACleanup, WSADATA, WSAEWOULDBLOCK,
+    WSAGetLastError, WSAStartup, bind, closesocket, ioctlsocket, recv, socket,
 };
 
 use super::{
@@ -66,23 +66,27 @@ fn access_gap(error: io::Error) -> Gap {
 }
 
 pub(crate) fn collect(capture: Capture, wait: Duration, limit: usize) -> io::Result<Snapshot> {
-    let opened = capture.socket.is_some();
-    let packets = match &capture.socket {
-        Some(socket) => socket.drain(wait, limit)?,
-        None => Vec::new(),
-    };
-    let failure = if capture.failure.is_some() {
-        capture.failure
-    } else if opened && packets.is_empty() {
-        Some(Gap {
-            reason: "capture_no_payload",
-            os_code: None,
-            count: 1,
-        })
-    } else {
-        None
-    };
+    // 连接表和采样互不阻断。未绑定的原始套接字上 recv 返回 WSAEINVAL (10022)，
+    // 这个错误只记入采样缺口。
     let snapshot = read_snapshot()?;
+    let (packets, failure) = match &capture.socket {
+        Some(socket) => match socket.bind_host(&snapshot.interfaces) {
+            Ok(()) => match socket.drain(wait, limit) {
+                Ok(packets) if packets.is_empty() => (
+                    packets,
+                    Some(Gap {
+                        reason: "capture_no_payload",
+                        os_code: None,
+                        count: 1,
+                    }),
+                ),
+                Ok(packets) => (packets, None),
+                Err(error) => (Vec::new(), Some(access_gap(error))),
+            },
+            Err(error) => (Vec::new(), Some(access_gap(error))),
+        },
+        None => (Vec::new(), capture.failure),
+    };
     Ok(finish(snapshot, packets, failure))
 }
 
@@ -126,6 +130,44 @@ impl RawSocket {
             return Err(io::Error::from_raw_os_error(unsafe { WSAGetLastError() }));
         }
         Ok(socket)
+    }
+
+    fn bind_host(&self, interfaces: &[Interface]) -> io::Result<()> {
+        let address = interfaces
+            .iter()
+            .find_map(|interface| {
+                interface
+                    .addresses
+                    .iter()
+                    .find_map(|candidate| match candidate {
+                        IpAddr::V4(ip)
+                            if !ip.is_loopback() && !ip.is_unspecified() && !ip.is_multicast() =>
+                        {
+                            Some(*ip)
+                        }
+                        _ => None,
+                    })
+            })
+            .unwrap_or(Ipv4Addr::UNSPECIFIED);
+        let mut local = SOCKADDR_IN::default();
+        local.sin_family = AF_INET;
+        local.sin_addr = IN_ADDR {
+            S_un: IN_ADDR_0 {
+                S_addr: u32::from_ne_bytes(address.octets()),
+            },
+        };
+        let code = unsafe {
+            bind(
+                self.handle,
+                (&local as *const SOCKADDR_IN).cast::<SOCKADDR>(),
+                std::mem::size_of::<SOCKADDR_IN>() as i32,
+            )
+        };
+        if code == 0 {
+            Ok(())
+        } else {
+            Err(io::Error::from_raw_os_error(unsafe { WSAGetLastError() }))
+        }
     }
 
     fn drain(&self, wait: Duration, limit: usize) -> io::Result<Vec<CapturedPacket>> {

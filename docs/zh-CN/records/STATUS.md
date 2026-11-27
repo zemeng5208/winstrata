@@ -96,7 +96,11 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 未提权的现场测试记录 `capture_inaccessible`，因为 `AF_PACKET` 返回 `EPERM`。以 root 运行同一项已提交测试，在 0.42 秒内通过，这段时间就是采样等待。在删除临时断言之前，另一次 root 运行要求客户端帧被分类为 `tls-record-header`，同样在 0.42 秒内通过。该断言不在已提交测试中，因此 CI 可以记录采样缺口而不是失败。root 结果是本机证据，不是 CI 结果。
 
-`RUSTFLAGS="-Dwarnings" cargo check --target x86_64-pc-windows-msvc --tests -p winstrata-kernel -p winstrata-core -p winstrata-service -p winstrata-protocols` 完成了 Windows 连接表、适配器和原始套接字代码的类型检查。这些测试没有执行。当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。该提交的 GitHub Linux、Windows 和工作区检查尚未记录。没有运行 Windows 10/11 客户端、HVCI、已签名 `strata-net.sys` 加载、拓扑、发现和 PCAPNG 导出。未标记连接元数据没有落盘。E2E-04 未完成。没有加载已签名驱动。
+`RUSTFLAGS="-Dwarnings" cargo check --target x86_64-pc-windows-msvc --tests -p winstrata-kernel -p winstrata-core -p winstrata-service -p winstrata-protocols` 完成了 Windows 连接表、适配器和原始套接字代码的类型检查。这些测试没有在本机执行。当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。
+
+在提交 `fcb7e3d61881a87e05d92f76846df86d6fdd7778` 上，GitHub Linux 工作区检查通过，Windows 工作区检查失败。Windows Server 2022 运行了 `cargo test --locked --workspace`。Core 进入现场交换后，`Observer::collect` 返回 Winsock 错误 10022（`WSAEINVAL`）。未绑定的 `SOCK_RAW` 在 `recv` 时返回该错误，于是连接表在测试读取之前被丢弃。汇总的工作区检查随后因为 Windows 失败而失败。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46007292420/job/140533560322) · [Windows 失败](https://github.com/zemeng5208/winstrata/actions/runs/46007292420/job/140533560835) · [工作区失败](https://github.com/zemeng5208/winstrata/actions/runs/46007292420/job/140533943936) 修正会把原始套接字绑定到一个非环回 IPv4 地址，并把采样错误留在缺口列表中。该 Windows 作业是 Windows Server 2022。它不是 Windows 10/11 客户端，也不是已签名驱动加载。修正后提交的 GitHub 检查尚未记录。
+
+发布的提交状态 `winstrata/merge-policy` 在 `fcb7e3d61881a87e05d92f76846df86d6fdd7778` 上失败，说明是 “Plan 009 must merge before plan 011”。工作流检查 “Evaluate merge policy from main” 成功；以状态上下文为准。[合并策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46007292445) 本计划不绕过这道门禁。计划 009 和 010 尚未合并。没有运行 Windows 10/11 客户端、HVCI、已签名 `strata-net.sys` 加载、拓扑、发现和 PCAPNG 导出。未标记连接元数据没有落盘。E2E-04 未完成。没有加载已签名驱动。
 
 ## 决策与技术假设
 
