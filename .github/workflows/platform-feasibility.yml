@@ -29,6 +29,10 @@ jobs:
       - name: Measure native data sources and Job Object enforcement
         shell: powershell
         run: .\.github\scripts\pr004-windows.ps1
+      - name: Test a scoped file grant in an AppContainer
+        shell: powershell
+        run: .\.github\scripts\pr004-appcontainer.ps1
       - name: Measure an offline page in embedded WebView2
+        if: ${{ !cancelled() }}
         shell: powershell
         run: .\.github\scripts\pr004-webview.ps1
