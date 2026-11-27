@@ -189,29 +189,32 @@ pub(crate) fn file_key(file: &File) -> io::Result<(u64, u128)> {
 fn handle_key(handle: HANDLE) -> io::Result<(u64, u128)> {
     let mut id = FILE_ID_INFO::default();
     // 在持有对象句柄期间读取完整 128 位文件标识，避免丢失 ReFS 的标识高位。
-    // 新建对象上 FileIdInfo 偶发返回 1305；只重试同一次查询，不改用较短标识。
+    unsafe {
+        check(GetFileInformationByHandleEx(
+            handle,
+            FileIdInfo,
+            (&mut id as *mut FILE_ID_INFO).cast(),
+            size_of::<FILE_ID_INFO>() as u32,
+        ))?;
+    }
+    Ok((
+        id.VolumeSerialNumber,
+        u128::from_le_bytes(id.FileId.Identifier),
+    ))
+}
+
+pub(super) fn retry_unknown_revision<T>(mut op: impl FnMut() -> io::Result<T>) -> io::Result<T> {
     let mut attempt = 0;
     loop {
-        let status = unsafe {
-            GetFileInformationByHandleEx(
-                handle,
-                FileIdInfo,
-                (&mut id as *mut FILE_ID_INFO).cast(),
-                size_of::<FILE_ID_INFO>() as u32,
-            )
-        };
-        if status != 0 {
-            return Ok((
-                id.VolumeSerialNumber,
-                u128::from_le_bytes(id.FileId.Identifier),
-            ));
+        match op() {
+            Ok(value) => return Ok(value),
+            // 1305 是安全描述符修订暂时读不出来。ACE 内容仍按原条件拒绝，不放宽。
+            Err(error) if error.raw_os_error() == Some(1305) && attempt < 3 => {
+                std::thread::sleep(std::time::Duration::from_millis(1 << attempt));
+                attempt += 1;
+            }
+            Err(error) => return Err(error),
         }
-        let error = io::Error::last_os_error();
-        if error.raw_os_error() != Some(1305) || attempt == 3 {
-            return Err(error);
-        }
-        std::thread::sleep(std::time::Duration::from_millis(1 << attempt));
-        attempt += 1;
     }
 }
 
@@ -364,6 +367,10 @@ impl Anchor {
     }
 
     pub(crate) fn child(&self, name: &OsStr, create: bool, private: bool) -> io::Result<Self> {
+        retry_unknown_revision(|| self.open_child(name, create, private))
+    }
+
+    fn open_child(&self, name: &OsStr, create: bool, private: bool) -> io::Result<Self> {
         let mut units: Vec<_> = name.encode_wide().collect();
         valid_name(&units)?;
         let length = (units.len() * 2) as u16;
