@@ -1,4 +1,4 @@
-use std::io::{self, Read, Write};
+use std::io::{self, ErrorKind, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -6,12 +6,12 @@ use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
+use winstrata_core::Core;
 use winstrata_service::Endpoint;
 
-use crate::observe::observe_at;
-use crate::prefs::{ClosePreference, Language, Preferences, Theme};
+use crate::prefs::{ClosePreference, Language, Preferences};
+use crate::session::{self, FollowUp};
 
 const ACTION_HIDE: u8 = 1;
 const ACTION_QUIT: u8 = 2;
@@ -24,6 +24,8 @@ struct Shared {
     preferences: Preferences,
     close_pending: bool,
     token: String,
+    core: Option<Core>,
+    drivers: String,
 }
 
 pub struct Bridge {
@@ -46,6 +48,11 @@ impl Bridge {
         let address = listener.local_addr()?;
         let token = random_token()?;
         let preferences = Preferences::load(&directory)?;
+        let drivers = if endpoint.is_some() {
+            "not_requested"
+        } else {
+            "not_configured"
+        };
         let shared = Arc::new(Mutex::new(Shared {
             directory,
             assets,
@@ -54,6 +61,8 @@ impl Bridge {
             preferences,
             close_pending: false,
             token: token.clone(),
+            core: None,
+            drivers: drivers.to_owned(),
         }));
         let stop = Arc::new(AtomicBool::new(false));
         let action = Arc::new(AtomicU8::new(0));
@@ -198,25 +207,18 @@ fn handle(mut stream: TcpStream, shared: &Mutex<Shared>, action: &AtomicU8) -> i
 }
 
 fn state_response(stream: &mut TcpStream, shared: &Mutex<Shared>) -> io::Result<()> {
-    let guard = shared.lock().map_err(|_| io::Error::other("preference lock"))?;
-    let observed = observe_at(&guard.locator, guard.endpoint.as_ref());
-    let body = json!({
-        "theme": guard.preferences.theme,
-        "language": guard.preferences.language,
-        "close": guard.preferences.close,
-        "closePending": guard.close_pending,
-        "user": observed.user,
-        "storage": observed.storage,
-        "run": observed.run,
-        "service": observed.service,
-        "plugins": observed.plugins.iter().map(|plugin| json!({
-            "id": plugin.id,
-            "name": plugin.name,
-            "availability": plugin.availability,
-            "enabled": plugin.enabled,
-        })).collect::<Vec<_>>(),
-        "privilege": observed.privilege,
-    });
+    let mut guard = shared.lock().map_err(|_| io::Error::other("preference lock"))?;
+    let locator = guard.locator.clone();
+    let drivers = guard.drivers.clone();
+    let endpoint = guard.endpoint.take();
+    let mut body = session::view(&mut guard.core, &locator, endpoint.as_ref(), &drivers);
+    guard.endpoint = endpoint;
+    if let Some(object) = body.as_object_mut() {
+        object.insert("theme".into(), json!(guard.preferences.theme));
+        object.insert("language".into(), json!(guard.preferences.language));
+        object.insert("close".into(), json!(guard.preferences.close));
+        object.insert("closePending".into(), json!(guard.close_pending));
+    }
     drop(guard);
     let bytes = serde_json::to_vec(&body).map_err(|error| io::Error::other(error.to_string()))?;
     write_status(stream, 200, "application/json", &bytes)
@@ -244,35 +246,39 @@ fn command_response(
     action: &AtomicU8,
     body: &[u8],
 ) -> io::Result<()> {
-    let command: Command = match serde_json::from_slice(body) {
+    let command: Value = match serde_json::from_slice(body) {
         Ok(command) => command,
         Err(_) => {
             return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
         }
     };
+    let name = command.get("command").and_then(Value::as_str).unwrap_or("");
     if matches!(
-        command.command.as_str(),
-        "subscribe" | "release" | "audit" | "uninstall" | "delete" | "rescue" | "grant"
-            | "start-live" | "enable" | "disable"
+        name,
+        "subscribe" | "release" | "audit" | "uninstall" | "delete" | "rescue" | "grant" | "enable"
+            | "disable"
     ) {
         return write_status(stream, 403, "application/json", b"{\"error\":\"forbidden\"}");
     }
     let mut guard = shared.lock().map_err(|_| io::Error::other("preference lock"))?;
-    match command.command.as_str() {
+    match name {
         "set-theme" => {
-            let Some(theme) = command.theme else {
+            let Some(theme) = command.get("theme").cloned().and_then(|value| serde_json::from_value(value).ok()) else {
                 return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
             };
             guard.preferences.theme = Some(theme);
         }
         "set-language" => {
-            let Some(language) = command.language else {
+            let Some(language) = command.get("language").cloned().and_then(|value| serde_json::from_value::<Language>(value).ok()) else {
                 return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
             };
             guard.preferences.language = Some(language);
+            if let Some(core) = guard.core.as_mut() {
+                let _ = core.set_onboarding_language(language.fallback());
+            }
         }
         "set-close" => {
-            let Some(close) = command.close else {
+            let Some(close) = command.get("close").cloned().and_then(|value| serde_json::from_value(value).ok()) else {
                 return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
             };
             guard.preferences.close = Some(close);
@@ -281,13 +287,47 @@ fn command_response(
                 guard.close_pending = false;
             }
         }
+        "skip-onboarding" | "choose-location" | "opt-in" | "set-rescue" | "set-scope"
+        | "confirm-retention" | "set-boot" | "enable-encryption" | "set-mcp" | "build-baseline"
+        | "pause" | "resume" | "start-live" | "enter-history" | "stop" => {
+            let locator = guard.locator.clone();
+            let follow = {
+                let core = match session::ensure(&mut guard.core, &locator) {
+                    Ok(core) => core,
+                    Err(error) => return error_status(stream, &error),
+                };
+                session::apply(core, &command)
+            };
+            match follow {
+                Ok(FollowUp::None) => {}
+                Ok(FollowUp::ReleaseDrivers) => {
+                    let endpoint = guard.endpoint.take();
+                    guard.drivers = match endpoint.as_ref() {
+                        Some(endpoint) => session::release_subscribed(endpoint),
+                        None => "not_configured".to_owned(),
+                    };
+                    guard.endpoint = endpoint;
+                }
+                Err(error) if error.kind() == ErrorKind::NotFound => {
+                    return write_status(stream, 404, "application/json", b"{\"error\":\"not_found\"}");
+                }
+                Err(error) => return error_status(stream, &error),
+            }
+            return write_status(stream, 200, "application/json", b"{\"ok\":true}");
+        }
         _ => return write_status(stream, 404, "application/json", b"{\"error\":\"not_found\"}"),
     }
     if let Err(error) = guard.preferences.save(&guard.directory) {
-        let body = format!("{{\"error\":\"{error}\"}}");
-        return write_status(stream, 500, "application/json", &body.into_bytes());
+        return error_status(stream, &error);
     }
     write_status(stream, 200, "application/json", b"{\"ok\":true}")
+}
+
+fn error_status(stream: &mut TcpStream, error: &std::io::Error) -> io::Result<()> {
+    let body = serde_json::to_vec(&json!({"error": error.to_string()}))
+        .unwrap_or_else(|_| b"{\"error\":\"invalid_record\"}".to_vec());
+    let status = if error.kind() == ErrorKind::NotFound { 404 } else { 400 };
+    write_status(stream, status, "application/json", &body)
 }
 
 fn close_action(close: ClosePreference) -> u8 {
@@ -368,15 +408,6 @@ fn query_token(query: &str) -> Option<String> {
         }
     }
     None
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Command {
-    command: String,
-    theme: Option<Theme>,
-    language: Option<Language>,
-    close: Option<ClosePreference>,
 }
 
 fn random_token() -> io::Result<String> {

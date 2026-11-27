@@ -23,7 +23,7 @@
 
 ## 本提交的产品行
 
-计划 016 加入这些文件。基线是 main `58b7d4fb13f5084222bb985c5c4a81a8b82692de`，即计划 015、GitHub PR #22 的合并。`packages/ui/upstream.json` 是树内的同一份登记。下表 SHA-256 是产品文件。修改内容为 `none` 的行，该摘要也是上游 blob。四个有适配的文件在 `upstream.json` 里另记上游摘要。
+计划 016 加入这些文件。计划 017 修改 `copy.ts` 和 `shell.tsx` 的组合说明，并重新构建 `packages/ui/dist`。它不增加来源，也不增加视觉体系。基线是 main `58b7d4fb13f5084222bb985c5c4a81a8b82692de`，即计划 015、GitHub PR #22 的合并。`packages/ui/upstream.json` 是树内的同一份登记。下表 SHA-256 是产品文件。修改内容为 `none` 的行，该摘要也是上游 blob。四个有适配的文件在 `upstream.json` 里另记上游摘要。
 
 Glasswork 的 `NOTICE`（`824058026d7338161460df1fda278d593e7a1682d9601c3780167c7fd6144a29`）写明仓库代码采用 MIT，macOS 壁纸媒体不在该许可内。本提交只入库 `lens.js` 和 `glass.css`，不入库那些媒体。Fluent UI 和 Astryx 不是产品依赖。
 
@@ -81,9 +81,9 @@ Glasswork 的 `NOTICE`（`824058026d7338161460df1fda278d593e7a1682d9601c3780167c
 
 | ID | 产品路径 | 上游仓库 | 版本 | 源码路径 | 许可证 | 复用方式 | 修改内容 | 引入计划 | 状态 |
 |---|---|---|---|---|---|---|---|---|---|
-| winstrata-copy | `packages/ui/compose/copy.ts` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 英文和 zh-CN 文案。未设置语言时使用英文。 | 016 | in-product |
+| winstrata-copy | `packages/ui/compose/copy.ts` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 英文和 zh-CN 文案。未设置语言时使用英文。计划 017 增加引导和模式文案。 | 016 | in-product |
 | winstrata-entry | `packages/ui/compose/entry.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 官方页面的内存路由。 | 016 | in-product |
-| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质、Amicro 淡入，以及下面的 UI Moments 控件。绑定真实宿主状态。 | 016 | in-product |
+| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质、Amicro 淡入，以及下面的 UI Moments 控件。计划 017 在这个外壳里增加引导、范围，以及实时、历史、暂停和继续。它不增加视觉体系。 | 016 | in-product |
 | winstrata-moments | `packages/ui/compose/moments.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 语言使用 Ink Switch。服务尚未连接时显示 Signal Return。开关令牌只作用在开关宿主上。文案使用当前语言。 | 016 | in-product |
 | winstrata-ink-switch | `packages/ui/compose/ink-switch.js` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 行为块是上游 `standalone:ink-switch-script` 段落。查询范围限定在挂载节点。 | 016 | in-product |
 

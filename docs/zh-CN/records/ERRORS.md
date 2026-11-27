@@ -28,6 +28,7 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-015 | 已解决 | [协议](modules/protocols.md#err-015) |
 | ERR-016 | 已解决 | [Core](modules/core.md#err-016) |
 | ERR-017 | 已解决 | [服务](modules/services.md#err-017) |
+| ERR-018 | 已解决 | [Core](modules/core.md#err-018) |
 
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
 

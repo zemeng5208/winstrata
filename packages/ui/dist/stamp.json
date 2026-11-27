@@ -2,7 +2,7 @@
   "files": [
     {
       "path": "compose/copy.ts",
-      "sha256": "afde69142be773998500431866cd8f71e559c4217668f6d5416d1d8e02b0da30"
+      "sha256": "31256569f357095157b81a7bde40b1bbb5805f94d9dd392ead5d0cb679a9b79a"
     },
     {
       "path": "compose/entry.tsx",
@@ -18,7 +18,7 @@
     },
     {
       "path": "compose/shell.tsx",
-      "sha256": "aa97b3b688711e4b05cf74e700ffaebaf319e41b7abe43331bbff7f146eafb51"
+      "sha256": "f83ce6021e93cb0df6f68cb8151ca31f448db6624da79e977e07e69de54a33a2"
     },
     {
       "path": "vendor/amicro/fade-in.tsx",

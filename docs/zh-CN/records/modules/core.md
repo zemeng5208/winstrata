@@ -116,3 +116,19 @@
 - 修复计划: 计划 006 合并前已实现
 - 重测结果: 候选 `b3f56ab` 在 Windows Server 2022 上通过 20 项 Core 测试。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947209)。本机 NTFS 回归确认私有目录保持固定，普通同级目录仍可改名。
 - 当前状态: 已解决
+
+<a id="err-018"></a>
+
+## ERR-018
+
+- Error ID: ERR-018
+- 发现时间: 2026-11-27，计划 017 期间 `df34c741e80d02e711dc97b8b8eeec34eae05f24` 的 Windows 工作区作业
+- 关联 PR: GitHub PR #28，计划 017，合并前
+- 环境: GitHub Actions `windows-2022`。运行器标签是 Windows Server 2022。它不是 Windows 10 或 Windows 11 客户端。
+- 复现方法: `cargo test --locked --workspace` 进入 `scope::tests::foreign_profiles_and_unselected_types_stay_out`、`scope::tests::registry_process_and_interface_choices_are_explicit` 和 `onboarding::tests::baseline_scope_pause_history_and_loss_stay_distinct`
+- 证据: [Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46058310468/job/140706127654)。`admits_file` 和 `admits_process` 拒绝了 `std::env::temp_dir()` 下的路径。`build_baseline` 随后返回 `a full snapshot needs at least one entry`。同一提交的 Linux 工作区检查通过。[Linux 作业](https://github.com/zemeng5208/winstrata/actions/runs/46058310468/job/140706126963)。
+- 根因: 运行器的临时目录位于当前用户的配置目录内，Windows 用与 `USERPROFILE` 解析出的所有者不一致的 8.3 短路径写出该目录。范围过滤把当前用户自己的目录当成了其他用户的私有配置目录。
+- 影响: Windows 工作区检查失败，因此 Workspace 检查失败。该配置目录下的选定基线无法保存。
+- 修复计划: 比较当前配置目录的长路径和 8.3 短路径，并展开候选路径上已经存在的祖先。其他用户的私有配置目录仍然排除。所选范围没有匹配文件时保存基线对象，不写空快照。测试没有改弱。
+- 重测结果: `f4c95f2d0e0077d765ede17278348a679c75e165` 的 Windows 工作区检查通过。拉取请求作业检出合并提交 `5d8e81711740c84fab7d32bdc5270a5cdd5e89aa`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `f4c95f2d0e0077d765ede17278348a679c75e165`，文件树 `89b473da381c91a748bfa01e025b394650d87326` 与该头相同。Windows Server 2022 运行 `cargo test --locked --workspace`，通过 66 个 Core 测试，包括上面三项，以及 24 个内核测试、14 个协议库测试、2 个协议集成测试、1 个实时系统事件测试、1 个 Windows 语言测试、5 个运行时生命周期测试、7 个服务测试和 5 个桌面测试。[Windows](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708786928)。该头的 Linux 工作区检查和 Workspace 检查也通过。这次作业是 Windows Server 2022，不是 Windows 10/11 客户端，也不是 WebView2 会话。
+- 当前状态: 已解决

@@ -75,6 +75,8 @@ Separate backend behavior and state from presentation. Use actual backends and h
 
 First launch chooses language, valid location, enabled plugins, collection scope, retention (indefinite default), start at boot (off), optional encryption, MCP, and the initial baseline. Allow skipping nonessential steps and resuming. Exclude rescue from batch enablement. Keep preset scripts and automatic snapshots off. Baseline only the selected scope and start only selected sources.
 
+Plan 017 binds that flow to the existing official shell and one Core session. The page cannot subscribe, release, enable, disable, or run rescue. A missing location is not replaced. The baseline label is `reconstructed`. Pause, history, stop, and loss stay distinct. These controls were exercised through the Linux loopback bridge. They were not run in Windows WebView2. Dashboard drag remains plan 042. E2E-01 and E2E-11 are not complete.
+
 The single customizable dashboard supports adding, removing, dragging, resizing, arranging, settings and refresh frequency for dynamic plugin widgets. Auto-save and reset its layout. Keep background collection independent of offscreen rendering. The same market supplies plugins and scripts.
 
 Search software, paths, registry, processes, PIDs, IP/domain/port, and combine regex, time and type filters. Show shared object profiles, relationships, timeline, source navigation and confidence. Use dedicated plugin-management views.

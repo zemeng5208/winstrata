@@ -18,6 +18,8 @@ The sample keeps at most 4,096 processes, 1,024 threads and 64 modules per proce
 
 `ProcessTracker::observe` assigns protocol events on provider `winstrata.process`. The source epoch is the boot id. An instance is the boot id, PID and start time. The v1 observation has no attribute map, so the image, parent and service names remain on `ProcessNode`. Command lines are not read.
 
+Plan 017 adds `observe_scoped`. It drops a process whose image is outside the selected roots, whose name is not selected, or whose image is missing. It also drops a service row whose process was dropped. File extensions do not filter process images. With process watching off and no selected names, it returns no events and does not call `observe`. `observe` itself is unchanged.
+
 The first sample that contains an instance emits `process.started` with observed attribution and evidence `procfs` or `toolhelp`. A later sample that still contains that instance does not emit the start again. When the instance is absent, one `process.exited` event is emitted with partial completeness `not_in_snapshot`. Another sample does not repeat the exit. The event time is the sample time, not a kernel exit timestamp.
 
 A PID whose start time differs from the tracked instance closes the old instance and opens a new one. A sample that is truncated does not turn a missing PID into an exit and does not replace a tracked start time. Threads and modules use the same first-seen and absence rule. A truncated thread or module list does not emit removals. Process exit does not also emit thread and module exits.

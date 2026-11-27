@@ -550,7 +550,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-01](../roadmap/ACCEPTANCE.md#e2e-01)
 - Source PR: the acceptance plan. No end-to-end run is recorded.
 - Current state: not done
-- Reason it is incomplete: onboarding is plan 017 and has not started
+- Reason it is incomplete: plan 017 records the onboarding choices, scope, baseline, and mode markers on Linux. No real Windows launch was run. The scenario is not closed.
 - Responsible PR: 017
 - Handoff owner: repository owner zemeng5208
 - Verification environment: a real Windows launch with a chosen data location
@@ -690,7 +690,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11)
 - Source PR: plan 004 measured three components. UI Moments is [OI-009](#oi-009).
 - Current state: not done
-- Reason it is incomplete: Linux tests persist a theme and reject driver commands through the official page bridge. No real Windows WebView2 session was run. Dashboard drag remains plan 042. Live and history control remains plan 017.
+- Reason it is incomplete: Linux tests persist a theme, reject driver commands, and exercise onboarding, pause, resume, and live/history through the loopback bridge. No real Windows WebView2 session was run. Dashboard drag remains plan 042.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: real Windows WebView2
