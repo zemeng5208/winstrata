@@ -196,23 +196,24 @@ mod windows {
     use std::ptr::{null, null_mut};
 
     use windows_sys::Win32::Foundation::{
-        CloseHandle, ERROR_ALREADY_EXISTS, HANDLE, HANDLE_FLAG_INHERIT, SetHandleInformation,
-        WAIT_OBJECT_0, WAIT_TIMEOUT,
+        CloseHandle, HANDLE, HANDLE_FLAG_INHERIT, LocalFree, SetHandleInformation, WAIT_OBJECT_0,
+        WAIT_TIMEOUT,
     };
     use windows_sys::Win32::Security::Authorization::{
-        ConvertSecurityDescriptorToStringSecurityDescriptorW, ConvertSidToStringSidW,
-        ConvertStringSecurityDescriptorToSecurityDescriptorW, GetNamedSecurityInfoW,
-        SDDL_REVISION_1, SE_FILE_OBJECT, SetNamedSecurityInfoW,
+        EXPLICIT_ACCESS_W, GRANT_ACCESS, GetNamedSecurityInfoW, NO_MULTIPLE_TRUSTEE,
+        SE_FILE_OBJECT, SetEntriesInAclW, SetNamedSecurityInfoW, TRUSTEE_IS_SID,
+        TRUSTEE_IS_UNKNOWN, TRUSTEE_W,
     };
     use windows_sys::Win32::Security::Isolation::{
         CreateAppContainerProfile, DeleteAppContainerProfile,
     };
     use windows_sys::Win32::Security::{
-        DACL_SECURITY_INFORMATION, FreeSid, GetSecurityDescriptorDacl, PSID, SECURITY_ATTRIBUTES,
-        SECURITY_CAPABILITIES,
+        CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, OBJECT_INHERIT_ACE, PSID,
+        SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES,
     };
     use windows_sys::Win32::Storage::FileSystem::{
-        CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_WRITE, FILE_SHARE_READ, OPEN_ALWAYS,
+        CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_EXECUTE,
+        FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ, OPEN_ALWAYS,
     };
     use windows_sys::Win32::System::Environment::{
         CreateEnvironmentBlock, DestroyEnvironmentBlock,
@@ -335,11 +336,10 @@ mod windows {
     ) -> Result<Live, PluginError> {
         let (name, sid) = container_profile()?;
         let profile = Profile { name, sid };
-        let sid_text = sid_text(profile.sid)?;
         for path in read {
-            grant(&path.as_ref(), &sid_text, false)?;
+            grant_tree(path.as_ref(), profile.sid, false)?;
         }
-        grant(state, &sid_text, true)?;
+        grant_tree(state, profile.sid, true)?;
         let job = job()?;
         let (stdin, stdout, child_in, child_out, child_err) = pipes(state)?;
         let mut startup = STARTUPINFOEXW::default();
@@ -485,25 +485,67 @@ mod windows {
                 ));
             }
         }
-        let _ = ERROR_ALREADY_EXISTS;
         Ok((profile, sid))
     }
 
-    fn sid_text(sid: PSID) -> Result<String, PluginError> {
-        let mut raw = null_mut();
-        if unsafe { ConvertSidToStringSidW(sid, &mut raw) } == 0 {
-            return Err(io_error("AppContainer SID"));
+    fn grant_tree(root: &Path, sid: PSID, write: bool) -> Result<(), PluginError> {
+        let root = std::fs::canonicalize(root).map_err(|error| {
+            PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+        })?;
+        let mut visited = 0u32;
+        grant_one(&root, sid, write)?;
+        if root.is_dir() {
+            walk_grant(&root, &root, sid, write, &mut visited)?;
         }
-        let text = unsafe { wide_string(raw) };
-        unsafe { windows_sys::Win32::Foundation::LocalFree(raw.cast()) };
-        Ok(text)
+        Ok(())
     }
 
-    fn grant(path: &Path, sid: &str, write: bool) -> Result<(), PluginError> {
-        let rights = if write { "FA" } else { "GRGX" };
-        let ace = format!("(A;OICI;{rights};;;{sid})");
+    fn walk_grant(
+        dir: &Path,
+        root: &Path,
+        sid: PSID,
+        write: bool,
+        visited: &mut u32,
+    ) -> Result<(), PluginError> {
+        for entry in std::fs::read_dir(dir).map_err(|error| {
+            PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+        })? {
+            let entry = entry.map_err(|error| {
+                PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+            })?;
+            let path = entry.path();
+            let metadata = std::fs::symlink_metadata(&path).map_err(|error| {
+                PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+            })?;
+            if metadata.file_type().is_symlink() {
+                continue;
+            }
+            let Ok(canonical) = std::fs::canonicalize(&path) else {
+                continue;
+            };
+            if !canonical.starts_with(root) {
+                continue;
+            }
+            *visited += 1;
+            if *visited > 20_000 {
+                return Err(PluginError::new(
+                    "isolation_unavailable",
+                    "sandbox grant exceeded the file limit",
+                ));
+            }
+            grant_one(&path, sid, write)?;
+            if metadata.is_dir() {
+                walk_grant(&path, root, sid, write, visited)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn grant_one(path: &Path, sid: PSID, write: bool) -> Result<(), PluginError> {
+        let directory = path.is_dir();
         let name = wide(path.as_os_str());
         let mut descriptor = null_mut();
+        let mut old_acl = null_mut();
         let status = unsafe {
             GetNamedSecurityInfoW(
                 name.as_ptr(),
@@ -511,7 +553,7 @@ mod windows {
                 DACL_SECURITY_INFORMATION,
                 null_mut(),
                 null_mut(),
-                null_mut(),
+                &mut old_acl,
                 null_mut(),
                 &mut descriptor,
             )
@@ -522,50 +564,34 @@ mod windows {
                 format!("security descriptor was not read: {status}"),
             ));
         }
-        let mut sddl = null_mut();
-        if unsafe {
-            ConvertSecurityDescriptorToStringSecurityDescriptorW(
-                descriptor,
-                SDDL_REVISION_1,
-                DACL_SECURITY_INFORMATION,
-                &mut sddl,
-                null_mut(),
-            )
-        } == 0
-        {
-            unsafe { windows_sys::Win32::Foundation::LocalFree(descriptor.cast()) };
-            return Err(io_error("security descriptor text"));
-        }
-        let mut text = unsafe { wide_string(sddl) };
-        unsafe { windows_sys::Win32::Foundation::LocalFree(sddl.cast()) };
-        unsafe { windows_sys::Win32::Foundation::LocalFree(descriptor.cast()) };
-        if let Some(index) = text.find(':') {
-            text.insert_str(index + 1, &ace);
-        } else {
-            text = format!("D:{ace}");
-        }
-        let encoded = wide(OsStr::new(&text));
-        let mut replacement = null_mut();
-        if unsafe {
-            ConvertStringSecurityDescriptorToSecurityDescriptorW(
-                encoded.as_ptr(),
-                SDDL_REVISION_1,
-                &mut replacement,
-                null_mut(),
-            )
-        } == 0
-        {
-            return Err(io_error("security descriptor"));
-        }
-        let mut present = 0;
-        let mut dacl = null_mut();
-        let mut defaulted = 0;
-        if unsafe {
-            GetSecurityDescriptorDacl(replacement, &mut present, &mut dacl, &mut defaulted)
-        } == 0
-        {
-            unsafe { windows_sys::Win32::Foundation::LocalFree(replacement.cast()) };
-            return Err(io_error("security descriptor DACL"));
+        let entry = EXPLICIT_ACCESS_W {
+            grfAccessPermissions: if write {
+                FILE_ALL_ACCESS
+            } else {
+                FILE_GENERIC_READ | FILE_GENERIC_EXECUTE
+            },
+            grfAccessMode: GRANT_ACCESS,
+            grfInheritance: if directory {
+                OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE
+            } else {
+                0
+            },
+            Trustee: TRUSTEE_W {
+                pMultipleTrustee: null_mut(),
+                MultipleTrusteeOperation: NO_MULTIPLE_TRUSTEE,
+                TrusteeForm: TRUSTEE_IS_SID,
+                TrusteeType: TRUSTEE_IS_UNKNOWN,
+                ptstrName: sid.cast(),
+            },
+        };
+        let mut new_acl = null_mut();
+        let merged = unsafe { SetEntriesInAclW(1, &entry, old_acl, &mut new_acl) };
+        unsafe { LocalFree(descriptor.cast()) };
+        if merged != 0 {
+            return Err(PluginError::new(
+                "isolation_unavailable",
+                format!("sandbox grant was not merged: {merged}"),
+            ));
         }
         let written = unsafe {
             SetNamedSecurityInfoW(
@@ -574,11 +600,11 @@ mod windows {
                 DACL_SECURITY_INFORMATION,
                 null_mut(),
                 null_mut(),
-                dacl,
+                new_acl,
                 null(),
             )
         };
-        unsafe { windows_sys::Win32::Foundation::LocalFree(replacement.cast()) };
+        unsafe { LocalFree(new_acl.cast()) };
         if written == 0 {
             Ok(())
         } else {
@@ -658,14 +684,6 @@ mod windows {
 
     fn wide(value: &OsStr) -> Vec<u16> {
         value.encode_wide().chain(Some(0)).collect()
-    }
-
-    unsafe fn wide_string(raw: *const u16) -> String {
-        let mut length = 0usize;
-        while unsafe { *raw.add(length) } != 0 {
-            length += 1;
-        }
-        String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(raw, length) })
     }
 
     fn command_line(command: &Command) -> Vec<u16> {

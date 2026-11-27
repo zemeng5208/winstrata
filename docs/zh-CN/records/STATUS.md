@@ -265,7 +265,9 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 Linux x86_64、Rust 1.100.0、Python 3.12.3 和 Node.js 24.22.3 上，`WINSTRATA_NODE` 指向该 Node 二进制，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过，包括原有的原生生命周期测试和新增的语言测试。真实 Python 脚本和真实 Node 脚本被拒绝读取规则集之外的文件、打开 TCP 套接字、打开 Unix 套接字和调用 `execve`。继承的描述符得到 `EBADF`。脚本在自己的状态目录里打开的句柄仍然可读。TypeScript `plugin.ts` 通过 Node 的类型剥离返回了载荷。报告版本 1.2.3 的 Node 二进制被拒绝。`cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-core -p winstrata-runtime -p winstrata-shim` 对 AppContainer 和作业路径做了类型检查。这些 Windows 测试没有执行。默认 PATH 上的 Node.js 是 v22.23.4，锁定版本是 24.22.3，因此没有运行 `cargo dev doctor` 和 `cargo dev verify`。工作区测试命令是直接运行的，并使用了锁定的 Node 二进制。`Cargo.lock` 增加路径包 `winstrata-shim`，并把已经锁定的 `libc` 列到 `winstrata-runtime`。没有新增外部包版本。启用了 `windows-sys` 0.61.2 的作业对象、AppContainer 配置文件、环境块和管道功能。
 
-没有运行 Windows 10/11 客户端、Windows 容器测试、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查尚未返回，所以还不是审查头。
+在 `bf9a67b6d0d1e779dfc63fd93597dea7095c6f09` 上，Linux 工作区检查成功，已发布的 `winstrata/merge-policy` 说明是 “Merge order, blockers, and policy files checked”。Windows 工作区检查在 `windows_language_plugins_enforce_the_container_boundary` 失败，Win32 错误 1336，“The access control list (ACL) structure is invalid.” Workspace 因 Windows 失败而失败。授权现在把一条允许项合并进现有 DACL，并应用到已经存在的文件树。这项修正还没有在 Windows 上执行。
+
+没有运行 Windows 10/11 客户端、修正后的 Windows 容器测试、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。修正后的头上，这份记录自己的四项门禁尚未返回，所以还不是审查头。
 
 ## 交接
 
