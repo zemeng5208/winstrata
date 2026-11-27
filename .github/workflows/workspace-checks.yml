@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  workspace:
-    name: Workspace checks
+  linux:
+    name: Linux workspace checks
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -32,8 +32,8 @@ jobs:
         shell: bash
         run: bash .github/scripts/check-workspace.sh
 
-  windows-protocols:
-    name: Windows protocol checks
+  windows:
+    name: Windows workspace checks
     runs-on: windows-2022
     timeout-minutes: 15
     steps:
@@ -50,6 +50,22 @@ jobs:
       - name: Resolve the repository Rust toolchain
         shell: pwsh
         run: cargo --version
-      - name: Test protocol contracts with Windows Event Log and Node.js
+      - name: Test the workspace on Windows
         shell: pwsh
-        run: cargo test --locked -p winstrata-protocols
+        run: cargo test --locked --workspace
+
+  workspace:
+    name: Workspace checks
+    needs: [linux, windows]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require both platform jobs to succeed
+        shell: bash
+        env:
+          LINUX_RESULT: ${{ needs.linux.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+        run: |
+          printf 'Linux %s, Windows %s\n' "$LINUX_RESULT" "$WINDOWS_RESULT"
+          [[ "$LINUX_RESULT" == success && "$WINDOWS_RESULT" == success ]]

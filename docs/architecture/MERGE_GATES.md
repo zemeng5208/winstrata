@@ -8,10 +8,10 @@ PR 002 implements the checks described by the [Git and PR standard](../standards
 
 | Check | Source and scope |
 |---|---|
-| `Workspace checks` | The `WinStrata CI` workflow fetches GitHub's exact test merge commit for PRs. The Linux runner uses the project toolchain pins and runs whitespace and tracked-artifact checks, policy regression tests, and the same `cargo dev init`, `build`, and `verify` commands used locally. It verifies both lockfiles remain unchanged. The job has no GitHub API permissions and receives no project secrets. |
+| `Workspace checks` | The Linux and Windows jobs check out the same GitHub test merge commit for a PR or the exact commit pushed to main. Linux runs the workspace script, including artifact and whitespace checks, policy tests, the pinned developer commands and lockfile checks. Windows runs `cargo test --locked --workspace` with the project toolchain and Node.js. The required check passes only when both jobs succeed. All three jobs use empty GitHub API permissions. |
 | `winstrata/merge-policy` | The policy workflow fetches protected `main` and verifies the current test merge commit and both parents, and posts the policy status on the PR head alongside the GitHub Actions check. It verifies that the head includes the current main commit. It reads repo and PR metadata and writes statuses. Candidate code has no role in that workflow. It re-evaluates affected PRs on PR, owner comment and blocking issue events and refreshes them when `main` advances. |
 
-To run the same workspace checks locally, use the [approved toolchain](DEVELOPMENT_TOOLCHAIN.md) and run `bash .github/scripts/check-workspace.sh` from a Linux Git checkout on the candidate commit with its first parent available.
+To run the same workspace checks locally, use the [approved toolchain](DEVELOPMENT_TOOLCHAIN.md) and run `bash .github/scripts/check-workspace.sh` from a Linux Git checkout on the candidate commit with its first parent available. On a Windows host with the pinned Node.js and Rust toolchains, run `cargo test --locked --workspace` from the repository root.
 
 ## Merge decisions
 
