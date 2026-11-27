@@ -817,7 +817,7 @@
 - 关联需求: [REQ-06.04](../roadmap/REQUIREMENTS.md)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - 来源 PR: 计划 022
 - 当前状态: 未测试
-- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。
+- 未完成原因: 这台 Linux 主机没有服务控制管理器。pid 1 是 tini。`/proc/modules` 为空，也没有正在运行的 cgroup `.service` 单元，因此这里没有观察到真实的驱动加载或真实的服务停止。Windows Server 2022 在 `20b7bb1502fafde469dbec45d02294ecd1d21d0a` 上运行了计划 022 的探测：创建、启动类型变更、缺失映像的启动失败和删除都通过了。受限令牌的采集在打开管理器之前返回 Win32 错误 5，因此拒绝访问的枚举没有被记录。该缺陷是 [ERR-019](modules/strata-services.md#err-019)。修复尚未重测。
 - 负责 PR: 022 负责把 Windows 工作区作业记入记录。E2E-03 和 E2E-14 保持开放。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows Server 2022 的服务控制管理器，运行计划 022 的插件测试

@@ -12,15 +12,13 @@ use windows_sys::Win32::System::Registry::{
     HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ, RegGetValueW,
 };
 use windows_sys::Win32::System::Services::{
-    CloseServiceHandle, EnumServicesStatusExW, OpenSCManagerW, OpenServiceW,
-    QUERY_SERVICE_CONFIGW, QueryServiceConfigW, SC_ENUM_PROCESS_INFO, SC_HANDLE,
-    SC_MANAGER_CONNECT, SC_MANAGER_ENUMERATE_SERVICE, SERVICE_DRIVER, SERVICE_QUERY_CONFIG,
-    SERVICE_STATE_ALL, SERVICE_WIN32,
+    CloseServiceHandle, EnumServicesStatusExW, OpenSCManagerW, OpenServiceW, QUERY_SERVICE_CONFIGW,
+    QueryServiceConfigW, SC_ENUM_PROCESS_INFO, SC_HANDLE, SC_MANAGER_CONNECT,
+    SC_MANAGER_ENUMERATE_SERVICE, SERVICE_DRIVER, SERVICE_QUERY_CONFIG, SERVICE_STATE_ALL,
+    SERVICE_WIN32,
 };
 
-use super::{
-    Coverage, Fact, Kind, RunState, ServiceSnapshot, StartType, clean_name, clean_path,
-};
+use super::{Coverage, Fact, Kind, RunState, ServiceSnapshot, StartType, clean_name, clean_path};
 
 const MAX_EACH: usize = 1024;
 const BUFFER_CAP: usize = 1024 * 1024;
@@ -46,17 +44,16 @@ impl Drop for Service {
 }
 
 pub(super) fn capture() -> io::Result<ServiceSnapshot> {
-    let device = registry_sz(
-        "SOFTWARE\\Microsoft\\Cryptography\0",
-        "MachineGuid\0",
-    )?;
-    let boot = registry_dword(
-        "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\0",
-        "BootId\0",
-    )?;
+    // 受限令牌读不到机器身份时，仍要打开服务控制管理器。
+    // 身份拒绝不能盖住管理器的拒绝访问，否则权限缺口不会被记下来。
+    let (device, boot, identity_denied) = match machine_identity() {
+        Ok((device, boot)) => (device, boot, false),
+        Err(error) if access_denied(&error) => (String::new(), "boot:unavailable".to_owned(), true),
+        Err(error) => return Err(error),
+    };
     let mut snapshot = ServiceSnapshot {
         device,
-        boot: format!("boot:{boot}"),
+        boot,
         sampled_unix_ns: super::unix_now()?,
         facts: Vec::new(),
         coverage: Coverage::Complete,
@@ -78,12 +75,18 @@ pub(super) fn capture() -> io::Result<ServiceSnapshot> {
         let error = unsafe { GetLastError() };
         if error == ERROR_ACCESS_DENIED {
             snapshot.permission_denied = true;
+        } else if identity_denied {
+            snapshot.source_failure = Some("identity:5".to_owned());
         } else {
             snapshot.source_failure = Some(format!("scm:{error}"));
         }
         return Ok(snapshot);
     }
     let manager = Manager(handle);
+    if identity_denied {
+        snapshot.source_failure = Some("identity:5".to_owned());
+        return Ok(snapshot);
+    }
     match read_kind(manager.0, SERVICE_WIN32, Kind::Service) {
         Ok(facts) => push_all(&mut snapshot, facts),
         Err(EnumError::Buffer) => snapshot.source_failure = Some("scm:buffer".to_owned()),
@@ -172,9 +175,8 @@ struct RawEntry {
 
 fn parse_entries(buffer: &[u64], returned: u32) -> Result<Vec<RawEntry>, EnumError> {
     let count = returned as usize;
-    let entry_size = std::mem::size_of::<
-        windows_sys::Win32::System::Services::ENUM_SERVICE_STATUS_PROCESSW,
-    >();
+    let entry_size =
+        std::mem::size_of::<windows_sys::Win32::System::Services::ENUM_SERVICE_STATUS_PROCESSW>();
     if count > 0 && count.saturating_mul(entry_size) > buffer.len() * 8 {
         return Err(EnumError::Buffer);
     }
@@ -184,7 +186,8 @@ fn parse_entries(buffer: &[u64], returned: u32) -> Result<Vec<RawEntry>, EnumErr
     }
     let raw = unsafe {
         std::slice::from_raw_parts(
-            buffer.as_ptr() as *const windows_sys::Win32::System::Services::ENUM_SERVICE_STATUS_PROCESSW,
+            buffer.as_ptr()
+                as *const windows_sys::Win32::System::Services::ENUM_SERVICE_STATUS_PROCESSW,
             count,
         )
     };
@@ -278,6 +281,22 @@ fn start_type(value: u32) -> StartType {
         4 => StartType::Disabled,
         _ => StartType::Unknown,
     }
+}
+
+fn machine_identity() -> io::Result<(String, String)> {
+    let device = registry_sz(
+        "SOFTWARE\\Microsoft\\Cryptography\0",
+        "MachineGuid\0",
+    )?;
+    let boot = registry_dword(
+        "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\0",
+        "BootId\0",
+    )?;
+    Ok((device, format!("boot:{boot}")))
+}
+
+fn access_denied(error: &io::Error) -> bool {
+    error.raw_os_error() == Some(ERROR_ACCESS_DENIED as i32)
 }
 
 fn registry_dword(subkey: &str, value: &str) -> io::Result<u32> {

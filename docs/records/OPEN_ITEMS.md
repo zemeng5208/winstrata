@@ -817,7 +817,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - Source PR: plan 022
 - Current state: untested
-- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here.
+- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. Windows Server 2022 did run the plan 022 probe on `20b7bb1502fafde469dbec45d02294ecd1d21d0a`: creation, start-type change, a failed start of the missing image, and deletion passed. The restricted-token capture returned Win32 error 5 before the manager was opened, so the access-denied enumeration was not recorded. That defect is [ERR-019](modules/strata-services.md#err-019). The fix is not retested.
 - Responsible PR: 022 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows Server 2022 Service Control Manager running the plan 022 plugin tests
