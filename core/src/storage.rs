@@ -112,6 +112,10 @@ fn valid_id(id: &str) -> bool {
 }
 
 impl Config {
+    pub(crate) fn same_workspace(&self, other: &Self) -> bool {
+        self.workspace_id == other.workspace_id
+    }
+
     pub(crate) fn initialize(dir: &Anchor, user: &str) -> io::Result<Self> {
         if fs::read_dir(dir.io_path())?.next().transpose()?.is_some() {
             return Err(io::Error::new(

@@ -183,3 +183,22 @@ fn case_variant_paths_reselect_the_same_workspace_and_cannot_create_nested_repla
     assert!(core.select_empty_directory(&nested).is_err());
     assert!(!nested.exists());
 }
+
+#[test]
+fn publishing_rechecks_the_real_destination_even_if_its_marker_matches() {
+    let fixture = Fixture::new();
+    let locator = fixture.0.join("locator");
+    let root = fixture.0.join("source");
+    let copy = fixture.0.join("copy");
+    let mut core = Core::open_at(&locator, Some(&root)).unwrap();
+    let (source, config) = core.bind().unwrap();
+    let other = crate::storage::data_dir(&copy, core.current_user(), true).unwrap();
+    config.save(&other).unwrap();
+    let saved = fs::read(locator.join("WinStrata/location.json")).unwrap();
+    assert!(core.publish(&copy, &source, &config).is_err());
+    assert_eq!(
+        fs::read(locator.join("WinStrata/location.json")).unwrap(),
+        saved
+    );
+    assert_eq!(core.selected_root(), Some(root.as_path()));
+}

@@ -220,8 +220,15 @@ impl Core {
         Ok(leaf)
     }
 
-    fn publish(&mut self, root: &Path, config: &Config) -> io::Result<()> {
+    fn publish(&mut self, root: &Path, target: &Anchor, config: &Config) -> io::Result<()> {
         let location = Location::new(root, config);
+        let (reachable, _) = location.bind(&self.user)?;
+        if !target.same_directory(&reachable)? {
+            return Err(io::Error::new(
+                ErrorKind::InvalidData,
+                "destination directory changed before publishing the locator",
+            ));
+        }
         if let Err(error) = self
             .locator()
             .and_then(|dir| files::write_json(&dir, POINTER, &location))
@@ -292,7 +299,15 @@ impl Core {
         files::probe(&target)?;
         let config = if let Some(source) = source {
             migration::copy_and_verify(&source, &target)?;
-            Config::load(&target, &self.user)?
+            let config = Config::load(&target, &self.user)?;
+            let (still_selected, original) = self.bind()?;
+            if !source.same_directory(&still_selected)? || !config.same_workspace(&original) {
+                return Err(io::Error::new(
+                    ErrorKind::InvalidData,
+                    "source workspace changed during migration",
+                ));
+            }
+            config
         } else {
             match Config::load(&target, &self.user) {
                 Ok(config) => config,
@@ -302,7 +317,7 @@ impl Core {
                 Err(error) => return Err(error),
             }
         };
-        self.publish(root, &config)
+        self.publish(root, &target, &config)
     }
 
     // 用户明确选择新的空工作区，原卷离线时仍能开始工作；此操作不代表已迁移历史。
@@ -322,7 +337,7 @@ impl Core {
         capacity(&target, 1)?;
         files::probe(&target)?;
         let config = Config::initialize(&target, &self.user)?;
-        self.publish(root, &config)
+        self.publish(root, &target, &config)
     }
 }
 
