@@ -14,6 +14,7 @@
 - [Core 当前用户配置与存储](architecture/CORE-STORAGE.md)
 - [Core 调度与事件总线](architecture/CORE-RUNTIME.md)
 - [受控服务、受控 IPC 与驱动管理](architecture/SERVICE-KERNEL.md)
+- [文件与注册表采集](architecture/FILE-REGISTRY.md)
 - [进程、线程与模块来源](architecture/PROCESS.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [网络与数据策略](architecture/DATA.md)

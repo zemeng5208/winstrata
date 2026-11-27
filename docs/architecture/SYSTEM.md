@@ -31,6 +31,8 @@ Prefer supported ETW, WFP, PDH, WMI/CIM, Windows API, USN Journal and Event Log,
 
 Independently build, version, manage, load on demand, and unload drivers. Candidate names are `strata-fs.sys`, `strata-reg.sys`, `strata-proc.sys`, and `strata-net.sys`. Validate module boundaries and subscription reference counts. Contain failed loads. Limit kernel work to collection and transport and manage IRQL, locks, memory, buffers, and callback time. Preserve signing, Secure Boot and HVCI and use supported interfaces. Verify real Windows loading, unloading, fault recovery, stability, and sustained operation.
 
+Plan 009 observes one chosen directory and one HKCU subkey with user-mode `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue`. That collection is specified in [File and registry collection](FILE-REGISTRY.md). It does not load `strata-fs.sys` or `strata-reg.sys`.
+
 ### Events, scheduling, and shared state
 
 - Version event types and protocol. Carry source, stable device/user/process identity, timestamp, order, precision, attribution evidence, and completeness. Trace missing sequences and verify PID reuse, restart, clock changes and cross-source alignment.

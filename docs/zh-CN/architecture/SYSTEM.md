@@ -33,6 +33,8 @@ GUI 与 Core 按普通用户权限运行，受控后台服务承担必要高权�
 
 多驱动设计，候选产物 `strata-fs.sys`、`strata-reg.sys`、`strata-proc.sys`、`strata-net.sys`；具体拆分取决于技术验证。驱动独立构建、版本、状态管理、按需加载、安全卸载；引用计数协调共享订阅。单驱动加载失败需明确受影响范围，无依赖模块继续工作。内核层只负责采集和传输，不执行业务分析；控制 IRQL、锁竞争、内存、缓冲、回调时长；不使用非标准 hook 或未验证接口，不绕过驱动签名、Secure Boot、HVCI 等安全机制。真实 Windows 稳定性、故障、卸载及长时间测试是完成条件。
 
+计划 009 用用户态 `ReadDirectoryChangesW` 和 `RegNotifyChangeKeyValue` 观察一个选定目录和一个 HKCU 子键。该采集见[文件与注册表采集](FILE-REGISTRY.md)。它不加载 `strata-fs.sys` 或 `strata-reg.sys`。
+
 ### 3.3 统一事件和资源管理
 
 - 事件统一类型、协议版本、来源标识、设备/用户/进程稳定标识、时间戳、顺序、观测精度、归因依据、完整性状态；事件序号与缺失区间可追溯。PID 重用、重启、时钟变化及多来源时间对齐应实际验证。
