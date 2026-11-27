@@ -327,7 +327,9 @@ impl PluginHost {
                 "plugin runtime is not a file",
             ));
         }
-        let root = fs::canonicalize(dir.io_path())?;
+        // Linux 句柄路径在目录关闭后失效。Windows 的 canonicalize 会加上
+        // `\\?\` 前缀，而目录锚点只接受普通盘符路径。
+        let root = reopenable_directory(dir.io_path())?;
         let epoch = crate::platform::fresh_id()?;
         let mut host = Self {
             root,
@@ -1619,6 +1621,24 @@ fn static_code(code: Option<&str>) -> &'static str {
         Some("faulted") => "faulted",
         _ => "rejected",
     }
+}
+
+fn reopenable_directory(path: &Path) -> io::Result<PathBuf> {
+    let canonical = fs::canonicalize(path)?;
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        let wide: Vec<u16> = canonical.as_os_str().encode_wide().collect();
+        const PREFIX: &[u16] = &[92, 92, 63, 92];
+        if wide.starts_with(PREFIX) && wide.len() >= PREFIX.len() + 3 {
+            let rest = &wide[PREFIX.len()..];
+            if matches!(rest[0], 65..=90 | 97..=122) && rest[1] == 58 && matches!(rest[2], 47 | 92)
+            {
+                return Ok(PathBuf::from(std::ffi::OsString::from_wide(rest)));
+            }
+        }
+    }
+    Ok(canonical)
 }
 
 fn official(id: &str) -> Option<&'static OfficialPlugin> {
