@@ -133,7 +133,7 @@ fn unavailable(detail: &str) -> Observation {
     }
 }
 
-fn runtime_binary() -> Option<PathBuf> {
+pub(crate) fn runtime_binary() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
     let mut dir = exe.parent()?.to_path_buf();
     if dir.file_name().and_then(|name| name.to_str()) == Some("deps") {

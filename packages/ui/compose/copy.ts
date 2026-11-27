@@ -6,6 +6,19 @@ export type Copy = {
   skip: string
   overview: string
   plugins: string
+  scripts: string
+  scriptsTitle: string
+  scriptsBody: string
+  scriptsSource: string
+  scriptsName: string
+  scriptsPrefix: string
+  scriptsCheck: string
+  scriptsDiagnose: string
+  scriptsHighlight: string
+  scriptsComplete: string
+  scriptsSave: string
+  scriptsIdle: string
+  scriptsPresets: string
   service: string
   settings: string
   navigation: string
@@ -83,6 +96,19 @@ const en: Copy = {
   skip: 'Skip to Main',
   overview: 'Overview',
   plugins: 'Plugins',
+  scripts: 'Scripts',
+  scriptsTitle: 'StrataScript',
+  scriptsBody: 'This page does not enable the plugin and does not grant a permission. Presets stay empty. A command is forwarded only while the workbench is already running.',
+  scriptsSource: 'Source',
+  scriptsName: 'Script name',
+  scriptsPrefix: 'Completion prefix',
+  scriptsCheck: 'Check presets',
+  scriptsDiagnose: 'Diagnose',
+  scriptsHighlight: 'Highlight',
+  scriptsComplete: 'Complete',
+  scriptsSave: 'Save source',
+  scriptsIdle: 'The workbench is not running.',
+  scriptsPresets: 'Presets',
   service: 'Service',
   settings: 'Settings',
   navigation: 'Navigation',
@@ -160,6 +186,19 @@ const zh: Copy = {
   skip: '跳到主内容',
   overview: '概览',
   plugins: '插件',
+  scripts: '脚本',
+  scriptsTitle: 'StrataScript',
+  scriptsBody: '此页不启用插件，也不授予权限。预设保持为空。只有工作台已经在运行时，命令才会被转发。',
+  scriptsSource: '源码',
+  scriptsName: '脚本名',
+  scriptsPrefix: '补全前缀',
+  scriptsCheck: '检查预设',
+  scriptsDiagnose: '诊断',
+  scriptsHighlight: '着色',
+  scriptsComplete: '补全',
+  scriptsSave: '保存源码',
+  scriptsIdle: '工作台没有在运行。',
+  scriptsPresets: '预设',
   service: '服务',
   settings: '设置',
   navigation: '导航',

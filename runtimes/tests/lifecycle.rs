@@ -135,6 +135,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     assert_eq!(builtins.len(), 25);
     let process_seeded = collector_present("winstrata-strata-process");
     let services_seeded = collector_present("winstrata-strata-services");
+    let script_seeded = collector_present("winstrata-strata-script");
     let startup_seeded = collector_present("winstrata-strata-startup");
     let pulse_seeded = collector_present("winstrata-strata-pulse");
     let health_seeded = collector_present("winstrata-strata-health");
@@ -170,6 +171,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.services" && services_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.script" && script_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.startup" && startup_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.pulse" && pulse_seeded {
@@ -203,6 +206,12 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     if services_seeded {
         assert_eq!(
             host.uninstall("strata.services").unwrap_err().code(),
+            "builtin_retained"
+        );
+    }
+    if script_seeded {
+        assert_eq!(
+            host.uninstall("strata.script").unwrap_err().code(),
             "builtin_retained"
         );
     }

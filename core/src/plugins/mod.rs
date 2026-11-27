@@ -2,6 +2,7 @@
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
 //! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse`、`strata.health` 与 `strata.budget` 只在同目录存在对应程序时登记为已安装且默认禁用。
+//! `strata.script` 只在同目录存在 `winstrata-strata-script` 时登记，并且在启用前保持禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
@@ -48,6 +49,7 @@ const MAX_PACKAGE_FILE: u64 = 64 * 1024;
 const MAX_HISTORY_LINES: usize = 1024;
 const PROCESS_PLUGIN: &str = "strata.process";
 const PULSE_PLUGIN: &str = "strata.pulse";
+const SCRIPT_PLUGIN: &str = "strata.script";
 const SERVICES_PLUGIN: &str = "strata.services";
 const STARTUP_PLUGIN: &str = "strata.startup";
 
@@ -67,6 +69,15 @@ const PULSE_MANIFEST: &str = concat!(
     r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
     r#""capabilities":["pulse.observe"],"permissions":["event.publish","storage.private"],"#,
     r#""dependencies":[],"events":["pulse.sample"],"rescue":false}"#,
+);
+
+// 清单与工作台程序共同描述计划 027。宿主不通过第三方安装写入这个身份。
+const SCRIPT_MANIFEST: &str = concat!(
+    r#"{"version":{"major":1,"minor":0},"id":"strata.script","name":"StrataScript","#,
+    r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
+    r#""capabilities":["script.workbench"],"permissions":["event.subscribe","event.publish","#,
+    r#""storage.private","history.read"],"dependencies":[],"events":["script.started","#,
+    r#""script.finished","script.faulted"],"rescue":false}"#,
 );
 
 // 计划 022 的服务与驱动观察。事件名沿用插件令牌，不含下划线。
@@ -482,6 +493,7 @@ impl PluginHost {
         };
         host.read_entries()?;
         host.seed_process_collector()?;
+        host.seed_script_workbench()?;
         host.seed_services_collector()?;
         host.seed_startup_collector()?;
         host.seed_pulse_collector()?;
@@ -1354,6 +1366,13 @@ impl PluginHost {
                         "process collector is not beside the plugin runtime",
                     )
                 })?
+            } else if manifest.id.as_str() == SCRIPT_PLUGIN {
+                collector_beside(&self.runtime, "winstrata-strata-script").ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "script workbench is not beside the plugin runtime",
+                    )
+                })?
             } else if manifest.id.as_str() == SERVICES_PLUGIN {
                 collector_beside(&self.runtime, "winstrata-strata-services").ok_or_else(|| {
                     PluginError::new(
@@ -1392,10 +1411,11 @@ impl PluginHost {
             } else {
                 self.runtime.clone()
             };
-            return Live::spawn(
-                native_command(&program, manifest_path, state),
-                manifest.plugin_version,
-            );
+            let mut command = native_command(&program, manifest_path, state);
+            if manifest.id.as_str() == SCRIPT_PLUGIN {
+                self.pass_script_toolchain(&mut command);
+            }
+            return Live::spawn(command, manifest.plugin_version);
         }
         let tools = self.languages.as_ref().ok_or_else(|| {
             PluginError::new("toolchain_missing", "language toolchain is not bound")
@@ -2043,6 +2063,56 @@ impl PluginHost {
         Ok(())
     }
 
+    fn seed_script_workbench(&mut self) -> Result<(), PluginError> {
+        if collector_beside(&self.runtime, "winstrata-strata-script").is_none()
+            || self.entry(SCRIPT_PLUGIN).is_ok()
+        {
+            return Ok(());
+        }
+        let manifest = Manifest::from_json(SCRIPT_MANIFEST).map_err(manifest_error)?;
+        if manifest.id.as_str() != SCRIPT_PLUGIN || manifest.kind != PluginKind::Builtin {
+            return Err(PluginError::new(
+                "invalid_manifest",
+                "script workbench manifest is not the official plugin",
+            ));
+        }
+        let files = vec![(
+            "manifest.json".to_owned(),
+            SCRIPT_MANIFEST.as_bytes().to_vec(),
+        )];
+        self.write_tree("packages", SCRIPT_PLUGIN, &files)?;
+        self.write_tree("recovery", SCRIPT_PLUGIN, &files)?;
+        self.ensure_dir("state", SCRIPT_PLUGIN)?;
+        self.entries.push(Installed {
+            id: SCRIPT_PLUGIN.to_owned(),
+            name: manifest.name.as_str().to_owned(),
+            kind: PluginKind::Builtin,
+            version: manifest.plugin_version,
+            enabled: false,
+            pin: None,
+            grants: manifest.permissions.clone(),
+            pending: Vec::new(),
+            loaded: false,
+            availability: "ready".to_owned(),
+        });
+        self.save()?;
+        self.audit(SCRIPT_PLUGIN, "seed", "ok", "present")?;
+        Ok(())
+    }
+
+    fn pass_script_toolchain(&self, command: &mut std::process::Command) {
+        if let Some(tools) = &self.languages {
+            command.arg("--python").arg(&tools.python);
+            command.arg("--python-prefix").arg(&tools.python_prefix);
+            command.arg("--node").arg(&tools.node);
+            command.arg("--node-prefix").arg(&tools.node_prefix);
+        }
+        let shim = shim_beside(&self.runtime);
+        if shim.is_file() {
+            command.arg("--shim").arg(shim);
+        }
+    }
+
     fn seed_budget_collector(&mut self) -> Result<(), PluginError> {
         self.seed_builtin(
             budget::PLUGIN,
@@ -2168,7 +2238,6 @@ impl PluginHost {
             .filter(|entry| matches!(entry.availability.as_str(), "faulted" | "unavailable"))
             .count() as u64
     }
-
     fn save(&self) -> Result<(), PluginError> {
         let stored = StoredHost {
             version: Version::CURRENT,

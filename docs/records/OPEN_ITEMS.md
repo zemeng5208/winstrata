@@ -53,6 +53,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
 | [OI-042](#oi-042) | Closed on Windows Server 2022 | Clients remain [OI-001](#oi-001), plan 049 |
 | [OI-043](#oi-043) | Untested | 022 |
+| [OI-044](#oi-044) | Untested | 027 |
+| [OI-045](#oi-045) | Known limitation | 027 |
 | [OI-046](#oi-046) | Untested | 024, then 048 for the load scenario |
 | [OI-047](#oi-047) | Unimplemented | 022, 026, 030, 032, 042 |
 | [OI-048](#oi-048) | Known limitation | No roadmap row |
@@ -643,8 +645,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07)
 - Source PR: the acceptance plan
 - Current state: not done
-- Reason it is incomplete: scripts and manual snapshot comparison are later plans
-- Responsible PR: 027
+- Reason it is incomplete: plan 027 runs the editor, three languages, debugging, triggers, logs, disablement, permissions, and the empty-preset check on Linux. Manual snapshot comparison is plan 038. Filter fallback is plan 028. The Windows scripts page was not opened. See [OI-044](#oi-044) and [OI-045](#oi-045).
+- Responsible PR: 027 for the workbench. Snapshots stay 038. Filter fallback stays 028.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the script workbench on Windows
 - Acceptance criteria: the scenario text
@@ -831,6 +833,34 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
 - Acceptance criteria: that test passes on the review head. It must show user and system before/after values for the probe, a PATH event whose evidence contains the appended segment, a paused gap that does not publish the hidden value, and no replay of a change made while stopped. The previous PATH bytes are restored.
 - Close conditions: the Windows workspace log for this plan's review head shows that test passed, and this row is updated with that result. A Linux run does not close it. Passing it does not close E2E-02.
+
+<a id="oi-044"></a>
+
+## OI-044
+
+- Related requirement: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) and [REQ-16.03](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 027
+- Current state: untested
+- Reason it is incomplete: the Windows workspace job on `a66da7b749ef5657d55f72cccd2d699783dd4a6f` ran the three languages inside the plugin test. No Windows session opened the official scripts page. Plan 025 holds OI-040, OI-041, and OI-042, so this page session is OI-044.
+- Responsible PR: 027
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, with storage selected, `winstrata-strata-script` beside the runtime, the project Python and Node.js pins, and the official scripts page
+- Acceptance criteria: create, edit, run, debug, trigger, and disable a script in each of Python, JavaScript, and TypeScript. Confirm the presets directory stays empty and the page does not enable the plugin by itself.
+- Close conditions: that Windows page run is recorded. A Linux test is not this close. The plugin test is not this close. Not closed by the idle bridge response.
+
+<a id="oi-045"></a>
+
+## OI-045
+
+- Related requirement: [REQ-16.03](../roadmap/REQUIREMENTS.md) and [plan 015 containment](../architecture/RUNTIMES.md)
+- Source PR: plan 027
+- Current state: known limitation
+- Reason it is incomplete: Linux user-script children use Landlock and `libwinstrata_shim.so`. The Windows AppContainer and Job Object stay private to the host language-plugin path. This plan does not copy that code and does not add a public host API. On Windows the script child starts without an AppContainer.
+- Responsible PR: 027
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, after the owner approves either a shared containment entry or a script-plugin AppContainer that matches plan 015
+- Acceptance criteria: a user script cannot read a path outside the granted prefix and plugin state, and cannot write the presets directory. The child is not started when containment cannot be installed.
+- Close conditions: that Windows containment run is recorded. Linux Landlock evidence does not close it. Not closed by marking the Windows path as passed. The Windows plugin test on `a66da7b749ef5657d55f72cccd2d699783dd4a6f` does not close it.
 
 <a id="oi-043"></a>
 

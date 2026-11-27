@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Outlet, Link } from '@tanstack/react-router'
-import { Activity, Blocks, LayoutDashboard, Settings } from 'lucide-react'
+import { Activity, Blocks, LayoutDashboard, Settings, SquareTerminal } from 'lucide-react'
 import { FadeIn } from '../vendor/amicro/fade-in'
 import { liquidGlass } from '../vendor/glasswork/lens.js'
 import { AppTitle } from '../vendor/shadcn-admin/src/components/layout/app-title'
@@ -25,7 +25,7 @@ import { InkSwitch, SignalReturn } from './moments'
 
 export type ThemeName = 'white-acrylic' | 'black-acrylic' | 'liquid-glass'
 export type CloseName = 'ask' | 'tray' | 'exit'
-export type PageName = 'overview' | 'plugins' | 'service' | 'settings'
+export type PageName = 'overview' | 'plugins' | 'service' | 'settings' | 'scripts'
 
 export type ScopeState = {
   roots: string[]
@@ -130,7 +130,7 @@ const emptyState: HostState = {
 
 const HostContext = createContext<HostState>(emptyState)
 
-function useHost() {
+export function useHost() {
   return useContext(HostContext)
 }
 
@@ -185,6 +185,7 @@ function OfficialSidebar({ copy, user, theme }: { copy: Copy; user: string; them
           items={[
             { title: copy.overview, url: '/', icon: LayoutDashboard },
             { title: copy.plugins, url: '/plugins', icon: Blocks },
+            { title: copy.scripts, url: '/scripts', icon: SquareTerminal },
             { title: copy.service, url: '/service', icon: Activity },
             { title: copy.settings, url: '/settings', icon: Settings },
           ]}
