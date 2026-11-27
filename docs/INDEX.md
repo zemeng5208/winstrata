@@ -29,6 +29,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Native plugin contracts and lifecycle](architecture/PLUGINS.md)
 - [Python, TypeScript, and JavaScript runtimes](architecture/RUNTIMES.md)
 - [Script plugin](architecture/SCRIPT.md)
+- [Filter plugin](architecture/FILTER.md)
 - [Tag plugin](architecture/TAG.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)

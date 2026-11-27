@@ -316,6 +316,25 @@ fn command_response(
             }
             return write_status(stream, 200, "application/json", b"{\"ok\":true}");
         }
+        "filter-apply" => {
+            // 页面不能启用插件。插件没有在跑时只回答空计数，并且在未选择存储时不创建插件目录。
+            let payload = command
+                .get("payload")
+                .and_then(Value::as_str)
+                .unwrap_or(r#"{"op":"show"}"#);
+            if payload.len() > 1024 || payload.chars().any(char::is_control) {
+                return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
+            }
+            let locator = guard.locator.clone();
+            let core = match session::ensure(&mut guard.core, &locator) {
+                Ok(core) => core,
+                Err(error) => return error_status(stream, &error),
+            };
+            let body = filter_apply(core, payload)?;
+            let bytes = serde_json::to_vec(&body)
+                .map_err(|error| io::Error::other(error.to_string()))?;
+            return write_status(stream, 200, "application/json", &bytes);
+        }
         "script-workbench" => {
             // 页面不能启用插件。插件没有在跑时只回答空预设，并且在未选择存储时不创建插件目录。
             let payload = command
@@ -357,6 +376,36 @@ fn command_response(
         return error_status(stream, &error);
     }
     write_status(stream, 200, "application/json", b"{\"ok\":true}")
+}
+
+fn filter_apply(core: &mut Core, payload: &str) -> io::Result<Value> {
+    let idle = json!({"enabled": false, "kept": 0, "avoided": 0, "overhead": 0});
+    if !matches!(core.storage_state(), StorageState::Ready) {
+        return Ok(idle);
+    }
+    let Some(runtime) = observe::runtime_binary() else {
+        return Ok(idle);
+    };
+    let mut host = match core.open_plugins(&runtime) {
+        Ok(host) => host,
+        Err(_) => return Ok(idle),
+    };
+    let report = match host.report("strata.filter") {
+        Ok(report) => report,
+        Err(_) => return Ok(idle),
+    };
+    if report.phase != "running" && report.phase != "paused" {
+        return Ok(idle);
+    }
+    let detail = match host.call("strata.filter", "filter.apply", payload) {
+        Ok(detail) => detail,
+        Err(error) => return Ok(json!({"enabled": true, "ok": false, "code": error.code()})),
+    };
+    let mut body = serde_json::from_str::<Value>(&detail).unwrap_or(idle);
+    if let Some(object) = body.as_object_mut() {
+        object.insert("enabled".to_owned(), Value::Bool(true));
+    }
+    Ok(body)
 }
 
 fn tag_apply(core: &mut Core, payload: &str) -> io::Result<Value> {

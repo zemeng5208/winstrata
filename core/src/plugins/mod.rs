@@ -3,6 +3,7 @@
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
 //! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse`、`strata.health` 与 `strata.budget` 只在同目录存在对应程序时登记为已安装且默认禁用。
 //! `strata.script` 只在同目录存在 `winstrata-strata-script` 时登记，并且在启用前保持禁用。
+//! `strata.filter` 只在同目录存在 `winstrata-strata-filter` 时登记，并且在启用前保持禁用。
 //! `strata.tag` 只在同目录存在 `winstrata-strata-tag` 时登记，并且在启用前保持禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
@@ -11,6 +12,7 @@
 
 mod budget;
 mod env;
+mod filter;
 mod health;
 mod language;
 mod process;
@@ -503,6 +505,7 @@ impl PluginHost {
         host.read_entries()?;
         host.seed_process_collector()?;
         host.seed_script_workbench()?;
+        host.seed_filter()?;
         host.seed_services_collector()?;
         host.seed_startup_collector()?;
         host.seed_pulse_collector()?;
@@ -973,6 +976,9 @@ impl PluginHost {
         capability: &str,
         payload: &str,
     ) -> Result<String, PluginError> {
+        if capability == "filter.apply" {
+            return self.filter_call(id, payload);
+        }
         self.running(id)?;
         let provider = self.resolve_provider(id, capability)?;
         if provider == tag::PLUGIN && capability == "tag.apply" {
@@ -1440,6 +1446,13 @@ impl PluginHost {
                     PluginError::new(
                         "runtime_missing",
                         "budget collector is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == filter::PLUGIN {
+                filter::beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "filter program is not beside the plugin runtime",
                     )
                 })?
             } else if manifest.id.as_str() == tag::PLUGIN {
@@ -2154,6 +2167,114 @@ impl PluginHost {
         }
     }
 
+    fn seed_filter(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            filter::PLUGIN,
+            winstrata_strata_filter::MANIFEST,
+            "winstrata-strata-filter",
+            "filter manifest is not the official plugin",
+        )
+    }
+
+    /// 插件未启用时仍执行基础保护。不写批量文件，也不启动过滤进程。
+    pub fn protect_observation(&self, payload: &str) -> Result<bool, PluginError> {
+        winstrata_strata_filter::protect_payload(payload)
+            .map_err(|_| PluginError::new("rejected", "observation was rejected"))
+    }
+
+    fn filter_call(&mut self, id: &str, payload: &str) -> Result<String, PluginError> {
+        self.running(id)?;
+        let provider = self.resolve_provider(id, "filter.apply")?;
+        if provider != filter::PLUGIN {
+            return Err(PluginError::new(
+                "rejected",
+                "filter.apply is provided by strata.filter",
+            ));
+        }
+        let detail = self.invoke_raw(&provider, "filter.apply", payload)?;
+        let Some(request) = filter::script_request(&detail) else {
+            return Ok(detail);
+        };
+        let staged =
+            fs::read_to_string(self.tree_path("state", filter::PLUGIN)?.join("staged.txt"))
+                .map_err(|_| PluginError::new("missing", "filter batch was not staged"))?;
+        let staged_lines = staged.lines().filter(|line| !line.is_empty()).count();
+        if staged_lines != request.count {
+            return self.invoke_raw(
+                &provider,
+                "filter.apply",
+                &filter::fallback_payload("staged_mismatch"),
+            );
+        }
+        match self.script_batch(&request.id, &staged) {
+            Ok(lines) if lines.len() == request.count => {
+                let payload = filter::verdict_payload(&lines)?;
+                self.invoke_raw(&provider, "filter.apply", &payload)
+            }
+            Ok(_) => self.invoke_raw(
+                &provider,
+                "filter.apply",
+                &filter::fallback_payload("verdict_mismatch"),
+            ),
+            Err(code) => {
+                self.invoke_raw(&provider, "filter.apply", &filter::fallback_payload(code))
+            }
+        }
+    }
+
+    fn script_batch(&mut self, id: &str, staged: &str) -> Result<Vec<String>, &'static str> {
+        if !self.live.contains_key(SCRIPT_PLUGIN) {
+            return Err("script_unavailable");
+        }
+        let private = self
+            .tree_path("state", SCRIPT_PLUGIN)
+            .map_err(|_| "faulted")?
+            .join("private");
+        fs::create_dir_all(&private).map_err(|_| "faulted")?;
+        fs::write(private.join("batch.txt"), staged).map_err(|_| "faulted")?;
+        let payload = format!(r#"{{"op":"run","id":"{id}"}}"#);
+        let detail = self
+            .call(SCRIPT_PLUGIN, "script.workbench", &payload)
+            .map_err(|error| error.code())?;
+        let text = filter::decode_output(&detail).ok_or("faulted")?;
+        filter::verdict_lines(&text).ok_or("verdict_mismatch")
+    }
+
+    fn invoke_raw(
+        &mut self,
+        provider: &str,
+        capability: &str,
+        payload: &str,
+    ) -> Result<String, PluginError> {
+        if payload.len() > 1024 || payload.chars().any(char::is_control) {
+            return Err(PluginError::new(
+                "invalid_record",
+                "filter payload does not fit a plugin frame",
+            ));
+        }
+        let mut frame = PluginFrame::request("invoke");
+        frame.capability = Some(capability.to_owned());
+        frame.payload = Some(payload.to_owned());
+        let reply = self.exchange(provider, &frame)?;
+        if reply.pid != Some(self.live.get(provider).map(Live::pid).unwrap_or(0)) {
+            return Err(PluginError::new(
+                "untrusted_peer",
+                "plugin process identity did not match the host",
+            ));
+        }
+        if reply.ok != Some(true) {
+            return Err(PluginError::new(
+                static_code(reply.code.as_deref()),
+                reply
+                    .detail
+                    .unwrap_or_else(|| "plugin rejected the call".to_owned()),
+            ));
+        }
+        reply
+            .detail
+            .ok_or_else(|| PluginError::new("invalid_record", "plugin returned no result"))
+    }
+
     fn seed_budget_collector(&mut self) -> Result<(), PluginError> {
         self.seed_builtin(
             budget::PLUGIN,
@@ -2607,6 +2728,14 @@ fn static_code(code: Option<&str>) -> &'static str {
         Some("missing") => "missing",
         Some("unavailable") => "unavailable",
         Some("faulted") => "faulted",
+        Some("disabled") => "disabled",
+        Some("timeout") => "timeout",
+        Some("toolchain_missing") => "toolchain_missing",
+        Some("isolation_unavailable") => "isolation_unavailable",
+        Some("preset_present") => "preset_present",
+        Some("permission_denied") => "permission_denied",
+        Some("pending_script") => "pending_script",
+        Some("dependency_missing") => "dependency_missing",
         _ => "rejected",
     }
 }

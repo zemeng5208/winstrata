@@ -6,6 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { FilterPage } from './filter-page'
 import { ScriptPage } from './script-page'
 import { TagPage } from './tag-page'
 import { OverviewPage, PluginsPage, ServicePage, SettingsPage, Shell } from './shell'
@@ -36,6 +37,11 @@ const scriptsRoute = createRoute({
   path: '/scripts',
   component: ScriptPage,
 })
+const filtersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/filters',
+  component: FilterPage,
+})
 const tagsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tags',
@@ -47,6 +53,7 @@ const routeTree = rootRoute.addChildren([
   serviceRoute,
   settingsRoute,
   scriptsRoute,
+  filtersRoute,
   tagsRoute,
 ])
 const router = createRouter({

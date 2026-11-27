@@ -7,6 +7,16 @@ export type Copy = {
   overview: string
   plugins: string
   scripts: string
+  filters: string
+  filtersTitle: string
+  filtersBody: string
+  filtersField: string
+  filtersValue: string
+  filtersSave: string
+  filtersShow: string
+  filtersIdle: string
+  filtersInclude: string
+  filtersExclude: string
   scriptsTitle: string
   scriptsBody: string
   scriptsSource: string
@@ -109,6 +119,16 @@ const en: Copy = {
   overview: 'Overview',
   plugins: 'Plugins',
   scripts: 'Scripts',
+  filters: 'Filters',
+  filtersTitle: 'StrataFilter',
+  filtersBody: 'This page does not enable the plugin and does not grant a permission. A command is forwarded only while the filter is already running. Self writes stay suppressed when the plugin is not running.',
+  filtersField: 'Field',
+  filtersValue: 'Value',
+  filtersSave: 'Save rule',
+  filtersShow: 'Show counts',
+  filtersIdle: 'The filter is not running.',
+  filtersInclude: 'Include',
+  filtersExclude: 'Exclude',
   scriptsTitle: 'StrataScript',
   scriptsBody: 'This page does not enable the plugin and does not grant a permission. Presets stay empty. A command is forwarded only while the workbench is already running.',
   scriptsSource: 'Source',
@@ -211,6 +231,16 @@ const zh: Copy = {
   overview: '概览',
   plugins: '插件',
   scripts: '脚本',
+  filters: '过滤',
+  filtersTitle: 'StrataFilter',
+  filtersBody: '此页不启用插件，也不授予权限。只有过滤器已经在运行时，命令才会被转发。插件没有运行时，自身写入仍然被抑制。',
+  filtersField: '字段',
+  filtersValue: '值',
+  filtersSave: '保存规则',
+  filtersShow: '查看计数',
+  filtersIdle: '过滤器没有在运行。',
+  filtersInclude: '包含',
+  filtersExclude: '排除',
   scriptsTitle: 'StrataScript',
   scriptsBody: '此页不启用插件，也不授予权限。预设保持为空。只有工作台已经在运行时，命令才会被转发。',
   scriptsSource: '源码',

@@ -40,6 +40,8 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 
 `plugins/strata-tag` has no open error. The Windows job that was not run is [OI-055](OPEN_ITEMS.md#oi-055), not an error. Plan 028 keeps OI-052 and OI-053. This file does not rewrite them. [ERR-021](modules/strata-services.md#err-021) stays with services.
 
+Plan 028 keeps its module register at [Filter plugin](modules/strata-filter.md). That file records no error yet. [OI-052](OPEN_ITEMS.md#oi-052) is closed for the Windows Server 2022 job on `bc009ea2ee3481ae8a9fea295c246380249cd32a`. [OI-053](OPEN_ITEMS.md#oi-053) remains the Windows page gap. Neither is an error id.
+
 Plan 023 keeps its module register at [Startup plugin](modules/strata-startup.md). That file records no error yet. [OI-049](OPEN_ITEMS.md#oi-049) is the Windows startup gap and is not an error id.
 
 ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c454aea4537809`. ERR-013 names the same defect. Plan 052 is the designated fix and is merged as `004974215e239f96160b47d3eef40a84c316e802`. Windows workspace checks on that commit passed. Plan 051 does not implement the fix.

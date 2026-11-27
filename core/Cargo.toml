@@ -11,6 +11,7 @@ serde_json.workspace = true
 winstrata-kernel = { path = "../kernel" }
 winstrata-protocols = { path = "../protocols" }
 winstrata-strata-env = { path = "../plugins/strata-env" }
+winstrata-strata-filter = { path = "../plugins/strata-filter" }
 winstrata-strata-registry = { path = "../plugins/strata-registry" }
 winstrata-strata-trace = { path = "../plugins/strata-trace" }
 
