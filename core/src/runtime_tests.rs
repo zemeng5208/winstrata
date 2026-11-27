@@ -169,8 +169,7 @@ fn scheduler_delivers_real_events_and_reports_throughput() {
     drop(subscription);
     runtime.shutdown();
     assert_eq!(runtime.scheduler().stats().live_threads, 0);
-    #[cfg(target_os = "linux")]
-    assert_eq!(runtime.scheduler().named_threads_alive(), 0);
+    assert_scheduler_threads_released(runtime.scheduler());
 }
 
 #[test]
@@ -524,8 +523,7 @@ fn priority_cancellation_timeout_and_queue_limits_release_workers() {
         .unwrap_err();
     assert_eq!(closed.error.code(), "shutting_down");
     assert_eq!(closed.event.sequence.get(), 2);
-    #[cfg(target_os = "linux")]
-    assert_eq!(runtime.scheduler().named_threads_alive(), 0);
+    assert_scheduler_threads_released(runtime.scheduler());
 }
 
 #[test]
@@ -582,6 +580,26 @@ fn unsubscribe_and_shutdown_release_queues_without_keeping_threads() {
     drop(subscription);
     runtime.shutdown();
     assert_eq!(runtime.scheduler().stats().live_threads, 0);
+    assert_scheduler_threads_released(runtime.scheduler());
+}
+
+fn assert_scheduler_threads_released(scheduler: &super::Scheduler) {
     #[cfg(target_os = "linux")]
-    assert_eq!(runtime.scheduler().named_threads_alive(), 0);
+    {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let alive = scheduler.named_threads_alive();
+            if alive == 0 {
+                return;
+            }
+            if Instant::now() >= deadline {
+                panic!("scheduler threads still visible after join: {alive}");
+            }
+            thread::sleep(Duration::from_millis(20));
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = scheduler;
+    }
 }

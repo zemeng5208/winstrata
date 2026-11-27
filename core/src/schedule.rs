@@ -118,8 +118,8 @@ struct Shared {
     mu: Mutex<State>,
     cv: Condvar,
     live: AtomicUsize,
-    #[cfg(target_os = "linux")]
-    tids: Mutex<Vec<u64>>,
+    #[cfg(all(test, target_os = "linux"))]
+    tids: Mutex<Vec<TrackedThread>>,
 }
 
 impl Shared {
@@ -172,7 +172,7 @@ impl Scheduler {
             }),
             cv: Condvar::new(),
             live: AtomicUsize::new(0),
-            #[cfg(target_os = "linux")]
+            #[cfg(all(test, target_os = "linux"))]
             tids: Mutex::new(Vec::new()),
         });
         let mut handles = Vec::new();
@@ -293,9 +293,7 @@ impl Scheduler {
             .lock()
             .expect("thread ids")
             .iter()
-            .filter(|tid| {
-                thread_name(**tid).is_some_and(|name| name.starts_with(&self.shared.label))
-            })
+            .filter(|tracked| same_scheduler_thread(&self.shared.label, tracked))
             .count()
     }
 }
@@ -358,9 +356,9 @@ impl Drop for LiveGuard<'_> {
 
 fn enter_thread(shared: &Shared) -> LiveGuard<'_> {
     shared.live.fetch_add(1, AtomicOrdering::AcqRel);
-    #[cfg(target_os = "linux")]
-    if let Some(tid) = current_tid() {
-        shared.tids.lock().expect("thread ids").push(tid);
+    #[cfg(all(test, target_os = "linux"))]
+    if let Some(tracked) = current_thread() {
+        shared.tids.lock().expect("thread ids").push(tracked);
     }
     LiveGuard(shared)
 }
@@ -445,10 +443,32 @@ fn timer_main(shared: Arc<Shared>) {
     }
 }
 
-#[cfg(target_os = "linux")]
-fn current_tid() -> Option<u64> {
+#[cfg(all(test, target_os = "linux"))]
+struct TrackedThread {
+    tid: u64,
+    started: u64,
+}
+
+#[cfg(all(test, target_os = "linux"))]
+fn current_thread() -> Option<TrackedThread> {
     let link = std::fs::read_link("/proc/thread-self").ok()?;
-    link.file_name()?.to_str()?.parse().ok()
+    let tid = link.file_name()?.to_str()?.parse().ok()?;
+    Some(TrackedThread {
+        tid,
+        started: task_start_ticks(tid)?,
+    })
+}
+
+#[cfg(all(test, target_os = "linux"))]
+fn task_start_ticks(tid: u64) -> Option<u64> {
+    let stat = std::fs::read_to_string(format!("/proc/self/task/{tid}/stat")).ok()?;
+    start_ticks(&stat)
+}
+
+#[cfg(test)]
+fn start_ticks(stat: &str) -> Option<u64> {
+    let rest = stat.rsplit_once(')')?.1;
+    rest.split_whitespace().nth(19)?.parse().ok()
 }
 
 #[cfg(all(test, target_os = "linux"))]
@@ -456,4 +476,31 @@ fn thread_name(tid: u64) -> Option<String> {
     std::fs::read_to_string(format!("/proc/self/task/{tid}/comm"))
         .ok()
         .map(|name| name.trim().to_owned())
+}
+
+#[cfg(all(test, target_os = "linux"))]
+fn same_scheduler_thread(label: &str, tracked: &TrackedThread) -> bool {
+    if task_start_ticks(tracked.tid) != Some(tracked.started) {
+        return false;
+    }
+    let Some(name) = thread_name(tracked.tid) else {
+        return false;
+    };
+    let Some(suffix) = name.strip_prefix(label) else {
+        return false;
+    };
+    matches!(suffix.as_bytes().first(), Some(b'k' | b't'))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::start_ticks;
+
+    #[test]
+    fn stat_start_ticks_follow_the_comm_field() {
+        let stat = "12 (w0001k0) S 1 1 1 0 -1 0 0 0 0 0 0 0 0 0 20 0 1 0 4242 99";
+        assert_eq!(start_ticks(stat), Some(4242));
+        let spaced = "12 (comm with) spaces) R 1 1 1 0 -1 0 0 0 0 0 0 0 0 0 20 0 1 0 99";
+        assert_eq!(start_ticks(spaced), Some(99));
+    }
 }
