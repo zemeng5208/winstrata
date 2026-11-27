@@ -23,7 +23,7 @@
 | PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
 | PR 007 | 已验收 | 所有者将 [GitHub PR #9](https://github.com/zemeng5208/winstrata/pull/9) 合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。父提交为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d` 与 `a95bb7005d014cc4872b56c78fc869a3e0705540`。文件树为 `faf3878360e09dd679e0f2ebe9aacb019ae37d72`。 |
 | PR 008 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #12](https://github.com/zemeng5208/winstrata/pull/12) 合并为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。没有进行已签名驱动的加载或卸载。 |
-| PR 009 | 待审查 | 已在 `pr/009-file-registry` 实现[文件与注册表采集](../architecture/FILE-REGISTRY.md)，基线为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。本机 Linux 测试已通过。Windows 测试只完成类型检查，尚未执行。验收未完成。 |
+| PR 009 | 待审查 | 已在 `pr/009-file-registry` 实现[文件与注册表采集](../architecture/FILE-REGISTRY.md)，基线为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。提交 `83cd44377fd4588c7706a6f227ca6e819a7e177e` 已通过 Linux 和合并策略。Windows Server 2022 上 4 项 Core 测试失败。修正尚未在 Windows 上执行。验收未完成。 |
 | PR 010–050 | 规划中 | 按已批准的路线图推进并核验前置条件。计划 010 和 011 不属于本计划。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加服务控制面。计划 009 增加用户态文件和注册表监视。进程与网络采集、存储、插件及其他指标仍按各自计划推进。 |
 
@@ -120,6 +120,8 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 由于当前 Node.js 为 v22.23.4，固定引擎为 24.22.3，没有运行 `cargo dev doctor`。工作区测试命令是直接运行的。
 
-本机尚未执行的 Windows 测试是 `windows_file_watch_reports_real_changes_without_content`、`windows_registry_watch_reports_exact_values` 和 `windows_registry_failure_leaves_the_file_watch_running`。它们用于创建、重命名和删除真实文件，拒绝子目录变化，在最后一次释放时停止，写入并删除易失的 HKCU DWORD，并在注册表键缺失时保持文件监视继续运行。本机无法运行它们。没有故意撑满 16 KiB 文件缓冲区。没有加载已签名驱动。没有运行 Windows 10 和 Windows 11 客户端、Secure Boot、HVCI、E2E-02、进程归因和插件呈现。在 Windows 工作区作业报告这三项测试的结果之前，验收未完成。
+本机 Linux 没有执行的 Windows 测试是 `windows_file_watch_reports_real_changes_without_content`、`windows_registry_watch_reports_exact_values` 和 `windows_registry_failure_leaves_the_file_watch_running`。它们创建、重命名和删除真实文件，拒绝子目录变化，在最后一次释放时停止，写入并删除易失的 HKCU DWORD，并在注册表键缺失时保持文件监视继续运行。没有故意撑满 16 KiB 文件缓冲区。没有加载已签名驱动。没有运行 Windows 10 和 Windows 11 客户端、Secure Boot、HVCI、E2E-02、进程归因和插件呈现。
 
-当前交接点为计划 009，分支 `pr/009-file-registry`，基线为合并提交 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。本机 Linux 测试已通过。该提交的 Windows 执行、工作区检查和合并策略尚未记录。计划 010 和 011 在各自分支上，不属于本计划。
+在提交 `83cd44377fd4588c7706a6f227ca6e819a7e177e` 上，Linux 工作区检查通过，`winstrata/merge-policy` 报告“Merge order, blockers, and policy files checked”。Windows Server 2022 运行 `cargo test --locked --workspace`，`winstrata-core` 为 34 项通过、4 项失败。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46007410073/job/140533973394) · [Windows 失败](https://github.com/zemeng5208/winstrata/actions/runs/46007410073/job/140533972873) · [工作区失败](https://github.com/zemeng5208/winstrata/actions/runs/46007410073/job/140534358882) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/46007410135) `linux_and_invalid_scope_publish_nothing` 用 `/tmp/winstrata-009-unused` 调用 `open`。在 Windows 上该字符串不是绝对路径，因此 `open` 在订阅前返回 `collector_fault` / `invalid collection scope`。注册表断言同时要求 `registry.value_added`、证据 `t=4;a=11000000`，以及 JSON 中未转义的主体 `HKCU\...`。JSON 会转义反斜杠，所以即使字段正确，这个主体检查也不会成功。该失败本身不能证明 DWORD 事件不存在。两项文件测试都等到 8 秒截止，仍没有主体包含新建文件名的事件。`ReadDirectoryChangesW` 把字节数指针放在栈上。重叠完成可能在调用返回后写入该地址。现在改为传入空指针，并由 `GetOverlappedResult` 读取字节数。范围测试已拆开：每个宿主都拒绝相对目录和 `..\Software`，Linux 仍检查订阅返回 `unsupported` 且不发布事件。注册表断言改为比较事件类型、主体标识和证据字段。拆分之后，本机 Linux 用 `cargo test --workspace --locked` 通过 37 项 Core 测试、13 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。该修正已用 `RUSTFLAGS="-Dwarnings"` 针对 `x86_64-pc-windows-msvc` 做类型检查，尚未在 Windows 上执行。验收未完成。
+
+当前交接点为计划 009，分支 `pr/009-file-registry`，基线为合并提交 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。计划 010 和 011 在各自分支上，不属于本计划。

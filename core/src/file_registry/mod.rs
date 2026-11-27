@@ -336,12 +336,29 @@ pub(super) fn emit_registry(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(windows))]
     use std::time::Duration;
 
-    use crate::{EventBus, Filter, Limits};
+    #[cfg(not(windows))]
+    use crate::Filter;
+    use crate::{EventBus, Limits};
 
     #[test]
-    fn linux_and_invalid_scope_publish_nothing() {
+    fn invalid_scope_is_rejected() {
+        match FileRegistry::open(
+            EventBus::new(Limits::standard()).unwrap(),
+            Id::new("device-1").unwrap(),
+            Path::new("relative"),
+            r"..\Software",
+        ) {
+            Err(error) => assert_eq!(error.code(), "collector_fault"),
+            Ok(_) => panic!("invalid scope was accepted"),
+        }
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn linux_subscribe_publishes_nothing() {
         let bus = EventBus::new(Limits::standard()).unwrap();
         let subscription = bus.subscribe(0, Filter::default()).unwrap();
         let mut watch = FileRegistry::open(
@@ -361,14 +378,5 @@ mod tests {
                 .unwrap()
                 .is_empty()
         );
-        match FileRegistry::open(
-            EventBus::new(Limits::standard()).unwrap(),
-            Id::new("device-1").unwrap(),
-            Path::new("relative"),
-            r"..\Software",
-        ) {
-            Err(error) => assert_eq!(error.code(), "collector_fault"),
-            Ok(_) => panic!("invalid scope was accepted"),
-        }
     }
 }

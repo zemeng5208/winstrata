@@ -8,7 +8,7 @@ use std::io;
 use std::mem::zeroed;
 use std::os::windows::ffi::OsStrExt;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
 use std::sync::mpsc::Sender;
@@ -442,13 +442,14 @@ fn issue_read(
     buffer: &mut [u32],
 ) -> Result<(), CollectError> {
     unsafe { ResetEvent(overlapped.hEvent) };
-    let mut transferred = 0u32;
     let filter = FILE_NOTIFY_CHANGE_FILE_NAME
         | FILE_NOTIFY_CHANGE_DIR_NAME
         | FILE_NOTIFY_CHANGE_ATTRIBUTES
         | FILE_NOTIFY_CHANGE_SIZE
         | FILE_NOTIFY_CHANGE_LAST_WRITE
         | FILE_NOTIFY_CHANGE_SECURITY;
+    // 重叠读取完成时才会写字节数。这里传空指针，改由 GetOverlappedResult 读取，
+    // 避免系统在函数返回后写到已经失效的栈变量。
     let ok = unsafe {
         ReadDirectoryChangesW(
             directory.0,
@@ -456,7 +457,7 @@ fn issue_read(
             u32::try_from(buffer.len() * 4).unwrap_or(u32::MAX),
             0,
             filter,
-            &mut transferred,
+            null_mut(),
             overlapped,
             None,
         )
@@ -628,6 +629,7 @@ fn wide_text(text: &str) -> Result<Vec<u16>, CollectError> {
 mod tests {
     use super::*;
     use std::fs;
+    use std::path::PathBuf;
     use std::sync::Arc;
     use std::time::{Duration, Instant};
 
@@ -771,6 +773,45 @@ mod tests {
         event.to_json().unwrap()
     }
 
+    fn event_type(event: &Event) -> Option<&str> {
+        match &event.record {
+            Record::Observation { event_type, .. } => Some(event_type.as_str()),
+            Record::Gap { .. } => None,
+        }
+    }
+
+    fn evidence(event: &Event) -> Option<&str> {
+        match &event.record {
+            Record::Observation {
+                attribution: Attribution::Observed { evidence },
+                ..
+            } => Some(evidence.as_str()),
+            _ => None,
+        }
+    }
+
+    fn summarize(events: &[Event]) -> String {
+        if events.is_empty() {
+            return "no events".into();
+        }
+        events
+            .iter()
+            .map(|event| match &event.record {
+                Record::Observation {
+                    event_type,
+                    subject,
+                    ..
+                } => format!(
+                    "{}:{}",
+                    event_type.as_str(),
+                    subject.as_ref().map(|item| item.id.as_str()).unwrap_or("-")
+                ),
+                Record::Gap { reason, .. } => format!("gap:{reason:?}"),
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
     fn has_subject(event: &Event, fragment: &str) -> bool {
         match &event.record {
             Record::Observation {
@@ -803,11 +844,14 @@ mod tests {
         );
         fs::write(dir.0.join("observed.txt"), SECRET).unwrap();
         let added = harness.until(|event| {
-            has_subject(event, "observed.txt") && text(event).contains("file.added")
+            has_subject(event, "observed.txt") && event_type(event) == Some("file.added")
         });
         assert!(
-            added.iter().any(|event| text(event).contains("file.added")),
-            "create was not observed"
+            added
+                .iter()
+                .any(|event| event_type(event) == Some("file.added")),
+            "create was not observed; saw {}",
+            summarize(&added)
         );
         let created = added
             .iter()
@@ -903,14 +947,21 @@ mod tests {
             .unwrap();
         assert!(quiet.is_empty(), "baseline values were reported as changes");
         write.set_dword("Probe", 0x11);
-        let added = harness.until(|event| text(event).contains("t=4;a=11000000"));
-        assert!(added.iter().any(|event| {
-            text(event).contains("registry.value_added")
-                && text(event).contains(&format!(r"HKCU\{subkey}\Probe"))
-                && text(event).contains("t=4;a=11000000")
-                && event.time.precision_ns.is_none()
-                && event.source.provider.as_str() == REGISTRY_PROVIDER
-        }));
+        let probe = format!(r"HKCU\{subkey}\Probe");
+        let added = harness.until(|event| {
+            event_type(event) == Some("registry.value_added") && has_subject(event, &probe)
+        });
+        assert!(
+            added.iter().any(|event| {
+                event_type(event) == Some("registry.value_added")
+                    && has_subject(event, &probe)
+                    && evidence(event) == Some("t=4;a=11000000")
+                    && event.time.precision_ns.is_none()
+                    && event.source.provider.as_str() == REGISTRY_PROVIDER
+            }),
+            "DWORD 0x11 was not reported exactly; saw {}",
+            summarize(&added)
+        );
         if let Ok(user) = current_id() {
             assert!(added.iter().any(|event| match &event.record {
                 Record::Observation {
@@ -967,7 +1018,11 @@ mod tests {
         );
         fs::write(dir.0.join("alive.txt"), "alive").unwrap();
         let seen = harness.until(|event| has_subject(event, "alive.txt"));
-        assert!(seen.iter().any(|event| has_subject(event, "alive.txt")));
+        assert!(
+            seen.iter().any(|event| has_subject(event, "alive.txt")),
+            "file watch stopped when the registry key was missing; saw {}",
+            summarize(&seen)
+        );
         let burst: Vec<_> = (0..40).map(|index| format!("n{index}.txt")).collect();
         for name in &burst {
             fs::write(dir.0.join(name), "x").unwrap();

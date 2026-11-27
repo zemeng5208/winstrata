@@ -215,6 +215,7 @@ fn index(
     Ok(map)
 }
 
+#[cfg(test)]
 pub fn notification_bytes(entries: &[(u32, &str)]) -> Vec<u8> {
     let mut buffer = Vec::new();
     for (index, (action, name)) in entries.iter().enumerate() {
