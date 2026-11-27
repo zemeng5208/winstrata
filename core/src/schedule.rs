@@ -264,17 +264,13 @@ impl Scheduler {
     }
 
     pub fn stats(&self) -> SchedulerStats {
-        let state = self.shared.mu.lock().expect("scheduler lock");
-        SchedulerStats {
-            submitted: state.submitted,
-            finished: state.finished,
-            cancelled: state.cancelled,
-            timed_out: state.timed_out,
-            rejected: state.rejected,
-            panicked: state.panicked,
-            queued: state.queue.len(),
-            inflight: state.inflight.len(),
-            live_threads: self.shared.live.load(AtomicOrdering::Acquire),
+        self.shared.stats()
+    }
+
+    /// 复制内部计数句柄。句柄没有工作者所有权，丢弃它不会停止调度器。
+    pub fn handle(&self) -> SchedulerHandle {
+        SchedulerHandle {
+            shared: Arc::clone(&self.shared),
         }
     }
 
@@ -298,7 +294,33 @@ impl Scheduler {
     }
 }
 
+#[derive(Clone)]
+pub struct SchedulerHandle {
+    shared: Arc<Shared>,
+}
+
+impl SchedulerHandle {
+    pub fn stats(&self) -> SchedulerStats {
+        self.shared.stats()
+    }
+}
+
 impl Shared {
+    fn stats(&self) -> SchedulerStats {
+        let state = self.mu.lock().expect("scheduler lock");
+        SchedulerStats {
+            submitted: state.submitted,
+            finished: state.finished,
+            cancelled: state.cancelled,
+            timed_out: state.timed_out,
+            rejected: state.rejected,
+            panicked: state.panicked,
+            queued: state.queue.len(),
+            inflight: state.inflight.len(),
+            live_threads: self.live.load(AtomicOrdering::Acquire),
+        }
+    }
+
     fn begin_shutdown(&self) {
         let mut state = self.mu.lock().expect("scheduler lock");
         state.shutdown = true;
