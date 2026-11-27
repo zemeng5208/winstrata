@@ -9,5 +9,6 @@ publish = false
 winstrata-protocols = { path = "../protocols" }
 
 [dev-dependencies]
+libc.workspace = true
 serde_json.workspace = true
 winstrata-core = { path = "../core" }

@@ -1,6 +1,6 @@
 # Native plugin contracts and lifecycle
 
-[简体中文](../zh-CN/architecture/PLUGINS.md) · [Index](../INDEX.md) · [Rust host](../../core/src/plugins/mod.rs) · [Runtime](../../runtimes/src/main.rs) · [Plan 014](../roadmap/PLAN.md#pr-014)
+[简体中文](../zh-CN/architecture/PLUGINS.md) · [Index](../INDEX.md) · [Rust host](../../core/src/plugins/mod.rs) · [Runtime](../../runtimes/src/main.rs) · [Language runtimes](RUNTIMES.md) · [Plan 014](../roadmap/PLAN.md#pr-014)
 
 Plan 014 adds the native package contract, dependency checks, and process lifecycle. The 25 official identities stay in the catalog. Their collectors, the GUI, user opt-in, language SDKs, OS containment, the market, and signed rollback stay on later plans.
 
@@ -10,7 +10,7 @@ The versioned records live in `protocols`. A manifest is a named JSON object at 
 
 A plugin id is 1 to 64 bytes. It starts with a lowercase letter and then uses lowercase letters, digits, `.` or `-`. It cannot contain `..` or end with `.`. Capability, event, and dependency ids use the same token. `exact` requires an equal version. `compatible` keeps major 0 on the same minor with a patch at least as high as required, and keeps major 1 or higher on the same major with a minor and patch at least as high as required. An update must be strictly newer.
 
-Permissions are `event.publish`, `event.subscribe`, `history.read`, `plugin.call`, and `storage.private`. `rescue` is legal only for `strata.rescue`. Any other manifest that sets it is `rescue_isolated`. `kind` must be `third_party` for a package this host installs. `runtime` must be `native`.
+Permissions are `event.publish`, `event.subscribe`, `history.read`, `plugin.call`, and `storage.private`. `rescue` is legal only for `strata.rescue`. Any other manifest that sets it is `rescue_isolated`. `kind` must be `third_party` for a package this host installs. `runtime` is `native` or one of the [language runtimes](RUNTIMES.md).
 
 The host and the plugin process exchange one frame at a time on stdio: a little-endian `u32` length and then JSON, from 1 to 65,536 bytes. The operations are `ping`, `pause`, `resume`, `stop`, `disable`, `emit`, `invoke`, `read_state`, `fault`, and `result`. Text fields are at most 1,024 bytes and cannot contain control characters. The runtime reports its process id. The host compares that id with `Child::id()`.
 
@@ -83,4 +83,4 @@ The native program is `winstrata-runtime`. The host starts it with absolute `--m
 
 ## What this plan does not do
 
-Separate processes, private directories, and a failed sibling are the isolation this plan runs. They are not an AppContainer, Job Object, or seccomp sandbox. Python, TypeScript, and JavaScript runtimes and SDKs are plan 015. The official default GUI is plan 016. Onboarding opt-in is plan 017. The 25 collectors are plans 018 through 047. The market is plan 043. Signed updates and transactional rollback are plan 044. Rescue behavior is plan 047. Full GUI replacement is [AG-64](../../AGENTS.md#ag-64), recorded as plan 053. It is not implemented here and it is not plan 016's acceptance. Plan 053 adds no implementation plan ID. E2E-06, E2E-11, and E2E-15 are not complete. The evidence is in the [engineering record](../records/STATUS.md).
+Separate processes, private directories, and a failed sibling are the isolation plan 014 runs for the native runtime. They are not an AppContainer, Job Object, or seccomp sandbox. Python, TypeScript, and JavaScript runtimes and their OS containment are [plan 015](RUNTIMES.md). The official default GUI is plan 016. Onboarding opt-in is plan 017. The 25 collectors are plans 018 through 047. The market is plan 043. Signed updates and transactional rollback are plan 044. Rescue behavior is plan 047. Full GUI replacement is [AG-64](../../AGENTS.md#ag-64), recorded as plan 053. It is not implemented here and it is not plan 016's acceptance. Plan 053 adds no implementation plan ID. E2E-06, E2E-11, and E2E-15 are not complete. The evidence is in the [engineering record](../records/STATUS.md).

@@ -6,7 +6,7 @@
 
 ## Plugin and script system
 
-Plan 014 records the native contract and process lifecycle in [Plugins](PLUGINS.md). The 25 collectors, user opt-in, Python and TypeScript/JavaScript SDKs, OS containment, the shared market, and signed transactional rollback remain later plans.
+Plan 014 records the native contract and process lifecycle in [Plugins](PLUGINS.md). Plan 015 records the language SDKs and OS containment in [Runtimes](RUNTIMES.md). The 25 collectors, user opt-in, the shared market, and signed transactional rollback remain later plans.
 
 Manage each plugin's load, start, pause, stop, disable, update, and recovery independently. Third-party plugins can be uninstalled. Built-ins remain installed. Disable stops exclusive subscriptions, resources, and tasks and preserves history. Shared collection uses references. Support live install, replacement, disable, and update without restarting the GUI or Windows where safe. Report driver restart requirements. Verify compatible dependencies, data and config migration, and transactional rollback.
 

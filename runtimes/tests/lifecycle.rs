@@ -242,7 +242,7 @@ fn load_disable_update_isolate_and_recover_real_plugins() {
     );
     assert_eq!(
         host.install(&python).unwrap_err().code(),
-        "unsupported_runtime"
+        "toolchain_missing"
     );
     let rescue = scratch.dir("rescue");
     let mut rescue_body = manifest("fixture.rescue", (1, 0, 0), &[], &[], &[], &[], true);
