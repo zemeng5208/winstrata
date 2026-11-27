@@ -53,6 +53,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
 | [OI-043](#oi-043) | Untested | 022 |
 | [OI-046](#oi-046) | Untested | 024, then 048 for the load scenario |
+| [OI-049](#oi-049) | Server 2022 probe recorded on `01f26d1`; Windows 10/11 stay [OI-001](#oi-001) | 023 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -847,12 +848,26 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-08.01](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 024
 - Current state: untested
-- Reason it is incomplete: this collector reads Windows CPU, memory, processor frequency, battery percent, and process working set through Win32. Windows GPU utilization, dedicated VRAM, thermal zones, RAPL, and perf counters stay `unsupported` with reason `reader_absent` because this collector has no reader for those APIs. This Linux host did not execute the Windows tests. It also has no sysfs GPU, cpufreq, thermal, hwmon, battery, or RAPL source, so those Linux readings are `unsupported` with `no_counter` or the matching absent reason. That is the honest result on this host, not a Windows run. This item is OI-046 because plan 025 holds OI-040, OI-041, and OI-042, plan 022 holds OI-043, and the open plan 027 branch holds OI-044 and OI-045.
+- Reason it is incomplete: this collector reads Windows CPU, memory, processor frequency, battery percent, and process working set through Win32. Windows GPU utilization, dedicated VRAM, thermal zones, RAPL, and perf counters stay `unsupported` with reason `reader_absent` because this collector has no reader for those APIs. This Linux host did not execute the Windows tests. It also has no sysfs GPU, cpufreq, thermal, hwmon, battery, or RAPL source, so those Linux readings are `unsupported` with `no_counter` or the matching absent reason. That is the honest result on this host, not a Windows run. This item is OI-046 because plan 025 holds OI-040, OI-041, and OI-042, plan 022 holds OI-043, and the open plan 027 branch holds OI-044 and OI-045. Plan 023 holds [OI-049](#oi-049). This row does not replace that row.
 - Responsible PR: 024 for the Windows GPU, VRAM, and thermal readers. Plan 032 remains drive health. Plan 048 remains the authorized-load scenario.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows 10 or 11 x64 with a GPU, running `cargo test --locked --workspace` and the pulse observe test
 - Acceptance criteria: that run records measured CPU and memory. GPU utilization, VRAM, and temperature are measured from a named API, or `unsupported` because that API reported the counter absent. `reader_absent` does not remain for a counter the API can read.
 - Close conditions: the Windows run is recorded and the reader no longer returns `reader_absent` for a counter that API read. This row does not close E2E-08 or plan 032.
+
+<a id="oi-049"></a>
+
+## OI-049
+
+- Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
+- Source PR: plan 023
+- Current state: the Windows Server 2022 probe is recorded for review head `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b`
+- Reason it is incomplete: The Linux authoring host cannot open Windows Run keys, startup folders, StartupApproved, shortcut local paths, or the Task Scheduler. Pid 1 is tini. That host's Linux test does not observe Windows startup. The result that meets this row is only the Windows workspace job on head `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b`, image `windows-2022`, Windows Server 2022. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46073259939/job/140754957334). At 2026-11-27T21:55:44Z (05:55:44 Asia/Shanghai) that log shows `windows_run_folder_link_and_task_changes_are_attributed ... ok`. The same job shows `real_startup_and_task_observation_releases_on_disable ... ok`. This item is OI-049. OI-043 and [ERR-021](modules/strata-services.md#err-021) stay with plan 022. [OI-001](#oi-001), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14) stay open. Head `67eeb5f48163574d60ea317a2172473623e8419e` is not this result.
+- Responsible PR: 023 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`, including `windows_run_folder_link_and_task_changes_are_attributed`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
+- Acceptance criteria: that test passes on the review head. It must show a HKCU Run value added, changed, disabled through StartupApproved, and removed; a user Startup shortcut whose local path is `C:\Probe.exe`; and a scheduled task created, changed, and deleted. A Linux run does not close it.
+- Close conditions: met for the Windows Server 2022 probe on review head `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b`. The log is the job above, and this row records that result. A Linux run does not meet it. This does not close [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14), [OI-043](#oi-043), [ERR-021](modules/strata-services.md#err-021), or [OI-001](#oi-001). Windows 10 and Windows 11 stay OI-001.
 
 <a id="e2e-17"></a>
 

@@ -1,7 +1,7 @@
 //! 插件清单、权限、依赖和进程生命周期。
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
-//! `strata.process`、`strata.services` 与 `strata.pulse` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
+//! `strata.process`、`strata.services`、`strata.startup` 与 `strata.pulse` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
@@ -46,6 +46,7 @@ const MAX_HISTORY_LINES: usize = 1024;
 const PROCESS_PLUGIN: &str = "strata.process";
 const PULSE_PLUGIN: &str = "strata.pulse";
 const SERVICES_PLUGIN: &str = "strata.services";
+const STARTUP_PLUGIN: &str = "strata.startup";
 
 // 清单与采集程序共同描述计划 018。宿主不通过第三方安装写入这个身份。
 const PROCESS_MANIFEST: &str = concat!(
@@ -74,6 +75,17 @@ const SERVICES_MANIFEST: &str = concat!(
     r#""service.started","service.stopped","service.start-type","service.config","#,
     r#""service.failure","service.permission","driver.state","driver.loaded","#,
     r#""driver.unloaded","driver.removed"],"rescue":false}"#,
+);
+
+// 计划 023 的启动项和计划任务观察。事件名沿用插件令牌，不含下划线。
+const STARTUP_MANIFEST: &str = concat!(
+    r#"{"version":{"major":1,"minor":0},"id":"strata.startup","name":"StrataStartup","#,
+    r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
+    r#""capabilities":["startup.observe"],"permissions":["event.publish","storage.private"],"#,
+    r#""dependencies":[],"events":["startup.state","startup.added","startup.removed","#,
+    r#""startup.changed","startup.enabled","startup.disabled","startup.permission","#,
+    r#""task.state","task.added","task.removed","task.changed","task.enabled","#,
+    r#""task.disabled","task.permission"],"rescue":false}"#,
 );
 
 #[derive(Debug)]
@@ -456,6 +468,7 @@ impl PluginHost {
         host.read_entries()?;
         host.seed_process_collector()?;
         host.seed_services_collector()?;
+        host.seed_startup_collector()?;
         host.seed_pulse_collector()?;
         Ok(host)
     }
@@ -1316,6 +1329,13 @@ impl PluginHost {
                         "services collector is not beside the plugin runtime",
                     )
                 })?
+            } else if manifest.id.as_str() == STARTUP_PLUGIN {
+                collector_beside(&self.runtime, "winstrata-strata-startup").ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "startup collector is not beside the plugin runtime",
+                    )
+                })?
             } else if manifest.id.as_str() == PULSE_PLUGIN {
                 pulse_beside(&self.runtime).ok_or_else(|| {
                     PluginError::new(
@@ -1857,6 +1877,15 @@ impl PluginHost {
             SERVICES_MANIFEST,
             "winstrata-strata-services",
             "services collector manifest is not the official plugin",
+        )
+    }
+
+    fn seed_startup_collector(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            STARTUP_PLUGIN,
+            STARTUP_MANIFEST,
+            "winstrata-strata-startup",
+            "startup collector manifest is not the official plugin",
         )
     }
 

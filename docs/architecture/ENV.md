@@ -6,7 +6,7 @@ Plan 020 is `strata.env`. It watches the current-user environment store and the 
 
 ## In-process host
 
-The native frame protocol cannot carry a before/after value and a child process cannot push an event. The watch stays inside `PluginHost`. Enabling `strata.env` does not write an installed package and does not start `winstrata-runtime`. `load`, `update`, `pin`, `grant`, `call`, and `ping` return `builtin_closed`. `uninstall` returns `builtin_retained`. The registry plugin remains the plan 019 watch. The other official identities that still have no collector stay `implementation_absent`.
+The native frame protocol cannot carry a before/after value and a child process cannot push an event. The watch stays inside `PluginHost`. Enabling `strata.env` does not write an installed package and does not start `winstrata-runtime`. `load`, `update`, `pin`, `grant`, `call`, and `ping` return `builtin_closed`. `uninstall` returns `builtin_retained`. The registry plugin remains the plan 019 watch. `strata.services` is registered only when `winstrata-strata-services` is a regular file beside the runtime. `strata.startup` is registered only when `winstrata-strata-startup` is a regular file beside the runtime. The other official identities that still have no collector stay `implementation_absent`.
 
 `host.json` stores `env_enabled`, `env_availability`, and `env_scope` beside the installed entries. Missing fields read as disabled, `ready`, and an empty scope. An empty scope means the product default. An invalid stored scope makes `open` fail with `invalid_record`. Reopening an enabled plugin does not start the watch. The next `start` or `enable_batch` does, and only when the saved availability is `ready`. A saved `unsupported` result is not retried by the batch.
 
