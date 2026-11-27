@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+storeDir: .winstrata/pnpm-store
+cacheDir: .winstrata/pnpm-cache

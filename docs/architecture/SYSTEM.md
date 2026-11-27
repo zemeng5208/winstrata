@@ -62,6 +62,8 @@ The current developer checks dependencies, build, test and diagnosis in their av
 | `tests`, `benchmarks` | Integrated regression and repeatable measurement |
 | `docs`, `.github` | Governing documents, review and CI |
 
+See the [development toolchain](DEVELOPMENT_TOOLCHAIN.md) for the workspace and developer commands.
+
 Create directories with their associated deliverables and obtain approval for layout changes. Centralize Python, SDK/WDK, compilers, runtimes, dependencies, versions and paths. Members use workspace dependencies as needed. Manage third-party isolated environments centrally. Register and validate development, build, runtime, and user configuration, including migration and secure settings. Keep resolution independent of machine paths.
 
 Provide unified setup, dependency checks, build, run, test, quality, architecture, order, performance and cleanup commands where practical identically across hosts. Select tools by approval. Reuse valid dependencies and caches and fix path problems at the source. Keep artifacts, logs, captures, databases, credentials, personal settings and temporary files out of Git. Preserve useful evidence and caches.

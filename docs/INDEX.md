@@ -7,6 +7,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Root agent instructions and complete rule index](../AGENTS.md)
 - [Product and plugins](architecture/PRODUCT.md)
 - [System architecture and engineering layout](architecture/SYSTEM.md)
+- [Development toolchain](architecture/DEVELOPMENT_TOOLCHAIN.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)

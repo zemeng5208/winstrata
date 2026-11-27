@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/roadmap/REQUIREMENTS.md) · [Index](../INDEX.md)
 
-The linked authoritative statements govern scope and criteria. Runtime evidence is pending for all planned work. The verified repository baseline is recorded separately. Update evidence and state for affected rows in each PR.
+The linked authoritative statements govern scope and criteria. Runtime evidence is pending for planned work. The baseline and verified development-toolchain evidence are recorded separately. Update evidence and state for affected rows in each PR.
 
 ## Product and engineering requirements
 
@@ -13,7 +13,7 @@ The linked authoritative statements govern scope and criteria. Runtime evidence 
 | REQ-01.03 | Deliver source, SDK, debug and development build | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-20) | [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Planned |
 | REQ-02.01 | Actual Windows 10 and 11 x64 operation | [SYSTEM](../architecture/SYSTEM.md#section-3) | [004](PLAN.md#pr-004), [049](PLAN.md#pr-049) | [14](ACCEPTANCE.md#e2e-14), [16](ACCEPTANCE.md#e2e-16) | Planned |
 | REQ-02.02 | Build complete Windows x64 artifacts on native Linux | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Planned |
-| REQ-02.03 | Keep both build capabilities and verify the available environment | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Planned |
+| REQ-02.03 | Keep both build capabilities and verify the available environment | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux tooling verified. Cross-platform build acceptance pending. |
 | REQ-03.01 | Ordinary GUI and Core, controlled service and kernel privilege split | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | Planned |
 | REQ-03.02 | Version and authenticate IPC with validation and audit | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | Planned |
 | REQ-03.03 | Supported mixed collection and independent on-demand driver lifetime | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | Planned |
@@ -90,9 +90,9 @@ The linked authoritative statements govern scope and criteria. Runtime evidence 
 | REQ-27.01 | Measure 150 MB background memory and 1 percent CPU targets | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | Planned |
 | REQ-27.02 | Measure 350 MB GUI memory, 250 MB artifact and 3 s cold start | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048), [050](PLAN.md#pr-050) | [08](ACCEPTANCE.md#e2e-08), [16](ACCEPTANCE.md#e2e-16) | Planned |
 | REQ-27.03 | Verify zero untagged writes, negligible disabled-plugin resources and I/O costs | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [031](PLAN.md#pr-031), [048](PLAN.md#pr-048) | [04](ACCEPTANCE.md#e2e-04), [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | Planned |
-| REQ-28.01 | Centralize toolchains, lockfiles and project dependency resolution | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Planned |
-| REQ-28.02 | Centralize configuration, migration and sensitive data handling | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Planned |
-| REQ-28.03 | Provide a shared development entry point and enforce repository hygiene | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | Planned |
+| REQ-28.01 | Centralize toolchains, lockfiles and project dependency resolution | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Workspace pins and paths verified on Linux. |
+| REQ-28.02 | Centralize configuration, migration and sensitive data handling | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Toolchain configuration in place. Runtime configuration planned. |
+| REQ-28.03 | Provide a shared development entry point and enforce repository hygiene | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | Developer entry and ignores verified. Automated gates planned. |
 | REQ-29.01 | Protect main, require PRs and have the owner review and merge in order | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | Planned |
 | REQ-29.02 | Validate gates, defect blocking, latest candidate and postmerge regression | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Planned |
 | REQ-29.03 | Finish real Windows, security, performance and end-to-end acceptance | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | Planned |

@@ -2,7 +2,7 @@
 
 [English](../../roadmap/REQUIREMENTS.md) · [文档索引](../INDEX.md)
 
-范围和准则以关联的权威条款为准。所有计划中项目的运行证据待取得。只有已核验的仓库基线单独标记。变更时为受影响条目更新实际证据及状态。
+范围和准则以关联的权威条款为准。所有计划中项目的运行证据待取得。仓库基线与已取得的开发工具链证据分别标记。变更时为受影响条目更新实际证据及状态。
 
 ## 产品与工程需求
 
@@ -13,7 +13,7 @@
 | REQ-01.03 | 交付源码、SDK、调试资料与开发版 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-20) | [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-02.01 | 在真实 Windows 10 和 11 x64 运行 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [004](PLAN.md#pr-004), [049](PLAN.md#pr-049) | [14](ACCEPTANCE.md#e2e-14), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
+| REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收待完成。 |
 | REQ-03.01 | GUI 与 Core 普通权限，受控服务与内核权限分离 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-03.03 | 官方接口优先的混合采集与驱动独立按需生命周期 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
@@ -90,9 +90,9 @@
 | REQ-27.01 | 实测后台 150 MB 内存及 1% CPU 目标 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-27.02 | 实测 GUI 350 MB 内存、产物 250 MB 及冷启动 3 秒目标 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048), [050](PLAN.md#pr-050) | [08](ACCEPTANCE.md#e2e-08), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-27.03 | 验证未标记包零写入、禁用插件近零专属资源及 I/O 开销 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [031](PLAN.md#pr-031), [048](PLAN.md#pr-048) | [04](ACCEPTANCE.md#e2e-04), [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
+| REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
+| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 工具链配置已建立，运行配置规划中。 |
+| REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口和忽略规则已验证，自动门禁规划中。 |
 | REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
