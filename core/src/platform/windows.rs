@@ -33,6 +33,8 @@ use windows_sys::Win32::UI::Shell::{FOLDERID_LocalAppData, SHGetKnownFolderPath}
 
 use security::PrivateAccess;
 
+pub(crate) use security::path_security;
+
 fn check(ok: i32) -> io::Result<()> {
     if ok != 0 {
         Ok(())

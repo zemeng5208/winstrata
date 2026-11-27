@@ -1,4 +1,5 @@
 mod bus;
+mod file_registry;
 mod files;
 mod hybrid;
 mod migration;
@@ -18,6 +19,9 @@ use storage::{
 };
 
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
+pub use file_registry::{
+    Channel, ChannelView, CollectError, FILE_PROVIDER, FileRegistry, REGISTRY_PROVIDER,
+};
 pub use hybrid::{
     Batch, CapacityReport, CaptureWrite, Confidence, DataClass, Hybrid, ObjectRecord, Point,
     RecordRef, Recovery, Relation, RiskTag, Snapshot, SnapshotEntry, StoredCapture,

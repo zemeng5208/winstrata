@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/architecture/SERVICE-KERNEL.md) · [Service](../../services/src/lib.rs) · [Driver manager](../../kernel/src/lib.rs) · [Plan 008](../roadmap/PLAN.md#pr-008)
 
-Plan 008 adds `winstrata-service` and `winstrata-kernel`. The service exchanges versioned, length-prefixed JSON with the current user. The kernel crate tracks four driver subscriptions. It does not collect file, registry, process or network activity, and the product host does not load a kernel image.
+Plan 008 adds `winstrata-service` and `winstrata-kernel`. The service exchanges versioned, length-prefixed JSON with the current user. The kernel crate tracks four driver subscriptions. The product host does not load a kernel image. Plan 009 adds user-mode file and registry watches in the same kernel crate. Process and network collection remain later plans. Those watches are specified in [File and registry collection](FILE-REGISTRY.md).
 
 ## Privilege
 
