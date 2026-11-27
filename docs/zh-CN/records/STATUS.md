@@ -19,7 +19,7 @@
 | PR 002 | 已验收 | 已核验生效规则及 PR 004 的结果。两项 GitHub Actions 检查和分支保持最新均已强制，见 ERR-004。 |
 | PR 003 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) 合并为 `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`。合并树与送审树一致，Linux 工作区回归和两个 x64 链接探针复验通过。打包、签名及实际驱动加载仍待验证。 |
 | PR 004 | 平台可行性验证已验收 | 所有者将 [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) 合并为 `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`。文件树与送审提交一致，合并后 Linux、Windows 及策略检查均通过。 |
-| PR 005 | 开发中 | 所有者已批准首版[协议契约](../architecture/PROTOCOLS.md)及 JSON 依赖。真实示例、版本兼容性、错误与缺口语义待验证。 |
+| PR 005 | 待所有者审核 | [公共协议](../architecture/PROTOCOLS.md)和两种语言的真实往返已验证。Windows Server 2022 x64 系统日志回读通过。[GitHub PR #6](https://github.com/zemeng5208/winstrata/pull/6) |
 | PR 006–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 运行及性能均待验证；相关工作提交时更新需求及模块证据。 |
 
@@ -47,6 +47,10 @@ Windows Server 2022 x64 实测覆盖 CIM、事件日志、Job Object、AppContai
 
 Phase 0 验收范围为实测工具链、已生效的合并门禁和可行性探针。三个工作流均在 PR 004 的实际合并提交上通过。后续阶段的产品及客户端验证见 AS-001 和 AS-002。[Linux CI](https://github.com/zemeng5208/winstrata/actions/runs/45969082288) · [Windows 可行性](https://github.com/zemeng5208/winstrata/actions/runs/45969082284) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45969082364)
 
+## PR 005 验证
+
+在提交 `995d148` 的候选上，Linux 通过了 11 个库测试和 2 个集成测试；Windows Server 2022 x64 还通过了第 14 项真实系统日志往返测试。第二次查询按记录号核对了同一条记录的提供方和原生时间。真实 Node 子进程核验了 PID，Rust 和 Node 交换事件和错误数据，并保留超出 JavaScript 安全整数范围的精度。自审发现默认解码可接受位置数组或数字枚举标签；增加对象与标签检查后，原复现用例在两个系统均通过。两种语言的文档共 6 个 JSON 代码块均通过协议解码、编码和再解码。Linux 另对 Windows MSVC x64 目标执行了测试代码类型检查。[Linux 工作区](https://github.com/zemeng5208/winstrata/actions/runs/45971619572/job/140413162125) · [Windows 协议测试](https://github.com/zemeng5208/winstrata/actions/runs/45971619572/job/140413162795)
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
@@ -70,4 +74,4 @@ Phase 0 验收范围为实测工具链、已生效的合并门禁和可行性探
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-在 `pr/005-protocol-contracts` 上从 `36c12dd` 继续开发。送审前用真实观测、无效输入、兼容版本和不兼容版本验证获批契约。服务传输、身份验证、授权和审计由 PR 008 实现并验证。
+在 `pr/005-protocol-contracts` 对当前候选执行工作区和 Windows 检查。所有者确认精确头提交并合并后，核验主分支再进入 PR 006。服务认证与审计仍属 PR 008。

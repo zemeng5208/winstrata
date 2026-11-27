@@ -61,4 +61,6 @@ Core、采集器和插件可使用同一组事件、对象引用和诊断类型�
 
 在工作区根目录用固定的 Rust 和 Node.js 执行 `cargo test --locked -p winstrata-protocols`。Rust 观测器启动真实 Node 子进程，双方通过 JSON 往返核对其实际 PID。确定性回放覆盖 PID 复用、时钟回退与来源重启。Windows 专用测试读取一条真实 System 日志，再按记录编号独立查询，核对序列化后的提供方和时间戳。测试使用临时设备别名，日志不输出事件正文或用户身份。[互操作测试](../../../protocols/tests/interop.rs) · [Windows 来源测试](../../../protocols/tests/windows_event.rs)
 
+一次 Linux x64 Release 微基准对新采集的一条 447 字节本进程观测重复执行公开的解码和编码方法。三批各 10,000 次，分别耗时 36.252、33.771、36.215 ms，中位数约为每次 3.62 微秒。测量使用 Rust 1.100.0、Xeon Platinum 8573C 和编译器优化屏障；单条内存样例未测量采集、传输或持久化。
+
 工作区固定启用 derive 的 serde 1.0.229 与 serde_json 1.0.154，Cargo 锁定含构建期宏在内的 11 个外部包。2026-11-27 已核对各包在 crates.io 的版本、校验和与撤回状态，逐一按精确版本查询 OSV，未查到已列出的漏洞。两项直接依赖均提供 MIT 或 Apache-2.0。锁定依赖还包括 memchr（Unlicense 或 MIT）、unicode-ident（MIT 或 Apache-2.0，并须满足 Unicode-3.0）及 zmij（MIT）。打包时保留适用声明。[Cargo 锁文件](../../../Cargo.lock) · [serde](https://crates.io/crates/serde/1.0.229) · [serde_json](https://crates.io/crates/serde_json/1.0.154) · [OSV 查询](https://google.github.io/osv.dev/post-v1-querybatch/)

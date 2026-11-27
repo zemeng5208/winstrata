@@ -15,14 +15,14 @@
 | REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 控制台与内核链接已验证，完整产物链待验证。 |
 | REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收待完成。 |
 | REQ-03.01 | GUI 与 Core 普通权限，受控服务与内核权限分离 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [版本与错误契约](../architecture/PROTOCOLS.md)实现中。PR 008 需在 Windows 上验证传输、对端身份、授权、请求校验及审计。 |
+| REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [版本与错误契约](../architecture/PROTOCOLS.md)已在 Linux 与 Windows 验证。PR 008 需在 Windows 上验证传输、对端身份、授权、请求校验及审计。 |
 | REQ-03.03 | 官方接口优先的混合采集与驱动独立按需生命周期 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-03.04 | 签名、Secure Boot 和 HVCI 保持启用 | [SECURITY](../standards/SECURITY.md#ag-47) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-04.01 | 当前用户、相关公共活动与用户选择的存储范围 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [006](PLAN.md#pr-006), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.02 | 初始化选择启用，默认手动启动且不开机自启 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-04.03 | 建立选定范围基线并标注重建历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [017](PLAN.md#pr-017), [021](PLAN.md#pr-021) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.04 | 实时与历史切换、暂停恢复、缺失记录和安全退出 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
-| REQ-05.01 | 事件稳定标识和版本、时间顺序、来源与完整性 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005) | [02](ACCEPTANCE.md#e2e-02), [15](ACCEPTANCE.md#e2e-15) | [事件标识、排序、来源与缺口契约](../architecture/PROTOCOLS.md)实现中，真实示例与兼容性验证待完成。 |
+| REQ-05.01 | 事件稳定标识和版本、时间顺序、来源与完整性 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005) | [02](ACCEPTANCE.md#e2e-02), [15](ACCEPTANCE.md#e2e-15) | [事件标识、排序、来源与缺口契约](../architecture/PROTOCOLS.md)已通过真实 Node 子进程、Windows 日志、兼容用例与确定性回放验证；产品规模的多来源对齐留待集成场景。 |
 | REQ-05.02 | 有界批处理、队列、背压、吞吐及丢失记录 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [007](PLAN.md#pr-007) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-05.03 | 统一优先级、超时、取消和资源保护 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-45) | [007](PLAN.md#pr-007), [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-06.01 | 文件操作、所有权与权限；不存文件内容版本 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [009](PLAN.md#pr-009), [021](PLAN.md#pr-021) | [02](ACCEPTANCE.md#e2e-02) | 规划中 |
