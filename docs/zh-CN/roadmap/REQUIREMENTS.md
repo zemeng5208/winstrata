@@ -11,7 +11,7 @@
 | REQ-01.01 | Windows 系统可观测与变更追踪 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-01.02 | 公开单仓库、main 和 Apache-2.0 基线 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | [基线已核验](../records/STATUS.md#baseline) |
 | REQ-01.03 | 交付源码、SDK、调试资料与开发版 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-20) | [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-02.01 | 在真实 Windows 10 和 11 x64 运行 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [004](PLAN.md#pr-004), [049](PLAN.md#pr-049) | [14](ACCEPTANCE.md#e2e-14), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
+| REQ-02.01 | 在真实 Windows 10 和 11 x64 运行 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [004](PLAN.md#pr-004), [049](PLAN.md#pr-049) | [14](ACCEPTANCE.md#e2e-14), [16](ACCEPTANCE.md#e2e-16) | Windows Server 2022 x64 已实测，Windows 10/11 客户端验收待办。 |
 | REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 控制台与内核链接已验证，完整产物链待验证。 |
 | REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收待完成。 |
 | REQ-03.01 | GUI 与 Core 普通权限，受控服务与内核权限分离 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
@@ -62,7 +62,7 @@
 | REQ-17.02 | 只读展示可观测安全与证书状态 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [037](PLAN.md#pr-037) | [14](ACCEPTANCE.md#e2e-14) | 规划中 |
 | REQ-18.01 | 检索和关联授权来源，并追溯对象证据 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-18.02 | 多轨时间线、仅供分析的回放及区间导出 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [041](PLAN.md#pr-041) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-19.01 | 验证三项指定来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
+| REQ-19.01 | 验证三项指定来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查三个指定修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。产品布局仍待验收。 |
 | REQ-19.02 | 三套共享主题可运行时切换并持久保存 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.03 | 完整双语与 Windows WebView2 可读的真实交互 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.04 | 持久化单首页布局并接入动态插件界面 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
@@ -71,7 +71,7 @@
 | REQ-20.02 | 独立生命周期、资源释放与兼容替换 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-43) | [014](PLAN.md#pr-014) | [06](ACCEPTANCE.md#e2e-06) | 规划中 |
 | REQ-20.03 | 验证动态升级、依赖状态与故障隔离 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [014](PLAN.md#pr-014), [044](PLAN.md#pr-044) | [06](ACCEPTANCE.md#e2e-06), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-21.01 | 能力声明与最小权限管理、撤销和审计 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [014](PLAN.md#pr-014), [015](PLAN.md#pr-015) | [06](ACCEPTANCE.md#e2e-06), [07](ACCEPTANCE.md#e2e-07) | 规划中 |
-| REQ-21.02 | 按需且隔离的 Python、TS/JS 运行时及依赖环境 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [004](PLAN.md#pr-004), [015](PLAN.md#pr-015) | [06](ACCEPTANCE.md#e2e-06), [07](ACCEPTANCE.md#e2e-07), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
+| REQ-21.02 | 按需且隔离的 Python、TS/JS 运行时及依赖环境 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [004](PLAN.md#pr-004), [015](PLAN.md#pr-015) | [06](ACCEPTANCE.md#e2e-06), [07](ACCEPTANCE.md#e2e-07), [12](ACCEPTANCE.md#e2e-12) | 本机隔离候选已有[实测记录](../architecture/PLATFORM_FEASIBILITY.md)，产品隔离待验收。 |
 | REQ-21.03 | 提供指定语言 SDK 并验证操作系统级隔离 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [015](PLAN.md#pr-015) | [06](ACCEPTANCE.md#e2e-06), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
 | REQ-22.01 | 本地优先统一市场，含官方、社区、已安装和更新管理 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [043](PLAN.md#pr-043) | [06](ACCEPTANCE.md#e2e-06), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
 | REQ-22.02 | 安装复合包并管理来源、警告和校验 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [043](PLAN.md#pr-043) | [06](ACCEPTANCE.md#e2e-06) | 规划中 |
@@ -92,9 +92,9 @@
 | REQ-27.03 | 验证未标记包零写入、禁用插件近零专属资源及 I/O 开销 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [031](PLAN.md#pr-031), [048](PLAN.md#pr-048) | [04](ACCEPTANCE.md#e2e-04), [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
 | REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 工具链配置已建立，运行配置规划中。 |
-| REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口和忽略规则已验证，自动门禁规划中。 |
+| REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口、忽略规则、本地及托管工作区检查已验证。 |
 | REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验 main 原生保护。PR 002 检查待激活。 |
-| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 策略与工作区检查本地已验证，托管强制执行待验证。 |
+| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Workspace checks 已强制。PR 003 的策略拒绝未阻止合并；见[工程记录](../records/STATUS.md)。 |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-30.02 | 逐项追踪需求、25 个插件和 61 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |

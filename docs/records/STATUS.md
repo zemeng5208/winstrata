@@ -16,9 +16,10 @@ The owner saved [Protect main](https://github.com/zemeng5208/winstrata/rules/282
 |---|---|---|
 | PR 000 | Accepted | Owner merged [GitHub PR #1](https://github.com/zemeng5208/winstrata/pull/1) as `c3e8abf07895edbdd1f84792dbab5c48b00c25e8`. Verified main has the reviewed tree and active PR protection. |
 | PR 001 | Accepted | Owner merged [GitHub PR #2](https://github.com/zemeng5208/winstrata/pull/2) as `e0a3bbf2ec8c6b3f322d3f0379e47618fd129c3c`. The merged tree matched the reviewed head. Linux doctor, build and verify passed on that tree. |
-| PR 002 | Awaiting verification | Owner merged [GitHub PR #3](https://github.com/zemeng5208/winstrata/pull/3) as `f1ed6098b3db1370449d6cc84ff4c53074e27f62`. Workspace checks is required. Both main workflows passed. Required policy status activation is pending its first eligible candidate. |
-| PR 003 | Awaiting owner review | [Windows x64 link probes](../architecture/WINDOWS_CROSS_BUILD.md). Native Linux link evidence available. Packaging, signing, and Windows execution remain open. |
-| PR 004–050 | Planned | Gates, feasibility, implementation and acceptance follow the approved roadmap and prerequisites. |
+| PR 002 | Partially enforced | Workspace checks is required. The first subsequent candidate merged despite policy rejection. See ERR-004. |
+| PR 003 | Merged with open acceptance items | The owner merged [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) as `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`. Its tree matched the submitted tree. Linux workspace and both x64 link probes passed on that baseline. Packaging, signing and actual driver loading remain open. |
+| PR 004 | Awaiting owner review | [Platform feasibility and selection](../architecture/PLATFORM_FEASIBILITY.md) records the measured candidates, environments and open items. Merge protection needs activation. |
+| PR 005–050 | Planned | Proceed by the roadmap after Phase 0 acceptance. |
 | Core and PL-01 through PL-25 | Planned | Runtime and metrics remain unverified. Maintain their evidence in requirements and module records as work lands. |
 
 ## PR 000 verification
@@ -39,6 +40,10 @@ On Linux x86_64, the CI bootstrap verified the official Node archive checksum, i
 
 On Linux x86_64 with Rust 1.100.0, bundled LLD 23.1.5 and Binutils 2.44, `cargo dev cross-probe` compiled COFF and linked the console and kernel PE32+ images twice. The binaries were byte-identical. Verified the expected imports, two subsystems and nonzero entry points, and inspected the driver checksum and empty signature directory. Checked both original package SHA-512 values and the extracted library digests. In a relocated checkout with a space in its path, verified missing-library and changed-checksum failures, restored the approved inputs, and successfully built from the nested tool directory. Images and Microsoft inputs stayed in ignored directories. No Windows program or driver was executed.
 
+## PR 004 verification
+
+Windows Server 2022 x64 exercised CIM and Event Log, Job Objects, an AppContainer file grant and revocation, local MCP and the three upstream components offline in WebView2. Linux regressions covered the workspace, both link probes, local transport, dependency resolution and upstream components. The selected UI dependencies were authorized for disposable trials. The [platform report](../architecture/PLATFORM_FEASIBILITY.md) records the measurements, controls, original runs and limits.
+
 ## Decisions and open assumptions
 
 | ID | Status | Evidence and follow-up |
@@ -48,7 +53,7 @@ On Linux x86_64 with Rust 1.100.0, bundled LLD 23.1.5 and Binutils 2.44, `cargo 
 | ADR-002 | Owner confirmed | Pin Rust and Cargo 1.100.0, Node.js 24.22.3 LTS, and pnpm 11.25.0. Use Cargo and pnpm root workspaces and keep this phase free of external Rust or JavaScript packages. |
 | ADR-003 | Owner confirmed | Use the official Microsoft WDK and Windows SDK x64 10.0.26100.6584 import libraries locally under their respective tool licenses for the Linux probe. |
 | AS-001 | Partially verified | Native Linux linking of both probes passed. Linux INF and CAT pipeline, official signing, actual Windows loading and the full cross-build remain pending. |
-| AS-002 | Unverified | Verify runtime isolation, IPC, native collection and frontend compatibility in PR 004 and PR 015. |
+| AS-002 | Partially verified | [PR 004 evidence](../architecture/PLATFORM_FEASIBILITY.md) covers the measured host, isolation, transport and components. Product authorization, full mixed-runtime containment and client-edition acceptance remain open. |
 | AS-003 | Pending decision | Confirm accounting and cleanup semantics, untagged metadata retention, WebView2 themes, Windows support, and performance methods in the [open decision list](../roadmap/PLAN.md#section-19). |
 
 ## Errors and handover
@@ -59,5 +64,6 @@ On Linux x86_64 with Rust 1.100.0, bundled LLD 23.1.5 and Binutils 2.44, `cargo 
 | ERR-001 | Resolved by owner configuration | GitHub returned HTTP 403 for ruleset creation by the integration. The owner saved the protection ruleset. Retrieving the branch, rulesets and effective branch rules confirmed active enforcement. The integration still lacks the settings permission. |
 | ERR-002 | Resolved in the Linux workspace | PR 001 preflight found no Rust or Cargo on PATH. The approved official toolchain was installed into the project’s ignored local tooling directory after verifying the Rustup installer checksum. Both version checks and the actual build passed. |
 | ERR-003 | Resolved | The first Linux driver link failed because the selected x64 WDK import archive did not export `KeQueryInterruptTime`. Inspected the archive, switched to the documented export `KeQueryTimeIncrement`, and reran both probes and PE inspection. |
+| ERR-004 | Awaiting owner configuration; next merge blocked | The PR 003 candidate lacked an owner confirmation for the exact head and its policy status was failure. Only Workspace checks was required and strict latest-base was off. Both postmerge workflows succeeded. Keep the next candidate open until the policy succeeds and both required checks and strict latest-base are effective. [Policy status run](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [Main CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) |
 
-Continue on `pr/003-linux-windows-cross-build` from the verified PR 002 merge. Use the current-head owner confirmation and verify effective merge-policy rules before PR 003 merges. Track signed Windows execution separately. Use the [standard record fields](../standards/DOCUMENTATION.md#section-12).
+Continue verification on `pr/004-platform-feasibility`. Inspect effective rules and the current candidate's checks before merge. PR 005 remains planned pending Phase 0 review.

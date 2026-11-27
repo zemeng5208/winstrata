@@ -16,9 +16,10 @@
 |---|---|---|
 | PR 000 | 已验收 | 所有者合并 [GitHub PR #1](https://github.com/zemeng5208/winstrata/pull/1)，提交为 `c3e8abf07895edbdd1f84792dbab5c48b00c25e8`。核验 main 与送审文件树一致，分支保护生效。 |
 | PR 001 | 已验收 | 所有者合并 [GitHub PR #2](https://github.com/zemeng5208/winstrata/pull/2)，提交为 `e0a3bbf2ec8c6b3f322d3f0379e47618fd129c3c`。合并后的文件树与送审分支一致，Linux 的环境检查、构建和验证通过。 |
-| PR 002 | 待验证 | 所有者合并 [GitHub PR #3](https://github.com/zemeng5208/winstrata/pull/3)，提交为 `f1ed6098b3db1370449d6cc84ff4c53074e27f62`。已强制 Workspace checks，main 上两个流程成功。策略状态待首个合格候选激活。 |
-| PR 003 | 待所有者审核 | [Windows x64 链接探针](../architecture/WINDOWS_CROSS_BUILD.md)。纯 Linux 链接已有证据，打包、签名及 Windows 运行待验证。 |
-| PR 004–050 | 规划中 | 依获批路线图及前置条件实施门禁、可行性、功能和验收。 |
+| PR 002 | 部分生效 | 已强制 Workspace checks。首次后续候选的策略拒绝未能阻止合并，见 ERR-004。 |
+| PR 003 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) 合并为 `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`。合并树与送审树一致，Linux 工作区回归和两个 x64 链接探针复验通过。打包、签名及实际驱动加载仍待验证。 |
+| PR 004 | 待所有者审核 | [平台可行性与选型](../architecture/PLATFORM_FEASIBILITY.md)。实测证据、适用环境和待验项见报告。需补齐合并保护。 |
+| PR 005–050 | 规划中 | Phase 0 验收后按路线图推进。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 运行及性能均待验证；相关工作提交时更新需求及模块证据。 |
 
 ## PR 000 验证
@@ -39,6 +40,10 @@
 
 Linux x86_64 使用 Rust 1.100.0、附带的 LLD 23.1.5 和 Binutils 2.44，运行 `cargo dev cross-probe` 两次，生成 COFF 对象并链接控制台与内核 PE32+ 映像，两次产物逐字节一致。验证了真实导入、两个子系统及非零入口，并检查驱动校验和与空签名目录。核验两个官方包的 SHA-512 和提取库摘要。在路径含空格的迁移副本中，分别验证库缺失和摘要不符时失败，恢复获批库后从工具子目录复验通过。映像和微软输入均留在忽略目录。本阶段未运行任何 Windows 程序或驱动。
 
+## PR 004 验证
+
+Windows Server 2022 x64 实测覆盖 CIM、事件日志、Job Object、AppContainer 文件授权与撤销、本机 MCP 子进程和三个上游组件的离线 WebView2 渲染。Linux 复验覆盖工作区、两个链接探针、本机协议、依赖查找和上游组件。所选依赖仅用于临时研究。指标、控件、原始运行链接及限制见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
@@ -48,7 +53,7 @@ Linux x86_64 使用 Rust 1.100.0、附带的 LLD 23.1.5 和 Binutils 2.44，运�
 | ADR-002 | 所有者已确认 | 固定 Rust 与 Cargo 1.100.0、Node.js 24.22.3 LTS、pnpm 11.25.0。采用 Cargo 和 pnpm 根工作区，本阶段无第三方 Rust 或 JavaScript 软件包。 |
 | ADR-003 | 所有者已确认 | 按各自工具许可，在本地开发环境使用官方 Microsoft WDK 与 Windows SDK x64 10.0.26100.6584 导入库验证 Linux 探针。 |
 | AS-001 | 部分已验证 | 两个探针的纯 Linux 链接通过。原生 Linux INF/CAT 流程、微软签名、实际 Windows 加载及完整交叉构建待验证。 |
-| AS-002 | 待验证 | PR 004 与 PR 015 验证运行时隔离、IPC、原生采集与前端兼容性。 |
+| AS-002 | 部分已验证 | [PR 004 证据](../architecture/PLATFORM_FEASIBILITY.md)涵盖当前系统、隔离、协议与组件。产品授权、混合运行时的完整隔离和客户端版本验收仍待验证。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。 |
 
 ## 错误与交接
@@ -59,5 +64,6 @@ Linux x86_64 使用 Rust 1.100.0、附带的 LLD 23.1.5 和 Binutils 2.44，运�
 | ERR-001 | 所有者配置后已解决 | 集成创建规则集返回 403。所有者保存保护规则，随后查询分支、规则集及有效规则已确认启用。集成仍缺设置权限。 |
 | ERR-002 | Linux 工作区已解决 | PR 001 预检发现 PATH 缺少 Rust 与 Cargo。验证 Rustup 安装器校验和后，将已批准的官方工具链安装至项目的忽略目录。工具版本与真实构建均通过验证。 |
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
+| ERR-004 | 待所有者配置，阻断下一次合并 | PR 003 候选因缺少所有者对精确头提交的确认，策略状态为失败。有效规则当时仅强制 Workspace checks，最新基线选项关闭。两个合并后工作流成功。下一候选必须保持打开，直至策略检查成功、两项检查均已强制且最新基线选项生效。[策略状态所属运行](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [合并后 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) |
 
-沿用 `pr/003-linux-windows-cross-build` 与已核验的 PR 002 合并提交。PR 003 合并前核验所有者对当前提交的确认与生效策略门禁。另行跟踪已签名驱动的 Windows 验证。后续记录使用[统一记录字段](../standards/DOCUMENTATION.md#section-12)。
+在 `pr/004-platform-feasibility` 上继续验证。合并前读取实际生效规则和当前候选检查。在 Phase 0 复核之前，PR 005 保持规划状态。

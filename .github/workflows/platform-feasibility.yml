@@ -1,0 +1,71 @@
+name: Windows feasibility
+
+on:
+  push:
+    branches: [pr/004-platform-feasibility, main]
+    paths:
+      - .github/scripts/pr004-*
+      - .github/workflows/platform-feasibility.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/scripts/pr004-*
+      - .github/workflows/platform-feasibility.yml
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  windows:
+    name: Windows platform probes
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - name: Fetch the exact revision
+        shell: bash
+        run: |
+          set -eu
+          git init --quiet
+          git fetch --no-tags --depth=1 "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Measure native data sources and Job Object enforcement
+        shell: powershell
+        run: .\.github\scripts\pr004-windows.ps1
+      - name: Test a scoped file grant in an AppContainer
+        shell: powershell
+        run: .\.github\scripts\pr004-appcontainer.ps1
+      - name: Measure an offline page in embedded WebView2
+        if: ${{ !cancelled() }}
+        shell: powershell
+        run: .\.github\scripts\pr004-webview.ps1
+      - name: Resolve the approved Node.js release
+        id: node
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw package.json | ConvertFrom-Json).engines.node
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected an exact Node.js version' }
+          if ((node --version) -eq "v$version") { return }
+          $name = "node-v$version-win-x64"
+          $url = "https://nodejs.org/dist/v$version"
+          $archive = Join-Path $env:RUNNER_TEMP "$name.zip"
+          Invoke-WebRequest "$url/$name.zip" -OutFile $archive
+          $checks = (Invoke-RestMethod "$url/SHASUMS256.txt") -split '\r?\n'
+          $line = @($checks | Where-Object { $_.EndsWith("  $name.zip") })
+          if ($line.Count -ne 1 -or $line[0].Split(' ')[0] -ne (Get-FileHash $archive).Hash) { throw 'Unexpected Node archive digest' }
+          Expand-Archive $archive $env:RUNNER_TEMP
+          Join-Path $env:RUNNER_TEMP $name >> $env:GITHUB_PATH
+      - name: Exercise MCP over local pipes
+        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
+        shell: pwsh
+        run: node --test --test-isolation=none .github/scripts/pr004-mcp.test.mjs
+      - name: Build the three approved upstream components
+        id: assets
+        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
+        shell: pwsh
+        run: node .github/scripts/pr004-ui-build.mjs "$env:RUNNER_TEMP/components"
+      - name: Render and measure the three components in WebView2
+        if: ${{ !cancelled() && steps.assets.outcome == 'success' }}
+        shell: powershell
+        run: .\.github\scripts\pr004-webview.ps1 -AssetDirectory "$env:RUNNER_TEMP/components"
