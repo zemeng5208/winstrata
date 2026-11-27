@@ -32,4 +32,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [PR plan and open decisions](roadmap/PLAN.md)
 - [Performance and end-to-end acceptance](roadmap/ACCEPTANCE.md)
 - [Requirements traceability](roadmap/REQUIREMENTS.md)
-- [Progress, decisions, errors and handover](records/STATUS.md)
+- [Progress, decisions and handover](records/STATUS.md)
+- [Open-item register](records/OPEN_ITEMS.md)
+- [Global error register](records/ERRORS.md)
+- [Module error registers](records/modules/core.md)

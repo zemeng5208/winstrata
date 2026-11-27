@@ -18,13 +18,13 @@ Approve a detailed roadmap before feature development. Specify plan IDs, prerequ
 
 ## AG-14 Review and defect blocking
 
-In single-maintainer work, self-review is allowed and an independent agent is optional. Audit architecture, logic, security, performance, tests, scope, obsolete behavior, and documentation. Resolve confirmed defects, rerun checks, and record evidence. A defect found after merge blocks the next merge in order. Independent development may continue.
+In single-maintainer work, self-review is allowed and an independent agent is optional. Audit architecture, logic, security, performance, tests, scope, obsolete behavior, and documentation. Resolve confirmed defects, rerun checks, and record evidence in the [error register](../records/ERRORS.md). A defect found after merge blocks the next merge in order. Do not reclassify that defect as a limitation or an unaccepted item. Independent development may continue.
 
 <a id="ag-27"></a>
 
 ## AG-27 Postmerge verification
 
-Fetch current main and inspect the actual merge, CI, integrated regressions, prior fixes, and the absence of removed behavior. Check errors, docs, PR and module status, and the next prerequisites. Block the next merge on failures. Use an approved PR for tracking updates.
+Fetch current main and inspect the actual merge, CI, integrated regressions, prior fixes, and the absence of removed behavior. Check the error register, the open-item register, docs, PR and module status, and the next prerequisites. On a regression, update the error record, the requirements matrix, and acceptance status. Block the next merge on failures. Use an approved PR for tracking updates.
 
 <a id="ag-48"></a>
 

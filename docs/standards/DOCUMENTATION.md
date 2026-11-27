@@ -6,19 +6,19 @@
 
 ## AG-05 Evidence and development records
 
-Update module and global records after a module or submodule, PR, extended session, significant change, blocker, or verified result. Record actual commands, environment, files, results, builds, tests, performance, remaining issues, and next actions. Mark unrun items unverified. Preserve evidence in the repository. A lower-cost agent may organize supplied evidence. The lead verifies it and completes the work directly when delegation is unavailable.
+Update module and global records after a module or submodule, PR, extended session, significant change, blocker, or verified result. Record actual commands, environment, files, results, builds, tests, performance, remaining issues, and next actions. Mark unrun items unverified in the [open-item register](../records/OPEN_ITEMS.md), with the fields [AG-62](../../AGENTS.md#ag-62) requires. Preserve evidence in the repository. A lower-cost agent may organize supplied evidence. The lead verifies it and completes the work directly when delegation is unavailable.
 
 <a id="ag-06"></a>
 
 ## AG-06 Context recovery and document consistency
 
-On handover, context reduction, interruption, or agent change, recover instructions, decisions, progress, preceding PRs, errors, and the current handover. Report the checks. For every document change, recursively check parent and child documents, direct and indirect references, cross-module impact, obsolete examples, links, and bilingual semantics. Maintain the reference index, authoritative ownership, and the impact record for updates, unaffected documents, and pending approvals. A lower-cost review may assist. The lead verifies the result. Avoid unnecessary rewrites.
+On handover, context reduction, interruption, or agent change, recover instructions, decisions, progress, preceding PRs, errors, and the current handover. Check every still-open item in the [open-item register](../records/OPEN_ITEMS.md) and every unresolved error in the [error register](../records/ERRORS.md). Report the checks. [AG-62](../../AGENTS.md#ag-62) applies. For every document change, recursively check parent and child documents, direct and indirect references, cross-module impact, obsolete examples, links, and bilingual semantics. Maintain the reference index, authoritative ownership, and the impact record for updates, unaffected documents, and pending approvals. A lower-cost review may assist. The lead verifies the result. Avoid unnecessary rewrites.
 
 <a id="ag-25"></a>
 
 ## AG-25 Errors, degradation, and records
 
-Use common error types, codes, and diagnostics. Keep detection, missing data, degradation, and recovery observable and traceable. Avoid silent failure, success on error, or unbounded retry. Isolate plugin failures from independent modules and sanitize diagnostics. Maintain separate global and module error records and retain resolved history under the [record schema](#section-12). Close only after retesting. Keep operational logs separate from engineering records and link defects to merge blocking. A lower-cost audit may assist.
+Use common error types, codes, and diagnostics. Keep detection, missing data, degradation, and recovery observable and traceable. Avoid silent failure, success on error, or unbounded retry. Isolate plugin failures from independent modules and sanitize diagnostics. Maintain separate global and module error records and retain resolved history under the [record schema](#section-12). The [global register](../records/ERRORS.md) and the [module registers](../records/modules/core.md) are those records. [STATUS.md](../records/STATUS.md) links to them and is not a substitute. Close only after retesting. Keep operational logs separate from engineering records and link defects to merge blocking under [AG-63](../../AGENTS.md#ag-63). A lower-cost audit may assist.
 
 <a id="ag-28"></a>
 
@@ -36,7 +36,7 @@ Use English for identifiers, paths, commits, PR titles and bodies, and protocol 
 
 ## AG-36 Global progress
 
-Maintain one authoritative view of PRs, core, all official plugins, atomic requirements, actual acceptance and evidence, errors, blockers, decisions, and next work. Derive completion from approved accepted tasks. Update regressions and align module and global status. Lower-cost assistance may maintain records subject to lead verification.
+Maintain one authoritative view of PRs, core, all official plugins, atomic requirements, actual acceptance and evidence, errors, blockers, decisions, and next work. Derive completion from approved accepted tasks. Update regressions and align module and global status, including the [open-item register](../records/OPEN_ITEMS.md) and the [error register](../records/ERRORS.md). Lower-cost assistance may maintain records subject to lead verification.
 
 <a id="ag-61"></a>
 
@@ -55,7 +55,8 @@ The [index](../INDEX.md) points to parallel Simplified Chinese and English docum
 | Requirement | ID, statement, authoritative source and approval, module, PR, scenario, actual evidence, status |
 | ADR | ID, decision, grounds, alternatives, impact, approval, related superseded records |
 | Progress | Plan ID, state, owner, prerequisites, acceptance, open issues, next action |
-| Error | ID, discovery date and PR, environment, reproduction, evidence, root cause, impact, repair, retest, state, links |
+| Error | Error ID, discovery time, related PR, environment, reproduction method, evidence, root cause, impact, fix plan, retest result, current state, links. Mark unknown fields as unknown. |
+| Open item | ID, related requirement, source PR, current state, reason it is incomplete, responsible PR, handoff owner, verification environment, acceptance criteria, close conditions |
 | Assumption | ID, hypothesis, impact, method, environment, evidence, state, conclusion and approval |
 | Verification | Base, environment, scenario, actual steps, expected and observed results, metrics, errors, evidence, verification state |
 | Handover | Branch and commit, worktree, completed and pending work, blockers, docs and next responsibility |

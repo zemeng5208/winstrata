@@ -20,7 +20,7 @@ Project rules rank in order from P0, the owner's latest explicit approved decisi
 
 ## AG-58 Layered standards
 
-Keep project red lines and the index at the root. Maintain detailed rules for development, architecture, Git and PRs, testing, security, documentation, dependencies, and agent workflow. Module instructions add specific requirements. Read every applicable layer. Preserve all 61 rules, each with one authoritative definition and links from related documents. Audit direct and indirect references when changing a rule.
+Keep project red lines and the index at the root. Maintain detailed rules for development, architecture, Git and PRs, testing, security, documentation, dependencies, and agent workflow. Module instructions add specific requirements. Read every applicable layer. Preserve all 63 rules, each with one authoritative definition and links from related documents. Audit direct and indirect references when changing a rule.
 
 <a id="ag-59"></a>
 
@@ -33,6 +33,18 @@ After repository initialization, submit the standards, architecture, complete ro
 ## AG-60 Approval for standards changes
 
 Request substantive mandatory-rule changes in their own PR. Include the current rule, proposed wording, reason, supporting evidence, necessity, and impact. The change takes effect after owner approval and merge. Keep rule changes out of ordinary feature PRs and preserve prior decisions. Recheck linked documents, automated gates, and open PRs after merge.
+
+<a id="ag-62"></a>
+
+## AG-62 Unaccepted-item tracking
+
+Every unimplemented, unaccepted, partially accepted, untested, technical-assumption, known-limitation, and deferred item has a unique ID and a persistent record in the [open-item register](docs/records/OPEN_ITEMS.md). Each record includes the related requirement, source PR, current state, reason it is incomplete, responsible PR, handoff owner, verification environment, acceptance criteria, and close conditions. Recording only “awaiting verification” without a clear follow-up plan is prohibited. At the start of development, at PR submission, after merge, on context compression, and at agent handoff, check every still-open item so none is dropped. A confirmed defect must not be disguised as a technical limitation or an unaccepted item. It is fixed and retested, and it blocks the next in-order PR merge. Items that cannot be verified because of an environment limit follow the existing environment rules, stay recorded honestly, and still have a clear later acceptance plan.
+
+<a id="ag-63"></a>
+
+## AG-63 Error management and closure
+
+Enforce [AG-25](docs/standards/DOCUMENTATION.md#ag-25). Keep the independent [global error register](docs/records/ERRORS.md) and the module error registers under [docs/records/modules/](docs/records/modules/core.md). Errors must not live only in STATUS.md, a PR body, or a chat session. Every error has a unique Error ID, discovery time, related PR, environment, reproduction method, evidence, root cause, impact, fix plan, retest result, and current state. Mark unknowns explicitly. Never invent facts. Register CI failures, regressions, security issues, data-integrity risks, and confirmed functional defects promptly. Unresolved errors must not be deleted, hidden, downgraded, or closed without authorization. After every PR merge, recheck the actual main branch. On a regression, update the error record, the requirements matrix, and acceptance status immediately, and block the next in-order PR merge. Global and module error records cross-link, stay bilingual, and keep resolved errors permanently in history.
 
 ## Complete rule index
 
@@ -99,3 +111,5 @@ Request substantive mandatory-rule changes in their own PR. Include the current 
 | AG-59 | [AGENTS.md](#ag-59) |
 | AG-60 | [AGENTS.md](#ag-60) |
 | AG-61 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-61) |
+| AG-62 | [AGENTS.md](#ag-62) |
+| AG-63 | [AGENTS.md](#ag-63) |

@@ -8,15 +8,38 @@
 
 ### 9.1 指定开源组件、动效与排版规范（已确认）
 
-前端必须复用所有者指定的三个开源项目，不自行创造或重写已有 UI 组件，不擅自引入其他设计体系。以下为指定来源与用途，而非已经完成集成的声明。
+前端必须复用所有者指定的开源项目，不自行创造或重写已有 UI 组件，不擅自引入其他设计体系。以下为指定来源与用途，而非已经完成集成的声明。内置主题仍只有 9.2 的三套。
 
 | 指定项目 | 源码仓库 | 用途及约束 |
 |---|---|---|
 | Amicro — Micro transitions | [Subhan-code/Amicro--Micro-transitions-](https://github.com/Subhan-code/Amicro--Micro-transitions-) | 复用已有 UI 组件及微交互动效；优先使用上游现有实现，不重新创造同类组件或动效。 |
 | Glasswork | [kubai087/glasswork](https://github.com/kubai087/glasswork) | Apple Liquid Glass 风格的液态玻璃按钮、玻璃材质及毛玻璃效果；使用上游可复用实现，不自行重新设计玻璃组件。 |
 | shadcn-admin | [satnaing/shadcn-admin](https://github.com/satnaing/shadcn-admin) | 统一应用框架及排版参考，复用侧边导航、顶部区域、内容区、仪表盘、表格及设置页面等适用布局；允许根据 WinStrata 功能进行小幅布局调整。 |
+| UI Moments | [guanmo-ai/ui-moments](https://github.com/guanmo-ai/ui-moments)，站点 [guanmo-ai.github.io/ui-moments](https://guanmo-ai.github.io/ui-moments/) | 追加的指定来源，用于复用已有交互组件与动效：原创控件、原创加载动效，以及仅在完成许可与版本审查后可采用的适用组件示例。指定本身不构成集成，也不预先批准将 Fluent UI 或 Astryx 作为产品依赖。 |
 
-三个仓库的 GitHub 许可证元数据均显示 MIT；实际引入前仍须核对所选版本的 LICENSE、第三方素材与传递依赖许可，保留原始版权和许可声明。开发 Agent 应检查真实源码、适用组件、可复用方式、WebView2 兼容性、性能与依赖，提交具体版本及集成方案；不得把上游演示页面或未验证的接口直接当作已可用组件。指定项目的设计方向已获确认，具体版本、额外依赖和超出范围的修改仍遵守 AG-08、AG-39 审批规则。
+Amicro、Glasswork、shadcn-admin 三个仓库的 GitHub 许可证元数据均显示 MIT。UI Moments 由观默（Guanmo）维护，是可直接操作的界面交互与动效图鉴；其项目代码采用 MIT 许可，部分组件示例基于第三方组件库，不能把整个图鉴描述为仅有 MIT 许可。实际引入任一来源前，仍须核对所选版本的 LICENSE、第三方素材与传递依赖许可，保留原始版权和许可声明。
+
+UI Moments 的分类、数量与署名取自 2026-11-27 读取的默认分支 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 上的 [README.zh-CN.md](https://github.com/guanmo-ai/ui-moments/blob/c9eece0fe425ee7dfe97d162d39d1665c3bf9368/README.zh-CN.md)、[README.md](https://github.com/guanmo-ai/ui-moments/blob/c9eece0fe425ee7dfe97d162d39d1665c3bf9368/README.md) 与 [CREDITS.md](https://github.com/guanmo-ai/ui-moments/blob/c9eece0fe425ee7dfe97d162d39d1665c3bf9368/CREDITS.md)。首发收录 884 个示例，卡片打开即可操作。下表名称使用简体中文 README；英文文档使用英文 README 的名称。个别条目两侧并不互为直译，例如英文 Code Shake 与中文“验证码输入”。
+
+| 分类 | 上游所列示例 |
+|---|---|
+| 基础控件 | 墨滴开关、刻度旋钮、长按确认、滚轮步进器、翻页标签、潮汐进度 |
+| 图形交互 | 磁吸点阵、果冻方块、融合水滴、涟漪画板、花朵开关 |
+| 手势与物理 | 滑动确认、下拉刷新、弹弦、多米诺、翘板开关、波形拖动、吸附网格、扇形菜单、步骤条、呼吸球 |
+| 操作反馈 | 复制按钮、点赞爆发、纸飞机发送、下载进度环、验证码输入、通知铃 |
+| 表单输入 | 划线清单、石子评分、档位滑块、密码强度、标签输入、方案卡片 |
+| 多彩控件 | 色轮、拉绳灯、抛硬币 |
+| 原创加载动效 | 纸张折叠、信号回转及 16 款加载动效。支持调参，可导出 HTML 或 JSX。 |
+| 组件示例 | 抽屉、表单、菜单、数据表格、图表、日程、代码编辑等 830 个可交互示例，基于第三方组件库 |
+
+| 内容 | 归属及版本 | 许可 |
+|---|---|---|
+| 原创控件、加载动效、站点与集成示例 | 观默（Guanmo） | MIT |
+| Fluent UI React | Microsoft，锁定 `@fluentui/react-components@9.75.2`。示例采用系统字体。 | 发行包与上游许可位于 `gallery/fluent-ui/vendor/` |
+| Meta Astryx | Meta Platforms, Inc.。Core、Neutral 主题和 CLI 固定为 0.7.17；Charts、Lab 和 Vega 沿用 0.7.17-canary.g72f2d7c。 | MIT |
+| Geist / Geist Mono | Vercel，随项目提供 Latin 可变字体 | OFL 1.1 |
+
+Fluent UI 与 Astryx 的名称仅用于署名。UI Moments 与 Microsoft、Meta 无关联。开发 Agent 应检查真实源码、适用组件、可复用方式、WebView2 兼容性、性能与依赖，提交具体版本及集成方案；不得把上游演示页面或未验证的接口直接当作已可用组件。指定项目的设计方向已获确认，具体版本、额外依赖和超出范围的修改仍遵守 AG-08、AG-39 审批规则。计划 004 的组件实测只覆盖 Amicro、Glasswork、shadcn-admin。UI Moments、Fluent UI 与 Astryx 尚未做同等验证，见[平台报告](PLATFORM_FEASIBILITY.md)。
 
 ### 9.2 三套内置默认主题
 
@@ -31,6 +54,7 @@
 ### 9.3 组件复用与排版边界
 
 - UI 基础组件、按钮、表单、弹窗、导航、动效等优先直接复用上述指定项目的真实已有实现；禁止自行创造替代组件、重复造轮子或引入未经批准的组件库。
+- UI Moments 只提供已有交互组件与动效的复用范围。原创控件和原创加载动效须先核对所选修订、许可、兼容性、性能与依赖；基于第三方库的组件示例还须先完成许可与版本审查。将 Fluent UI 或 Astryx 纳入产品依赖不因本次指定而获得批准。
 - 允许组合现有组件、绑定真实后端数据、添加业务逻辑适配及必要主题参数；允许对 shadcn-admin 的排版、间距、密度及内容区布局进行小幅适配，保留总体设计体系，不将该许可扩大为重新设计基础组件。
 - 指定资源确实缺少所需组件或无法满足功能、安全、兼容性、性能要求时，报告缺口、复用候选及证据，取得所有者批准后再实施替代方案；不得自行创造组件填补缺口或使用假入口。
 - 官方插件与第三方插件的宿主 UI 接入统一主题、共享组件及页面注册规范；项目级集中管理组件源码/依赖及主题资源，禁止在各插件复制整套 UI。

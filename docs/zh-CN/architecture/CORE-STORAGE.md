@@ -49,4 +49,4 @@ Linux 使用系统 OpenSSL 3 的 `libcrypto.so.3` 封装记录。Windows 使用 
 
 ## 验证范围
 
-在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。计划 012 覆盖混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 在 Linux 上覆盖口令、锁定、加密和解密、备份、恢复以及跨位置迁移。这些新测试的 Windows 执行、Windows 10/11 客户端、ReFS、第二台物理设备、第二个操作系统账户、界面锁定和 E2E-10 仍未完成。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。
+在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。计划 012 覆盖混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 覆盖口令、锁定、加密和解密、备份、恢复以及跨位置迁移。Windows Server 2022 在送审头 `36b5cd688afa2f9690f4a634d0a4c57ec6eba7cd` 上运行了这些测试并通过。该作业不是 Windows 10/11 客户端。ReFS、第二台物理设备、第二个操作系统账户、界面锁定、崩溃安全的密钥轮换和 E2E-10 仍未完成。main `a2471d5fc13f0a307ee39d2629c454aea4537809` 随后在 Windows 工作区检查中，`process::tests::real_process_tree_pid_lifecycle_and_dedup` 失败。见 [ERR-013](../records/modules/core.md#err-013)。那次运行不是该 main 提交的加密验收通过。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。

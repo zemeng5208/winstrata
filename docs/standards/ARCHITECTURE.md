@@ -6,7 +6,7 @@
 
 ## AG-30 Frontend design
 
-Use [the frontend standard](../architecture/FRONTEND.md#section-9). Reuse Amicro, Glasswork, and shadcn-admin and ship White Acrylic, Black Acrylic, and Liquid Glass with Glasswork buttons and frosted panels. Reuse upstream primitives and preserve the design system. Business adaptations and minor shadcn-admin layout changes are allowed. Document gaps and get approval before using alternatives. Verify plugin UI, resizing, real data and errors, theme switching, persistence, interaction, and performance. Root AGENTS links this rule and the frontend standard.
+Use [the frontend standard](../architecture/FRONTEND.md#section-9). Reuse Amicro, Glasswork, shadcn-admin, and UI Moments, and ship White Acrylic, Black Acrylic, and Liquid Glass with Glasswork buttons and frosted panels. Reuse upstream primitives and preserve the design system. UI Moments supplies existing interactive components and motion; its component examples need license and version review, and Fluent UI and Astryx are not approved product dependencies. Business adaptations and minor shadcn-admin layout changes are allowed. Document gaps and get approval before using alternatives. Verify plugin UI, resizing, real data and errors, theme switching, persistence, interaction, and performance. Root AGENTS links this rule and the frontend standard.
 
 <a id="ag-32"></a>
 

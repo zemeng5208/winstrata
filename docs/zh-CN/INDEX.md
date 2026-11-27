@@ -32,4 +32,7 @@
 - [PR 计划与未决事项](roadmap/PLAN.md)
 - [性能与端到端验收](roadmap/ACCEPTANCE.md)
 - [需求追踪](roadmap/REQUIREMENTS.md)
-- [进度、决策、错误和交接](records/STATUS.md)
+- [进度、决策和交接](records/STATUS.md)
+- [未验收事项登记](records/OPEN_ITEMS.md)
+- [全局错误登记](records/ERRORS.md)
+- [模块错误登记](records/modules/core.md)
