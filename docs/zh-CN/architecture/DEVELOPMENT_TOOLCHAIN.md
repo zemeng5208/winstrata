@@ -24,6 +24,7 @@ PR 001 建立 Rust 与 pnpm 工作区，以及 Linux 与 Windows 共用的开发
 | `cargo dev init` | 执行环境预检，获取 Rust 锁定依赖并安装按锁文件解析的 pnpm 工作区。 |
 | `cargo dev build` | 使用已提交的锁文件构建 Rust 工作区。 |
 | `cargo dev verify` | 运行 Cargo 工作区测试并验证 pnpm 锁文件的冻结解析。 |
+| `cargo dev cross-probe` | 在 Linux 上构建并检查 [Windows x64 控制台与驱动链接探针](WINDOWS_CROSS_BUILD.md)。 |
 
 Rust 使用工作区根目录的 [Cargo.toml](../../../Cargo.toml) 与 [Cargo.lock](../../../Cargo.lock)。pnpm 使用 [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) 与 [pnpm-lock.yaml](../../../pnpm-lock.yaml)，将随交付纳入应用包和共享前端包。两个生态各维护一个根锁文件。工具从项目根目录启动子命令并使用当前宿主的工具链。Cargo 默认使用工作区的构建目录，pnpm 的依赖仓库与缓存在 `.winstrata/` 下。生成产物、安装目录和本地缓存均被 Git 忽略。
 
