@@ -38,7 +38,7 @@ Python uses `sys.settrace` on the real source. JavaScript and TypeScript run und
 
 ## Containment
 
-When `libwinstrata_shim.so` is beside the runtime, each user-script child gets the same Landlock plus `LD_PRELOAD` shim as [plan 015](RUNTIMES.md). Read access covers the interpreter prefix, the loader paths, and the plugin state. Write access covers `debug` during debugging, and `private` only when `storage.private` is granted. If the shim or Landlock cannot be installed, the child is not started and the result is `isolation_unavailable`. This plan does not place Windows children in an AppContainer. That gap is [OI-041](../records/OPEN_ITEMS.md#oi-041), not a success.
+When `libwinstrata_shim.so` is beside the runtime, each user-script child gets the same Landlock plus `LD_PRELOAD` shim as [plan 015](RUNTIMES.md). Read access covers the interpreter prefix, the loader paths, and the plugin state. Write access covers `debug` during debugging, and `private` only when `storage.private` is granted. If the shim or Landlock cannot be installed, the child is not started and the result is `isolation_unavailable`. This plan does not place Windows children in an AppContainer. That gap is [OI-045](../records/OPEN_ITEMS.md#oi-045), not a success.
 
 ## Official page
 

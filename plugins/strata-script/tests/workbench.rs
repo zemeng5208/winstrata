@@ -331,7 +331,7 @@ fn editor_languages_debug_triggers_logs_permissions_and_empty_presets() {
     let revoked = call(&mut host, json!({"op": "run", "id": python, "emit": "script.finished"}));
     assert_eq!(revoked["code"], "permission_denied");
 
-    // Linux 子进程有 Landlock。Windows 的 AppContainer 仍是 OI-041，这里不把它记成通过。
+    // Linux 子进程有 Landlock。Windows 的 AppContainer 仍是 OI-045，这里不把它记成通过。
     #[cfg(unix)]
     {
         call(&mut host, json!({"op": "grant", "id": python, "permission": "storage.private"}));

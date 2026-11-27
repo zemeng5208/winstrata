@@ -30,4 +30,4 @@ Windows 宿主创建没有额外能力的 AppContainer 配置文件，以及最�
 
 ## 仍属后续计划的部分
 
-计划 027 提供脚本编辑器、调试、触发器、日志、权限和空预设检查。Windows 工作台会话仍是 [OI-040](../records/OPEN_ITEMS.md#oi-040)。这些子进程的 Windows AppContainer 仍是 [OI-041](../records/OPEN_ITEMS.md#oi-041)。统一市场属于计划 043。签名更新属于计划 044。E2E-06、E2E-07 和 E2E-12 未完成。允许目录内已经打开的句柄不会在进程中途被收回。撰写主机没有在 Windows 10 或 11 客户端上运行这套隔离。证据见[工程记录](../records/STATUS.md)。
+计划 027 提供脚本编辑器、调试、触发器、日志、权限和空预设检查。Windows 脚本页仍是 [OI-044](../records/OPEN_ITEMS.md#oi-044)。这些子进程的 Windows AppContainer 仍是 [OI-045](../records/OPEN_ITEMS.md#oi-045)。统一市场属于计划 043。签名更新属于计划 044。E2E-06、E2E-07 和 E2E-12 未完成。允许目录内已经打开的句柄不会在进程中途被收回。撰写主机没有在 Windows 10 或 11 客户端上运行这套隔离。证据见[工程记录](../records/STATUS.md)。

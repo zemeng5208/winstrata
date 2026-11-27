@@ -111,19 +111,11 @@ fn storage_must_be_selected_before_plugins_open() {
     }
 }
 
-fn process_collector_present() -> bool {
-    program_beside("winstrata-strata-process")
-}
-
-fn script_workbench_present() -> bool {
-    program_beside("winstrata-strata-script")
-}
-
-fn program_beside(name: &str) -> bool {
+fn collector_present(stem: &str) -> bool {
     let name = if cfg!(windows) {
-        format!("{name}.exe")
+        format!("{stem}.exe")
     } else {
-        name.to_owned()
+        stem.to_owned()
     };
     runtime()
         .parent()
@@ -141,8 +133,9 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         .filter(|report| report.kind == "builtin")
         .collect();
     assert_eq!(builtins.len(), 25);
-    let seeded = process_collector_present();
-    let script_seeded = script_workbench_present();
+    let process_seeded = collector_present("winstrata-strata-process");
+    let services_seeded = collector_present("winstrata-strata-services");
+    let script_seeded = collector_present("winstrata-strata-script");
     let registry = builtins
         .iter()
         .find(|report| report.id == "strata.registry")
@@ -170,7 +163,9 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             || report.id == "strata.trace"
         {
             true
-        } else if report.id == "strata.process" && seeded {
+        } else if report.id == "strata.process" && process_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.services" && services_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.script" && script_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
@@ -190,9 +185,15 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         host.uninstall("strata.trace").unwrap_err().code(),
         "builtin_retained"
     );
-    if seeded {
+    if process_seeded {
         assert_eq!(
             host.uninstall("strata.process").unwrap_err().code(),
+            "builtin_retained"
+        );
+    }
+    if services_seeded {
+        assert_eq!(
+            host.uninstall("strata.services").unwrap_err().code(),
             "builtin_retained"
         );
     }
