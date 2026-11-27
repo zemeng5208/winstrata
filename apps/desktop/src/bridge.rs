@@ -354,6 +354,22 @@ fn command_response(
                 .map_err(|error| io::Error::other(error.to_string()))?;
             return write_status(stream, 200, "application/json", &bytes);
         }
+        "tag-apply" => {
+            // 页面不能启用插件，也不能打开全量落盘。插件没有在跑时只回答空闲。
+            let payload = command.get("payload").and_then(Value::as_str).unwrap_or("{}");
+            if payload.len() > 1024 || payload.chars().any(char::is_control) {
+                return write_status(stream, 400, "application/json", b"{\"error\":\"invalid_record\"}");
+            }
+            let locator = guard.locator.clone();
+            let core = match session::ensure(&mut guard.core, &locator) {
+                Ok(core) => core,
+                Err(error) => return error_status(stream, &error),
+            };
+            let body = tag_apply(core, payload)?;
+            let bytes = serde_json::to_vec(&body)
+                .map_err(|error| io::Error::other(error.to_string()))?;
+            return write_status(stream, 200, "application/json", &bytes);
+        }
         _ => return write_status(stream, 404, "application/json", b"{\"error\":\"not_found\"}"),
     }
     if let Err(error) = guard.preferences.save(&guard.directory) {
@@ -390,6 +406,34 @@ fn filter_apply(core: &mut Core, payload: &str) -> io::Result<Value> {
         object.insert("enabled".to_owned(), Value::Bool(true));
     }
     Ok(body)
+}
+
+fn tag_apply(core: &mut Core, payload: &str) -> io::Result<Value> {
+    let idle = json!({"enabled": false, "safety": "none"});
+    if !matches!(core.storage_state(), StorageState::Ready) {
+        return Ok(idle);
+    }
+    let Some(runtime) = observe::runtime_binary() else {
+        return Ok(idle);
+    };
+    let mut host = match core.open_plugins(&runtime) {
+        Ok(host) => host,
+        Err(_) => return Ok(idle),
+    };
+    let report = match host.report("strata.tag") {
+        Ok(report) => report,
+        Err(_) => return Ok(idle),
+    };
+    if report.phase != "running" && report.phase != "paused" {
+        return Ok(idle);
+    }
+    let detail = match host.call("strata.tag", "tag.apply", payload) {
+        Ok(detail) => detail,
+        Err(error) => {
+            return Ok(json!({"enabled": true, "ok": false, "code": error.code(), "safety": "none"}));
+        }
+    };
+    Ok(serde_json::from_str(&detail).unwrap_or(idle))
 }
 
 fn script_workbench(core: &mut Core, payload: &str) -> io::Result<Value> {

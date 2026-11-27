@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Outlet, Link } from '@tanstack/react-router'
-import { Activity, Blocks, Filter, LayoutDashboard, Settings, SquareTerminal } from 'lucide-react'
+import { Activity, Blocks, Filter, LayoutDashboard, Settings, SquareTerminal, Tags } from 'lucide-react'
 import { FadeIn } from '../vendor/amicro/fade-in'
 import { liquidGlass } from '../vendor/glasswork/lens.js'
 import { AppTitle } from '../vendor/shadcn-admin/src/components/layout/app-title'
@@ -25,7 +25,7 @@ import { InkSwitch, SignalReturn } from './moments'
 
 export type ThemeName = 'white-acrylic' | 'black-acrylic' | 'liquid-glass'
 export type CloseName = 'ask' | 'tray' | 'exit'
-export type PageName = 'overview' | 'plugins' | 'service' | 'settings' | 'scripts' | 'filters'
+export type PageName = 'overview' | 'plugins' | 'service' | 'settings' | 'scripts' | 'filters' | 'tags'
 
 export type ScopeState = {
   roots: string[]
@@ -187,6 +187,7 @@ function OfficialSidebar({ copy, user, theme }: { copy: Copy; user: string; them
             { title: copy.plugins, url: '/plugins', icon: Blocks },
             { title: copy.scripts, url: '/scripts', icon: SquareTerminal },
             { title: copy.filters, url: '/filters', icon: Filter },
+            { title: copy.tags, url: '/tags', icon: Tags },
             { title: copy.service, url: '/service', icon: Activity },
             { title: copy.settings, url: '/settings', icon: Settings },
           ]}

@@ -141,6 +141,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     let health_seeded = collector_present("winstrata-strata-health");
     let budget_seeded = collector_present("winstrata-strata-budget");
     let filter_seeded = collector_present("winstrata-strata-filter");
+    let tag_seeded = collector_present("winstrata-strata-tag");
     let registry = builtins
         .iter()
         .find(|report| report.id == "strata.registry")
@@ -183,6 +184,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         } else if report.id == "strata.budget" && budget_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.filter" && filter_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.tag" && tag_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else {
             report.phase == "implementation_absent"
@@ -260,6 +263,17 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     } else {
         assert_eq!(
             host.enable("strata.filter").unwrap_err().code(),
+            "implementation_absent"
+        );
+    }
+    if tag_seeded {
+        assert_eq!(
+            host.uninstall("strata.tag").unwrap_err().code(),
+            "builtin_retained"
+        );
+    } else {
+        assert_eq!(
+            host.enable("strata.tag").unwrap_err().code(),
             "implementation_absent"
         );
     }

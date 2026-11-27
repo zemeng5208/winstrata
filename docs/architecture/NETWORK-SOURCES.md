@@ -48,7 +48,7 @@ A flow whose direction basis is `observed` uses observed attribution. A basis of
 
 `DiskPolicy::TaggedOnly` writes one named packet. The checks run in this order: unknown id, memory-only policy, missing tag, rejected tag, then empty, truncated or already released bytes. Only the last step opens the path with `create_new`, writes the retained bytes and syncs them. A failed authorized write removes its own partial file. There is no persist-all operation.
 
-A qualifying tag has `reason`, `source` and `confidence`, each 1 to 128 bytes, with no surrounding whitespace and no control characters. `time_unix_ns` is stored with the tag and is not a product risk score. Product tagging remains plan 029. The default memory cap is 256 KiB. When a new packet does not fit, the oldest retained bytes are released. Persisting a released or truncated id returns `unavailable`.
+A qualifying tag has `reason`, `source` and `confidence`, each 1 to 128 bytes, with no surrounding whitespace and no control characters. `time_unix_ns` is stored with the tag and is not a product risk score. Product tagging is plan 029 in [Tag plugin](TAG.md). Topology, discovery, and PCAPNG export remain plan 031. The default memory cap is 256 KiB. When a new packet does not fit, the oldest retained bytes are released. Persisting a released or truncated id returns `unavailable`.
 
 This plan also does not persist untagged connection metadata. That retention choice remains the open owner decision in [Network and data](DATA.md#section-7).
 

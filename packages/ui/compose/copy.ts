@@ -29,6 +29,18 @@ export type Copy = {
   scriptsSave: string
   scriptsIdle: string
   scriptsPresets: string
+  tags: string
+  tagsTitle: string
+  tagsBody: string
+  tagsSubject: string
+  tagsReason: string
+  tagsSource: string
+  tagsConfidence: string
+  tagsEvidence: string
+  tagsPacket: string
+  tagsApply: string
+  tagsIdle: string
+  tagsSafety: string
   service: string
   settings: string
   navigation: string
@@ -129,6 +141,18 @@ const en: Copy = {
   scriptsSave: 'Save source',
   scriptsIdle: 'The workbench is not running.',
   scriptsPresets: 'Presets',
+  tags: 'Tags',
+  tagsTitle: 'StrataTag',
+  tagsBody: 'This page does not enable the plugin and does not grant a permission. A tag is forwarded only while StrataTag is already running. A missing tag is not a safety conclusion.',
+  tagsSubject: 'Subject',
+  tagsReason: 'Reason',
+  tagsSource: 'Source',
+  tagsConfidence: 'Confidence',
+  tagsEvidence: 'Evidence',
+  tagsPacket: 'Packet id, only for a packet',
+  tagsApply: 'Apply tag',
+  tagsIdle: 'StrataTag is not running.',
+  tagsSafety: 'safety none',
   service: 'Service',
   settings: 'Settings',
   navigation: 'Navigation',
@@ -229,6 +253,18 @@ const zh: Copy = {
   scriptsSave: '保存源码',
   scriptsIdle: '工作台没有在运行。',
   scriptsPresets: '预设',
+  tags: '标记',
+  tagsTitle: 'StrataTag',
+  tagsBody: '此页不启用插件，也不授予权限。只有 StrataTag 已经在运行时，标记才会被转发。没有标记不是安全结论。',
+  tagsSubject: '对象',
+  tagsReason: '原因',
+  tagsSource: '来源',
+  tagsConfidence: '置信',
+  tagsEvidence: '依据',
+  tagsPacket: '报文编号，仅用于报文',
+  tagsApply: '提交标记',
+  tagsIdle: 'StrataTag 没有在运行。',
+  tagsSafety: 'safety none',
   service: '服务',
   settings: '设置',
   navigation: '导航',

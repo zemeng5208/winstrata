@@ -81,11 +81,12 @@ Glasswork 的 `NOTICE`（`824058026d7338161460df1fda278d593e7a1682d9601c3780167c
 
 | ID | 产品路径 | 上游仓库 | 版本 | 源码路径 | 许可证 | 复用方式 | 修改内容 | 引入计划 | 状态 |
 |---|---|---|---|---|---|---|---|---|---|
-| winstrata-copy | `packages/ui/compose/copy.ts` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 英文和 zh-CN 文案。未设置语言时使用英文。计划 017 增加引导和模式文案。计划 027 增加脚本工作台文案。计划 028 增加过滤页文案。 | 016 | in-product |
-| winstrata-entry | `packages/ui/compose/entry.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 官方页面的内存路由。计划 027 增加 `/scripts`。计划 028 增加 `/filters`。 | 016 | in-product |
-| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质、Amicro 淡入，以及下面的 UI Moments 控件。计划 017 在这个外壳里增加引导、范围，以及实时、历史、暂停和继续。计划 027 增加脚本导航项。计划 028 增加过滤导航项。它不增加视觉体系。 | 016 | in-product |
+| winstrata-copy | `packages/ui/compose/copy.ts` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 英文和 zh-CN 文案。未设置语言时使用英文。计划 017 增加引导和模式文案。计划 027 增加脚本工作台文案。计划 028 增加过滤页文案。计划 029 增加标记页文案。 | 016 | in-product |
+| winstrata-entry | `packages/ui/compose/entry.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 官方页面的内存路由。计划 027 增加 `/scripts`。计划 028 增加 `/filters`。计划 029 增加 `/tags`。 | 016 | in-product |
+| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质、Amicro 淡入，以及下面的 UI Moments 控件。计划 017 在这个外壳里增加引导、范围，以及实时、历史、暂停和继续。计划 027 增加脚本导航项。计划 028 增加过滤导航项。计划 029 增加标记导航项。它不增加视觉体系。 | 016 | in-product |
 | winstrata-script-page | `packages/ui/compose/script-page.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 组合 shadcn-admin 的 Button、Input 和 Badge，再加上使用 Input 边框和焦点类的 textarea。它不启用插件，也不授予权限。 | 027 | in-product |
 | winstrata-filter-page | `packages/ui/compose/filter-page.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 组合 shadcn-admin 的 Button、Input 和 Badge。它不启用插件，也不授予权限。它不是一套新的视觉体系。 | 028 | in-product |
+| winstrata-tag-page | `packages/ui/compose/tag-page.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 组合 shadcn-admin 的 Button、Input 和 Badge。它不启用插件，也不授予权限。 | 029 | in-product |
 | winstrata-moments | `packages/ui/compose/moments.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 语言使用 Ink Switch。服务尚未连接时显示 Signal Return。开关令牌只作用在开关宿主上。文案使用当前语言。 | 016 | in-product |
 | winstrata-ink-switch | `packages/ui/compose/ink-switch.js` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 行为块是上游 `standalone:ink-switch-script` 段落。查询范围限定在挂载节点。 | 016 | in-product |
 

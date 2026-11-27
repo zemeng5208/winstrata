@@ -14,7 +14,7 @@ Observe available physical and virtual interfaces, VPN, TUN, loopback, IPv4/IPv6
 4. Let users configure memory cap and retention. Report too-late tags and discarded or unavailable data. Disabling tags cannot switch on full packet persistence. A missing tag carries no safety conclusion.
 5. Preserve traceable filter, tag and resource decisions. Support live statistics and distinguish intentional filtering from collection loss.
 
-Pending owner decision covers retention of lightweight untagged connection metadata such as IP, domain, process, time, or size. Optional metadata and aggregate history is a candidate under the appropriate log quota. The raw packet rule applies regardless. Plan 011 implements the user-mode observer and the selective raw-packet gate in [Network sources](NETWORK-SOURCES.md). It does not persist untagged connection metadata and does not export PCAPNG.
+Pending owner decision covers retention of lightweight untagged connection metadata such as IP, domain, process, time, or size. Optional metadata and aggregate history is a candidate under the appropriate log quota. The raw packet rule applies regardless. Plan 011 implements the user-mode observer and the selective raw-packet gate in [Network sources](NETWORK-SOURCES.md). It does not persist untagged connection metadata and does not export PCAPNG. Plan 029 records the tag and uses that ledger. See [Tag plugin](TAG.md). Topology, discovery, and PCAPNG export remain plan 031.
 
 <a id="section-8"></a>
 
