@@ -124,6 +124,10 @@ impl Core {
         &self.user
     }
 
+    pub fn locator_path(&self) -> &Path {
+        &self.locator_path
+    }
+
     pub fn selected_root(&self) -> Option<&Path> {
         self.location
             .as_ref()

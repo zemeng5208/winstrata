@@ -130,9 +130,13 @@ pub(super) fn unique_endpoint() -> io::Result<Endpoint> {
     })
 }
 
+pub(super) fn user_address() -> io::Result<String> {
+    Ok(format!(r"\\.\pipe\WinStrata-{}", current_user()?))
+}
+
 pub(super) fn user_endpoint() -> io::Result<Endpoint> {
     Ok(Endpoint {
-        address: format!(r"\\.\pipe\WinStrata-{}", current_user()?),
+        address: user_address()?,
         owned_file: None,
         owned_dir: None,
     })

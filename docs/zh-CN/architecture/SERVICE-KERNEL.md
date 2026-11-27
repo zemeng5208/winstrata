@@ -16,6 +16,10 @@
 
 一帧是小端 `u32` 长度，随后是最多 16 KiB 的 UTF-8 JSON。单次读写最多等待 2 秒。接受循环一次只服务一个连接。Windows 在 `listen` 返回前创建管道实例。200 毫秒的等待只检查停止标志，不关闭该实例。下一个实例尚未开始监听时，客户端最多重试 2 秒。管道关闭后的读取，包括 Win32 错误 232，视为流结束。
 
+`Endpoint::client` 连接到已经存在的地址，不创建、不删除、也不拥有该端点。`Endpoint::user_address` 返回当前用户的默认服务地址，并且不会拆除正在监听的套接字。`user_default` 仍是监听端的准备步骤；在 Linux 上，它监听前仍会移除过期的套接字名。
+
+`Endpoint::client` 连接到已经存在的地址，不创建、不删除、也不拥有该端点。`Endpoint::user_address` 返回当前用户的默认服务地址，并且不会拆除正在监听的套接字。`user_default` 仍是监听端的准备步骤；在 Linux 上，它监听前仍会移除过期的套接字名。
+
 Linux 使用 Unix 域套接字。临时端点是权限 `0700` 的目录，其中套接字权限为 `0600`；关闭时删除该目录。默认端点在确认运行时目录为私有后使用 `$XDG_RUNTIME_DIR/winstrata/service.sock`。启动时会移除同名的旧套接字。关闭时不删除默认套接字，因此后启动的监听者不会被清掉。`SO_PEERCRED` 提供对端用户，其 uid 必须等于服务的有效 uid。凭据无法读取或 uid 不同时，连接被丢弃且 `faults` 增加。这些字节不会被解析，也不写审计记录。
 
 Windows 使用重叠 I/O 的命名管道。临时名为 `\\.\pipe\winstrata-<pid>-<n>`。默认名为 `\\.\pipe\WinStrata-<sid>`。DACL 为 `D:P(A;;GA;;;<sid>)`，管道设置 `PIPE_REJECT_REMOTE_CLIENTS` 且只允许一个实例。客户端以 `SECURITY_IMPERSONATION` 打开管道，因此服务可以模拟它。连接到达后，服务先模拟客户端，读取线程令牌 SID，并在调用驱动管理器之前恢复原令牌。无法模拟的连接会被直接关闭，不返回应答。不满足 DACL 的令牌在 `CreateFile` 处被拒绝。服务看不到这次调用，因此不审计它。管道 ACL 测试和服务控制管理器测试只在 Windows 上编译。

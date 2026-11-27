@@ -21,6 +21,7 @@
 - [原生插件契约与生命周期](architecture/PLUGINS.md)
 - [网络与数据策略](architecture/DATA.md)
 - [前端设计与主题](architecture/FRONTEND.md)
+- [桌面壳](architecture/DESKTOP.md)
 - [开发规范](standards/DEVELOPMENT.md)
 - [架构规范](standards/ARCHITECTURE.md)
 - [Git、PR 与门禁](standards/GIT_AND_PR.md)

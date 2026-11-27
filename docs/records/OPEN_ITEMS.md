@@ -6,7 +6,7 @@ This register is required by [AG-62](../../AGENTS.md#ag-62). Every still-open it
 
 The handoff owner for every row is repository owner zemeng5208. The developer of the responsible plan runs the named environment and records the result. The owner accepts the close. “Awaiting verification” is not a close condition.
 
-Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is not started.
+Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is merged. Plan 016 does not close the Windows GUI session.
 
 ## Summary
 
@@ -46,7 +46,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-032](#oi-032) | Evidence gap | Next records update |
 | [OI-033](#oi-033) | Open process item | Owner closes GitHub PR #11 |
 | [OI-034](#oi-034) | Known limitation | 031 |
-| [OI-035](#oi-035) | Known limitation | 016 |
+| [OI-035](#oi-035) | Closed | 016 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 
 <a id="oi-001"></a>
@@ -168,7 +168,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - Source PR: owner designation on 2026-11-27, recorded by plan 051. Plan 004 measured Amicro, Glasswork, and shadcn-admin only. Upstream commit read for the designation: `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`.
 - Current state: untested
-- Reason it is incomplete: UI Moments has not had the plan 004 revision, license-closure, WebView2, or performance measurement. Fluent UI and Astryx are attribution, not approved product dependencies. This is not a fourth theme and not an early start of plan 016.
+- Reason it is incomplete: Plan 016 read the project LICENSE at `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`. It is MIT. No UI Moments component was bundled. Fluent UI and Astryx are not product dependencies. The plan 004 class of WebView2 and performance measurement was not run for this revision.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the same class of offline WebView2 measurement used for the three measured sources, plus the selected revision's license and version review
@@ -224,7 +224,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-002](STATUS.md) and [E2E-11](#e2e-11)
 - Source PR: plan 008. The Windows job is not an interactive unelevated GUI.
 - Current state: untested
-- Reason it is incomplete: no GUI session was run
+- Reason it is incomplete: the Windows tray and WebView2 host are implemented. This record's authoring host is Linux and did not run an ordinary Windows GUI session. A Server 2022 job is not that session until its privilege and window result are recorded.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: an ordinary-user Windows GUI session
@@ -364,7 +364,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-003](STATUS.md) and [REQ-19.02](../roadmap/REQUIREMENTS.md)
 - Source PR: the open-decision list. The initial theme is not selected.
 - Current state: pending decision
-- Reason it is incomplete: three themes are specified. The first selected theme is not.
+- Reason it is incomplete: the shell proposes White Acrylic and does not apply any theme until the user chooses. The owner has not confirmed that proposal as the default.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the plan 016 GUI
@@ -531,13 +531,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: the plan 004 toolchain note in the [platform report](../architecture/PLATFORM_FEASIBILITY.md)
 - Source PR: plan 004. Known Vite advisory [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm) affects upstream-locked development tooling.
-- Current state: known limitation
-- Reason it is incomplete: a production toolchain has not been selected, so the advisory has not been re-reviewed for one
-- Responsible PR: 016, before a production toolchain is selected
+- Current state: closed
+- Reason it is incomplete: closed by the plan 016 review. The product bundle uses esbuild 0.25.12 from Amicro `fa5f8ffbe39537a8db191806066b8773c47c82e9`. Vite is not a dependency. GHSA-587h-7wmj-h5pm is a Vite development-server bypass and does not apply to esbuild.
+- Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
-- Verification environment: the advisory and the selected toolchain's lockfile
+- Verification environment: the advisory text and `packages/ui/upstream.json`
 - Acceptance criteria: a fresh review is recorded before that toolchain is adopted
-- Close conditions: the review is recorded. The trial dependency authorization does not close it.
+- Close conditions: the review is recorded in [Desktop shell](../architecture/DESKTOP.md). The plan 004 trial by itself did not close this item.
 
 <a id="e2e-01"></a>
 
@@ -686,7 +686,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11)
 - Source PR: plan 004 measured three components. UI Moments is [OI-009](#oi-009).
 - Current state: not done
-- Reason it is incomplete: the product GUI has not been run
+- Reason it is incomplete: Linux tests covered theme persistence, both locales, live service status, and the upstream bundle. Windows WebView2, the tray session, and privilege were not run.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: real Windows WebView2

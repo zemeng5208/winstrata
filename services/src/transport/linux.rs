@@ -60,6 +60,16 @@ pub(super) fn unique_endpoint() -> io::Result<Endpoint> {
     })
 }
 
+pub(super) fn user_address() -> io::Result<String> {
+    let runtime = std::env::var_os("XDG_RUNTIME_DIR")
+        .ok_or_else(|| io::Error::new(ErrorKind::NotFound, "XDG_RUNTIME_DIR is not set"))?;
+    path_text(
+        &PathBuf::from(runtime)
+            .join("winstrata")
+            .join("service.sock"),
+    )
+}
+
 pub(super) fn user_endpoint() -> io::Result<Endpoint> {
     let runtime = std::env::var_os("XDG_RUNTIME_DIR")
         .ok_or_else(|| io::Error::new(ErrorKind::NotFound, "XDG_RUNTIME_DIR is not set"))?;

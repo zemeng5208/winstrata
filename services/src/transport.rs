@@ -74,6 +74,27 @@ pub fn current_privilege() -> io::Result<Privilege> {
 }
 
 impl Endpoint {
+    /// 连接到已经存在的服务地址。不创建、不删除、也不拥有该端点。
+    pub fn client(address: impl Into<String>) -> io::Result<Self> {
+        let address = address.into();
+        if address.is_empty() || address.bytes().any(|byte| byte == 0) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "service address is empty",
+            ));
+        }
+        Ok(Self {
+            address,
+            owned_file: None,
+            owned_dir: None,
+        })
+    }
+
+    /// 当前用户的默认服务地址。只计算地址，不删除已经在监听的套接字。
+    pub fn user_address() -> io::Result<String> {
+        platform::user_address()
+    }
+
     pub(crate) fn anonymous(&self) -> Self {
         Self {
             address: self.address.clone(),

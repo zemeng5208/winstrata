@@ -32,9 +32,14 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 013 | 已合并，验收仍有待项 | 所有者于 2026-11-27T15:48:53Z 将 [GitHub PR #16](https://github.com/zemeng5208/winstrata/pull/16) 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树 `68a5db4598a9659a437368289d368ce60dd5b7d2` 与第二父提交相同。主分支 Linux 通过。主分支 Windows 的 `real_process_tree_pid_lifecycle_and_dedup` 失败，Workspace 因 Windows 失败而失败。见 [ERR-005](modules/core.md#err-005)。密钥轮换不是崩溃安全的。没有运行 Windows 10/11、ReFS、第二台设备、第二个账户、界面锁定和 E2E-10。[主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/46028223956) |
 | PR 052 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #17](https://github.com/zemeng5208/winstrata/pull/17) 合并为 `004974215e239f96160b47d3eef40a84c316e802`。父提交为 `a2471d5fc13f0a307ee39d2629c454aea4537809` 与 `a6a22c200eca6d67f5cffff6f370d0537567850e`。进程树测试仍然要求一次真实退出，并等到完整采样能够报告这次退出。该合并提交的 Windows 工作区检查通过。计划 051 不实现这项修复。[主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/46036724064) |
 | PR 051 | 已合并，验收仍有待项 | 所有者于 2026-11-27T17:19:35Z 将 [GitHub PR #18](https://github.com/zemeng5208/winstrata/pull/18) 合并为 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`。被合并的头是 `b855c188c85bb9916bc388232f1469e9b849fcad`。只包含标准和记录。UI Moments 已指定且未验证。这一行不是对 UI Moments 的验收。这份记录不为该合并提交附加 CI 地址。 |
-| PR 014 | 待审查 | 已实现[原生插件契约、依赖和生命周期](../architecture/PLUGINS.md)。分支 `pr/014-plugin-contracts` 已变基到 main `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`，其中已经包含计划 013、052 和 051。头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的 `winstrata/merge-policy` 状态，随后 Windows 插件生命周期测试因共享冲突失败，Workspace 随之失败。这份记录改为保留已经固定的插件目录，不再按路径重开。它自己的四项检查尚未返回，所以这份记录还不是审查头。 |
-| PR 015–050 | 规划中 | 计划 015、016、017 及更晚的计划不属于计划 014。 |
+| PR 014 | 已合并，验收仍有待项 | 所有者于 2026-11-27T17:41:19Z 将 GitHub PR #20 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。这一行不附加 CI 地址。该合并没有关闭 E2E-06、E2E-11 和 E2E-15。 |
+| PR 015 | 规划中 | 尚未开始。它是路线图上计划 016 的前序。本计划不实现它。 |
+| PR 016 | 进行中 | 桌面宿主、三个主题标识、语言、托盘代码和服务状态。官方视觉只包括[桌面壳](../architecture/DESKTOP.md)点名的、未经修改的 Amicro、Glasswork 和 shadcn-admin 文件。宿主自写的框架和亚克力涂装已暂停，不是验收。没有纳入 UI Moments。2026-11-28 的 GUI 替换决定没有实现。编写宿主没有运行 Windows WebView2。 |
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
+
+## PR 016 验证
+
+编写宿主是 Linux。写下这条记录之前，该宿主上的 `cargo test -p winstrata-desktop --test shell` 和 `cargo test -p winstrata-service --lib gui_client_reaches` 已通过。`cargo check --target x86_64-pc-windows-msvc -p winstrata-desktop --tests` 只做了托盘和窗口代码的类型检查，没有运行它们。本机 Node 是 v22.23.4，不是固定的 24.22.3，所以这里没有运行 `cargo dev verify`。上游组件包由 `node packages/ui/build.mjs target/plan016-ui` 构建。没有运行 Windows WebView2、普通用户托盘会话和 E2E-11。宿主自写的框架和亚克力涂装不算这些结果。
 
 ## PR 000 验证
 

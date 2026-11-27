@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>WinStrata</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="layout.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+</head>
+<body>
+<div id="app" data-theme="unset">
+  <aside id="nav"></aside>
+  <div class="column">
+    <header id="top"></header>
+    <div id="shadcn" class="@container/content"></div>
+  </div>
+</div>
+<div id="chooser" class="dialog" hidden></div>
+<div id="close-dialog" class="dialog" hidden></div>
+<script src="boot.js"></script>
+<script src="amicro.js"></script>
+<script src="shadcn.js"></script>
+<script src="glass.js"></script>
+<script type="module" src="shell.js"></script>
+</body>
+</html>

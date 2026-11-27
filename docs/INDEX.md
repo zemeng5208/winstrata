@@ -21,6 +21,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Native plugin contracts and lifecycle](architecture/PLUGINS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)
+- [Desktop shell](architecture/DESKTOP.md)
 - [Development](standards/DEVELOPMENT.md)
 - [Architecture](standards/ARCHITECTURE.md)
 - [Git, PRs and gates](standards/GIT_AND_PR.md)

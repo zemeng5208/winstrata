@@ -30,6 +30,15 @@ fn request(user: &str, role: &str, operation: &str, driver: &str) -> String {
 }
 
 #[test]
+fn gui_client_reaches_an_existing_endpoint_without_replacing_it() {
+    let service = Service::listen_catalog(Endpoint::unique().unwrap()).unwrap();
+    let client = Endpoint::client(service.address()).unwrap();
+    let status = GuiClient::connect(&client).unwrap().status().unwrap();
+    assert_eq!(status.drivers.len(), 4);
+    assert!(Endpoint::client("").is_err());
+}
+
+#[test]
 fn live_socket_rejects_unprivileged_roles_and_does_not_call_the_driver_host() {
     let service = Service::listen_catalog(Endpoint::unique().unwrap()).unwrap();
     let endpoint = service.client_endpoint();

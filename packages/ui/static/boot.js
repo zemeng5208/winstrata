@@ -1,0 +1,1 @@
+/* The page address carries the local session. Probe mode reads its query. */

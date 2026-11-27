@@ -51,7 +51,7 @@ Apply all themes to the main window, dashboard, official plugin pages, settings,
 
 ## Implementation and acceptance
 
-Reuse existing upstream primitives for buttons, forms, dialogs, navigation, transitions, and other baseline components. Combine components, bind backend state, add business adapters and necessary theme parameters, and adapt shadcn-admin spacing, density, or layout within the source design. If a required component is missing or fails functionality, security, compatibility or performance, show evidence and seek approval for an alternative. Host official and third-party pages through shared themes and registration. Centralize sources and theme resources. Avoid duplicate component libraries across plugins.
+Plan 016 records the desktop host in [Desktop shell](DESKTOP.md). Reuse existing upstream primitives for buttons, forms, dialogs, navigation, transitions, and other baseline components. Combine components, bind backend state, add business adapters and necessary theme parameters, and adapt shadcn-admin spacing, density, or layout within the source design. If a required component is missing or fails functionality, security, compatibility or performance, show evidence and seek approval for an alternative. Host official and third-party pages through shared themes and registration. Centralize sources and theme resources. Avoid duplicate component libraries across plugins.
 
 UI Moments adds a source for existing interactive components and motion. Original controls and loaders still need revision, license, WebView2, performance, and dependency review. Component examples also need license and version review before use. This designation does not approve Fluent UI or Astryx as product dependencies.
 
