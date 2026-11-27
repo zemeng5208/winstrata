@@ -34,4 +34,4 @@ Linux 只覆盖当前活动集合。消失的服务是 `service.stopped`，不�
 
 ## 仍保留的限制
 
-启动项和计划任务仍属于计划 023。E2E-03 和 E2E-14 未完成。Windows 10 和 Windows 11、已签名驱动加载、Secure Boot 和 HVCI 均未运行。
+启动项和计划任务属于[计划 023](STARTUP.md)。E2E-03 和 E2E-14 未完成。Windows 10 和 Windows 11、已签名驱动加载、Secure Boot 和 HVCI 均未运行。
