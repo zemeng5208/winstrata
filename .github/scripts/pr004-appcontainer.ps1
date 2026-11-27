@@ -7,7 +7,6 @@ if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64' -or $PSVersionTable.PSEdition -ne 'D
 Add-Type -TypeDefinition @'
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
@@ -37,8 +36,6 @@ public static class WinStrataContainerProbe {
     [DllImport("userenv.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern int CreateAppContainerProfile(string name, string display, string description,
         IntPtr capabilities, uint count, out IntPtr sid);
-    [DllImport("userenv.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-    private static extern int GetAppContainerFolderPath(string sid, out IntPtr path);
     [DllImport("userenv.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern int DeleteAppContainerProfile(string name);
     [DllImport("userenv.dll", SetLastError = true)]
@@ -86,13 +83,6 @@ public static class WinStrataContainerProbe {
         return sid;
     }
 
-    public static string Folder(string sid) {
-        IntPtr path;
-        Marshal.ThrowExceptionForHR(GetAppContainerFolderPath(sid, out path));
-        try { return Marshal.PtrToStringUni(path); }
-        finally { Marshal.FreeCoTaskMem(path); }
-    }
-
     public static void Remove(string name, IntPtr sid) {
         try { Marshal.ThrowExceptionForHR(DeleteAppContainerProfile(name)); }
         finally { FreeSid(sid); }
@@ -116,12 +106,11 @@ public static class WinStrataContainerProbe {
         } finally { CloseHandle(token); }
     }
 
-    public static uint Compare(IntPtr sid, string reference, string fixture) {
+    public static uint ReadFixture(IntPtr sid, string executable, string fixture) {
         const int SecurityCapabilitiesAttribute = 0x00020009;
         const uint LaunchFlags = 0x00080000 | 0x00000004 | 0x08000000 | 0x00000400;
         string system = Environment.SystemDirectory;
-        string executable = Path.Combine(system, "fc.exe");
-        var cmd = new StringBuilder(String.Format("\"{0}\" /B \"{1}\" \"{2}\"", executable, reference, fixture));
+        var cmd = new StringBuilder(String.Format("\"{0}\" \"{1}\"", executable, fixture));
         IntPtr listSize = IntPtr.Zero;
         InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref listSize);
         if (listSize.ToInt64() <= 0) throw new InvalidOperationException("Missing process attribute list size.");
@@ -181,55 +170,92 @@ public static class WinStrataContainerProbe {
 }
 '@
 
-function Set-FixtureReadAccess([string]$Path, [Security.Principal.SecurityIdentifier]$OwnerSid,
-    [Security.Principal.SecurityIdentifier]$PackageSid, [bool]$AllowPackage) {
-    $acl = [Security.AccessControl.FileSecurity]::new()
+function Set-FixtureAccess([string]$Path, [Security.Principal.SecurityIdentifier]$OwnerSid,
+    [Security.Principal.SecurityIdentifier]$PackageSid, [Security.AccessControl.FileSystemRights]$Grant,
+    [switch]$Directory) {
+    if ($Directory) { $acl = [Security.AccessControl.DirectorySecurity]::new() }
+    else { $acl = [Security.AccessControl.FileSecurity]::new() }
     $acl.SetAccessRuleProtection($true, $false)
     $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($OwnerSid, 'FullControl', 'Allow'))
-    if ($AllowPackage) {
-        $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($PackageSid, 'Read', 'Allow'))
+    if ([int]$Grant -ne 0) {
+        $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($PackageSid, $Grant, 'Allow'))
     }
-    [IO.File]::SetAccessControl($Path, $acl)
+    if ($Directory) { [IO.Directory]::SetAccessControl($Path, $acl) }
+    else { [IO.File]::SetAccessControl($Path, $acl) }
+}
+
+function Build-FixtureReader([string]$Folder) {
+    $locator = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    $install = & $locator -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+    if ($LASTEXITCODE -ne 0 -or -not $install) { throw 'No installed x64 MSVC compiler was found.' }
+    $vc = Join-Path $install 'VC\Auxiliary\Build\vcvars64.bat'
+    $source = @'
+#include <windows.h>
+#include <string.h>
+int wmain(int argc, wchar_t **argv) {
+    static const char marker[] = "WinStrata synthetic fixture";
+    char content[sizeof(marker)];
+    DWORD count, error;
+    HANDLE file;
+    if (argc != 2) return ERROR_INVALID_PARAMETER;
+    file = CreateFileW(argv[1], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE) return (int)GetLastError();
+    if (!ReadFile(file, content, (DWORD)sizeof(content), &count, NULL)) error = GetLastError();
+    else if (count != sizeof(marker) - 1 || memcmp(content, marker, count) != 0) error = ERROR_INVALID_DATA;
+    else error = ERROR_SUCCESS;
+    CloseHandle(file);
+    return (int)error;
+}
+'@
+    [IO.File]::WriteAllText([IO.Path]::Combine($Folder, 'reader.c'), $source, [Text.Encoding]::ASCII)
+    Push-Location -LiteralPath $Folder
+    try {
+        $command = 'call "' + $vc + '" >nul && cl.exe /nologo /W4 /WX /O1 /MT reader.c /link /OUT:reader.exe'
+        & $env:ComSpec /d /v:off /c $command | Out-Host
+        if ($LASTEXITCODE -ne 0) { throw 'Native fixture reader compilation failed.' }
+    } finally { Pop-Location }
 }
 
 $timer = [Diagnostics.Stopwatch]::StartNew()
 $name = 'WinStrata.Probe.' + [Guid]::NewGuid().ToString('N')
 $sid = [WinStrataContainerProbe]::Create($name)
-$files = [Collections.Generic.List[string]]::new()
+$folder = $null
 try {
     $packageSid = [Security.Principal.SecurityIdentifier]::new($sid)
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     try { $ownerSid = $identity.User } finally { $identity.Dispose() }
-    $folder = [WinStrataContainerProbe]::Folder($packageSid.Value)
-    $reference = [IO.Path]::Combine($folder, $name + '-reference.txt')
-    $fixture = [IO.Path]::Combine($folder, $name + '-fixture.txt')
-    $bytes = [Text.Encoding]::ASCII.GetBytes('WinStrata synthetic fixture')
+    $base = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [IO.Path]::GetTempPath() }
+    $folder = (New-Item -Path ([IO.Path]::Combine($base, $name)) -ItemType Directory).FullName
+    Build-FixtureReader $folder
+    $executable = [IO.Path]::Combine($folder, 'reader.exe')
+    $reference = [IO.Path]::Combine($folder, 'control.txt')
+    $fixture = [IO.Path]::Combine($folder, 'fixture.txt')
     foreach ($path in @($reference, $fixture)) {
-        $stream = [IO.File]::Open($path, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-        try {
-            $files.Add($path)
-            $stream.Write($bytes, 0, $bytes.Length)
-        } finally { $stream.Dispose() }
+        [IO.File]::WriteAllText($path, 'WinStrata synthetic fixture', [Text.Encoding]::ASCII)
     }
 
-    Set-FixtureReadAccess $reference $ownerSid $packageSid $true
-    $codes = foreach ($allow in @($false, $true, $false)) {
-        Set-FixtureReadAccess $fixture $ownerSid $packageSid $allow
-        [WinStrataContainerProbe]::Compare($sid, $reference, $fixture)
+    Set-FixtureAccess $folder $ownerSid $packageSid ReadAndExecute -Directory
+    Set-FixtureAccess $executable $ownerSid $packageSid ReadAndExecute
+    Set-FixtureAccess $reference $ownerSid $packageSid Read
+    $control = [WinStrataContainerProbe]::ReadFixture($sid, $executable, $reference)
+    if ($control -ne 0) { throw ('Always-granted control read failed with code ' + $control) }
+    $codes = foreach ($grant in @(0, [Security.AccessControl.FileSystemRights]::Read, 0)) {
+        Set-FixtureAccess $fixture $ownerSid $packageSid $grant
+        [WinStrataContainerProbe]::ReadFixture($sid, $executable, $fixture)
     }
-    if (($codes -join ',') -ne '2,0,2') {
-        throw ('Unexpected file compare results for denied/granted/revoked phases: ' + ($codes -join ','))
+    if (($codes -join ',') -ne '5,0,5') {
+        throw ('Unexpected native read results for denied/granted/revoked phases: ' + ($codes -join ','))
     }
 } finally {
     try {
-        foreach ($path in $files) { [IO.File]::Delete($path) }
+        if ($null -ne $folder) { [IO.Directory]::Delete($folder, $true) }
     } finally {
         [WinStrataContainerProbe]::Remove($name, $sid)
     }
 }
 $timer.Stop()
 [ordered]@{
-    probe = 'appcontainer-file'; state = 'passed'; requestedExtraCapabilities = 0
-    compareExitCodes = $codes; phases = @('package-grant-absent', 'package-grant-present', 'package-grant-revoked')
+    probe = 'appcontainer-file'; state = 'passed'; requestedExtraCapabilities = 0; controlRead = $control
+    readExitCodes = $codes; phases = @('package-grant-absent', 'package-grant-present', 'package-grant-revoked')
     elapsedMs = $timer.ElapsedMilliseconds
 } | ConvertTo-Json -Depth 3 -Compress
