@@ -1,6 +1,6 @@
 # Core 的用户配置与混合存储
 
-[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006) · [计划 012](../roadmap/PLAN.md#pr-012)
+[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006) · [计划 012](../roadmap/PLAN.md#pr-012) · [计划 013](../roadmap/PLAN.md#pr-013)
 
 PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存储。调用方使用实际运行进程的操作系统账号身份。Windows 从进程令牌读取用户 SID，Linux 使用有效 UID。
 
@@ -33,8 +33,20 @@ PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存�
 
 `set_retention` 按 `DataClass` 保存天数。`None` 表示继续永久保留，`Some(0)` 会被拒绝。这个调用不删除数据。清理和配额执行属于计划 030。`capacity` 分别统计六个目录里普通文件的字节，抓包单独计数。`reserve` 使用既有的 `storage::capacity`。用 `u64::MAX` 调用会返回空间不足，测试没有为此写满物理磁盘。卷错误会暂停 Core 会话并停止实时模式。`InvalidInput` 和 `InvalidData` 不暂停会话。
 
-计划 006 的迁移会复制用户目录中的普通私有文件。混合存储文件在权限为 `0600` 且没有额外硬链接时，会随该用户目录一起迁移。
+计划 006 的迁移会复制用户目录中的普通私有文件。混合存储文件在权限为 `0600` 且没有额外硬链接时，会随该用户目录一起迁移。加密工作区的 `vault.wsv` 也随这些文件复制。复制之后源目录仍在，目标目录用同一把密钥打开。
+
+## 加密、备份与恢复
+
+加密默认关闭，直到调用 `enable_encryption`。实时监视进行中、保险库已存在，或混合存储已经有提交时，这个调用会被拒绝。口令为 8 到 1024 字节。自动锁定为 0 秒到 7 天。`vault.wsv` 与 `core.json` 同级，权限 `0600`，上限 64 KiB。它保存 PBKDF2-HMAC-SHA256 参数、口令校验值、封装后的数据密钥和 16 字节设备标识。迭代次数必须是 600,000。未启用加密时，同一设备标识写在 `device.wsd`。
+
+Linux 使用系统 OpenSSL 3 的 `libcrypto.so.3` 封装记录。Windows 使用 CNG 的 `BCrypt`。两边都是 AES-256-GCM。本仓库不实现分组密码，也没有增加密码学包。不使用 AF_ALG。可迁移的保险库不使用 DPAPI，因为它把密文绑在一个 Windows 配置文件上，另一台电脑无法恢复。这项选择记为 AS-009。
+
+封装记录由 `WSE1`、12 字节 nonce、密文和 16 字节标签组成。关联数据绑定用户、工作区、类别、分段和偏移，因此被移动或对调的记录无法通过认证。日志里的 CRC 覆盖落盘的密文。抓包前导仍可在没有密钥时读取。包字节在封装记录内部。锁定后的查询返回 `PermissionDenied`，文本是 `storage is locked`。提交仍然加密，不刷新空闲计时，也不停止 `RunState::Live`。自动锁定在用户读取时检查。进程重启后没有数据密钥，`open_hybrid` 保持锁定，直到 `unlock`。锁定错误不暂停会话。错误口令返回 `password is not valid`，不会被报成保险库损坏。
+
+`change_password` 重新封装当前数据密钥。`rotate_keys` 生成新的数据密钥，按原长度重写每条被引用的记录，再重新封装保险库。重写和重新封装之间如果崩溃，新密文可能还对应旧封装。重新封装在本进程内失败时，Core 会尝试写回旧密钥。这里不把轮换说成崩溃安全。
+
+`backup_full` 和 `backup_incremental` 在用户目录之外写一份 `WSB1` 包。包内复制普通文件，并为每个文件保存 CRC。增量包记录相对同一用户和工作区的完整包发生变化的文件，以及自那份完整包以来删除的路径。实时监视进行中时拒绝备份和恢复。锁定期间允许备份，包内保持密文。恢复核对用户、工作区、配置和每个文件的 CRC，并在写入之前拒绝 `..`。记录的设备标识不必与目标机器相同。这里没有明文导出、插件导出、按时间范围切分或删除配额。它们仍属于计划 038、042 和 030。
 
 ## 验证范围
 
-在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。计划 012 在 Linux 上额外覆盖上一节的写入、查询、分段、索引、容量和损坏回退；本机 Windows 测试、Windows 10/11 客户端、ReFS、加密备份与恢复以及端到端监视仍未完成。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。
+在 Linux 和 Windows 上运行 `cargo test --locked -p winstrata-core`，覆盖启动、设置、重启、存储失联与恢复、私有目录访问和 Core 配置迁移。工作区 CI 在 Linux 与 Windows Server 2022 上运行测试。计划 012 覆盖混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 在 Linux 上覆盖口令、锁定、加密和解密、备份、恢复以及跨位置迁移。这些新测试的 Windows 执行、Windows 10/11 客户端、ReFS、第二台物理设备、第二个操作系统账户、界面锁定和 E2E-10 仍未完成。见[工程记录](../records/STATUS.md)和[数据架构](DATA.md#section-8)。

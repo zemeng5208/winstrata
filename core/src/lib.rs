@@ -1,4 +1,6 @@
+mod backup;
 mod bus;
+mod crypto;
 mod file_registry;
 mod files;
 mod hybrid;
@@ -9,6 +11,7 @@ mod process;
 mod runtime;
 mod schedule;
 mod storage;
+mod vault;
 
 use platform::Anchor;
 use std::ffi::OsStr;
@@ -20,6 +23,7 @@ use storage::{
     validate_path,
 };
 
+pub use backup::{BackupKind, BackupReport, RestoreReport};
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
 pub use file_registry::{
     Channel, ChannelView, CollectError, FILE_PROVIDER, FileRegistry, REGISTRY_PROVIDER,
@@ -44,6 +48,7 @@ pub use runtime::{
 };
 pub use schedule::{Cancel, Scheduler, SchedulerStats, Task, TaskId};
 pub use storage::Settings;
+pub use vault::Protection;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RunState {
@@ -65,6 +70,7 @@ pub struct Core {
     location: Option<Location>,
     state: StorageState,
     run: RunState,
+    seal: Option<vault::Seal>,
 }
 
 impl Drop for Core {
@@ -99,6 +105,7 @@ impl Core {
                 detail: "select a storage directory".into(),
             },
             run: RunState::Stopped,
+            seal: None,
         };
         let candidate = core.selected_root().or(default).map(Path::to_owned);
         if let Some(path) = candidate {
@@ -269,7 +276,29 @@ impl Core {
         self.location = Some(location);
         self.state = StorageState::Ready;
         self.stop();
+        self.sync_protection()?;
         Ok(())
+    }
+
+    fn sync_protection(&mut self) -> io::Result<()> {
+        let Ok((dir, config)) = self.bind() else {
+            self.seal = None;
+            return Ok(());
+        };
+        if !vault::exists(&dir)? {
+            self.seal = None;
+            return Ok(());
+        }
+        if self.seal.as_ref().is_some_and(|seal| {
+            seal.user() != self.user || seal.workspace() != config.workspace_id()
+        }) {
+            self.seal = None;
+        }
+        Ok(())
+    }
+
+    fn ready_dir(&mut self) -> io::Result<(Anchor, Config)> {
+        self.active(0)
     }
 
     fn is_selected_directory(&self, root: &Path) -> io::Result<bool> {
@@ -297,11 +326,16 @@ impl Core {
                 capacity(&dir, 1)?;
                 files::probe(&dir)
             });
-            match &result {
-                Ok(_) => self.state = StorageState::Ready,
-                Err(error) => self.suspend(error),
-            }
-            return result;
+            return match result {
+                Ok(()) => {
+                    self.state = StorageState::Ready;
+                    self.sync_protection()
+                }
+                Err(error) => {
+                    self.suspend(&error);
+                    Err(error)
+                }
+            };
         }
         if self.run == RunState::Live {
             return Err(io::Error::new(
@@ -352,8 +386,30 @@ impl Core {
 
     // 在当前用户目录打开混合存储。卷错误会暂停会话；记录内容错误不会。
     pub fn open_hybrid(&mut self) -> io::Result<Hybrid> {
-        let (dir, _) = self.active(1)?;
-        match Hybrid::open(&dir) {
+        let (dir, config) = self.active(1)?;
+        let opened = if vault::exists(&dir)? {
+            let Some(seal) = self.seal.clone() else {
+                return Err(vault::locked_error());
+            };
+            if seal.is_locked() {
+                return Err(vault::locked_error());
+            }
+            if seal.user() != self.user || seal.workspace() != config.workspace_id() {
+                return Err(io::Error::new(
+                    ErrorKind::InvalidData,
+                    "vault identity does not match this workspace",
+                ));
+            }
+            Hybrid::open_sealed(&dir, seal)
+        } else if self.seal.is_some() {
+            Err(io::Error::new(
+                ErrorKind::InvalidData,
+                "encryption state does not match the workspace",
+            ))
+        } else {
+            Hybrid::open(&dir)
+        };
+        match opened {
             Ok(store) => Ok(store),
             Err(error) => {
                 if hybrid::suspends(&error) {
@@ -399,7 +455,236 @@ impl Core {
         let config = Config::initialize(&target, &self.user)?;
         self.publish(root, &target, &config)
     }
+
+    pub fn protection(&mut self) -> io::Result<Protection> {
+        let (dir, _) = self.ready_dir()?;
+        if let Some(header) = vault::peek(&dir)? {
+            Ok(Protection {
+                encrypted: true,
+                locked: self.seal.as_ref().is_none_or(|seal| seal.is_locked()),
+                auto_lock_secs: header.auto_lock_secs,
+            })
+        } else {
+            Ok(Protection {
+                encrypted: false,
+                locked: false,
+                auto_lock_secs: 0,
+            })
+        }
+    }
+
+    pub fn device_id(&mut self) -> io::Result<[u8; 16]> {
+        let (dir, config) = self.ready_dir()?;
+        vault::device_id(&dir, &self.user, config.workspace_id())
+    }
+
+    pub fn enable_encryption(&mut self, password: &str, auto_lock_secs: u32) -> io::Result<()> {
+        self.require_idle()?;
+        vault::check_password(password)?;
+        vault::check_auto_lock(auto_lock_secs)?;
+        let (dir, config) = self.ready_dir()?;
+        if vault::exists(&dir)? {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "encryption is already enabled",
+            ));
+        }
+        let store = Hybrid::open(&dir)?;
+        if store.commits() != 0 {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "enable encryption before the first stored record",
+            ));
+        }
+        drop(store);
+        let device = vault::device_id(&dir, &self.user, config.workspace_id())?;
+        self.seal = Some(vault::create(
+            &dir,
+            &config,
+            &self.user,
+            password,
+            auto_lock_secs,
+            device,
+        )?);
+        Ok(())
+    }
+
+    pub fn unlock(&mut self, password: &str) -> io::Result<()> {
+        let (dir, config) = self.ready_dir()?;
+        if !vault::exists(&dir)? {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "encryption is not enabled",
+            ));
+        }
+        let opened = vault::unlock(&dir, &config, &self.user, password)?;
+        if let Some(current) = &self.seal {
+            if current.user() == opened.user() && current.workspace() == opened.workspace() {
+                let mut dek = opened.export_dek()?;
+                current.replace_dek(dek);
+                crypto::wipe(&mut dek);
+                return Ok(());
+            }
+        }
+        self.seal = Some(opened);
+        Ok(())
+    }
+
+    pub fn lock(&mut self) -> io::Result<()> {
+        let (dir, _) = self.ready_dir()?;
+        if !vault::exists(&dir)? {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "encryption is not enabled",
+            ));
+        }
+        let Some(seal) = &self.seal else {
+            return Err(vault::locked_error());
+        };
+        seal.lock();
+        Ok(())
+    }
+
+    pub fn change_password(&mut self, current: &str, next: &str) -> io::Result<()> {
+        self.require_idle()?;
+        let (dir, config) = self.ready_dir()?;
+        let Some(seal) = self.seal.clone() else {
+            return Err(vault::locked_error());
+        };
+        vault::change_password(
+            &dir,
+            &seal,
+            &self.user,
+            config.workspace_id(),
+            current,
+            next,
+        )
+    }
+
+    // 轮换会先重写分段，再重新封装保险库。两步之间进程崩溃时，新密文可能还对应旧封装。
+    // 重新封装失败时，本进程会尝试把分段写回旧密钥；那次回写再失败就必须停下来核对备份。
+    pub fn rotate_keys(&mut self, store: &mut Hybrid, password: &str) -> io::Result<()> {
+        self.require_idle()?;
+        let (dir, config) = self.ready_dir()?;
+        let Some(seal) = self.seal.clone() else {
+            return Err(vault::locked_error());
+        };
+        if !store.same_seal(&seal) {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "hybrid store does not belong to this session",
+            ));
+        }
+        let mut next = [0u8; 32];
+        crypto::random_bytes(&mut next)?;
+        let mut previous = match seal.export_dek() {
+            Ok(key) => key,
+            Err(error) => {
+                crypto::wipe(&mut next);
+                return Err(error);
+            }
+        };
+        let device = vault::device_id(&dir, &self.user, config.workspace_id())?;
+        let seconds = seal.auto_lock_secs();
+        if let Err(error) = store.rotate_dek(next) {
+            crypto::wipe(&mut next);
+            crypto::wipe(&mut previous);
+            return Err(error);
+        }
+        if let Err(error) = vault::rewrap(
+            &dir,
+            &self.user,
+            config.workspace_id(),
+            password,
+            &next,
+            seconds,
+            device,
+        ) {
+            crypto::wipe(&mut next);
+            let rolled = store.rotate_dek(previous);
+            crypto::wipe(&mut previous);
+            return Err(rolled.err().unwrap_or(error));
+        }
+        crypto::wipe(&mut next);
+        crypto::wipe(&mut previous);
+        Ok(())
+    }
+
+    pub fn backup_full(&mut self, package: &Path) -> io::Result<BackupReport> {
+        let identity = self.backup_identity()?;
+        backup::write_full(&identity.dir, package, &identity.body)
+    }
+
+    pub fn backup_incremental(&mut self, package: &Path, base: &Path) -> io::Result<BackupReport> {
+        let identity = self.backup_identity()?;
+        backup::write_incremental(&identity.dir, package, base, &identity.body)
+    }
+
+    pub fn verify_backup(&self, package: &Path) -> io::Result<BackupReport> {
+        let _ = self;
+        backup::verify(package)
+    }
+
+    pub fn restore_full(&mut self, root: &Path, package: &Path) -> io::Result<RestoreReport> {
+        self.require_idle()?;
+        let report = backup::restore_full(root, &self.user, package)?;
+        self.seal = None;
+        Ok(report)
+    }
+
+    pub fn restore_incremental(
+        &mut self,
+        root: &Path,
+        base: &Path,
+        package: &Path,
+    ) -> io::Result<RestoreReport> {
+        self.require_idle()?;
+        if self.selected_root() != Some(root) {
+            return Err(io::Error::new(
+                ErrorKind::InvalidInput,
+                "incremental restore continues the selected workspace",
+            ));
+        }
+        let report = backup::restore_incremental(root, &self.user, base, package)?;
+        self.seal = None;
+        Ok(report)
+    }
+
+    fn require_idle(&self) -> io::Result<()> {
+        if self.run == RunState::Live {
+            Err(io::Error::new(
+                ErrorKind::ResourceBusy,
+                "stop monitoring before changing storage protection",
+            ))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn backup_identity(&mut self) -> io::Result<BackupIdentity> {
+        self.require_idle()?;
+        let (dir, config) = self.ready_dir()?;
+        let encrypted = vault::exists(&dir)?;
+        let device_id = vault::device_id(&dir, &self.user, config.workspace_id())?;
+        Ok(BackupIdentity {
+            dir,
+            body: backup::Identity {
+                user: self.user.clone(),
+                workspace: config.workspace_id().to_owned(),
+                device_id,
+                encrypted,
+            },
+        })
+    }
 }
+
+struct BackupIdentity {
+    dir: Anchor,
+    body: backup::Identity,
+}
+
+#[cfg(test)]
+mod protect_tests;
 
 #[cfg(test)]
 mod recovery_tests;
