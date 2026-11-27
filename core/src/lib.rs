@@ -1,4 +1,5 @@
 mod bus;
+mod file_registry;
 mod files;
 mod migration;
 mod platform;
@@ -17,6 +18,9 @@ use storage::{
 };
 
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
+pub use file_registry::{
+    Channel, ChannelView, CollectError, FILE_PROVIDER, FileRegistry, REGISTRY_PROVIDER,
+};
 pub use runtime::{
     Limits, MAX_ADMISSION_WAIT, MAX_QUEUE, MAX_SUBSCRIPTIONS, MAX_TASK_TIMEOUT, MAX_WORKERS,
     Runtime, RuntimeError,

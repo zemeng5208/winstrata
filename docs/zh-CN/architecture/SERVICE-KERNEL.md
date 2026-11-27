@@ -2,7 +2,7 @@
 
 [English](../../architecture/SERVICE-KERNEL.md) · [服务](../../../services/src/lib.rs) · [驱动管理](../../../kernel/src/lib.rs) · [计划 008](../roadmap/PLAN.md#pr-008)
 
-计划 008 增加 `winstrata-service` 与 `winstrata-kernel`。服务与当前用户交换带版本、带长度前缀的 JSON。kernel crate 跟踪四个驱动订阅。它不采集文件、注册表、进程或网络活动，产品宿主也不加载内核映像。
+计划 008 增加 `winstrata-service` 与 `winstrata-kernel`。服务与当前用户交换带版本、带长度前缀的 JSON。kernel crate 跟踪四个驱动订阅。产品宿主不加载内核映像。计划 009 在同一 kernel crate 中增加用户态文件和注册表监视。进程与网络采集仍属于后续计划。这些监视见[文件与注册表采集](FILE-REGISTRY.md)。
 
 ## 权限
 

@@ -1,11 +1,14 @@
 use std::ffi::c_void;
 use std::io;
+use std::os::windows::ffi::OsStrExt;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
+use std::path::Path;
 use std::ptr::{self, null_mut};
 
 use windows_sys::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, HANDLE, LocalFree};
 use windows_sys::Win32::Security::Authorization::{
-    ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo,
+    ConvertSecurityDescriptorToStringSecurityDescriptorW, ConvertSidToStringSidW,
+    ConvertStringSecurityDescriptorToSecurityDescriptorW, GetNamedSecurityInfoW, GetSecurityInfo,
     SDDL_REVISION_1, SE_FILE_OBJECT,
 };
 use windows_sys::Win32::Security::{
@@ -122,6 +125,74 @@ impl PrivateAccess {
 
 pub(super) fn verify_file(handle: HANDLE) -> io::Result<()> {
     User::current()?.verify(handle, false)
+}
+
+pub(crate) struct ObservedSecurity {
+    pub owner: String,
+    pub sddl: Option<String>,
+}
+
+pub(crate) fn path_security(path: &Path) -> io::Result<ObservedSecurity> {
+    let mut name: Vec<u16> = path.as_os_str().encode_wide().collect();
+    if name.contains(&0) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "path contains NUL",
+        ));
+    }
+    name.push(0);
+    let mut owner = null_mut();
+    let mut descriptor = null_mut();
+    // 返回的描述符自包含所有者与 DACL；LocalFree 释放整块，不能单独释放 SID。
+    let status = unsafe {
+        GetNamedSecurityInfoW(
+            name.as_ptr(),
+            SE_FILE_OBJECT,
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &mut owner,
+            null_mut(),
+            null_mut(),
+            null_mut(),
+            &mut descriptor,
+        )
+    };
+    if status != 0 {
+        return Err(io::Error::from_raw_os_error(status as i32));
+    }
+    let _allocation = LocalBlock(descriptor);
+    if owner.is_null() || descriptor.is_null() {
+        return Err(io::Error::other("security lookup omitted the owner"));
+    }
+    Ok(ObservedSecurity {
+        owner: sid_text(owner)?,
+        sddl: sddl_text(descriptor).ok(),
+    })
+}
+
+fn sid_text(sid: PSID) -> io::Result<String> {
+    let mut raw = null_mut();
+    unsafe { check(ConvertSidToStringSidW(sid, &mut raw))? };
+    let _allocation = LocalBlock(raw.cast());
+    unsafe { wide_os(raw) }
+        .into_string()
+        .map_err(|_| io::Error::other("invalid SID text"))
+}
+
+fn sddl_text(descriptor: *mut c_void) -> io::Result<String> {
+    let mut raw = null_mut();
+    unsafe {
+        check(ConvertSecurityDescriptorToStringSecurityDescriptorW(
+            descriptor,
+            SDDL_REVISION_1,
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &mut raw,
+            null_mut(),
+        ))?;
+    }
+    let _allocation = LocalBlock(raw.cast());
+    unsafe { wide_os(raw) }
+        .into_string()
+        .map_err(|_| io::Error::other("invalid security descriptor text"))
 }
 
 impl User {
