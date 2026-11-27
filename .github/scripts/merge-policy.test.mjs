@@ -38,11 +38,13 @@ const input = {
 
 test('real roadmap has ordered plan IDs and detects duplicate IDs', () => {
   assert.deepEqual(repoPlan.slice(0, 4), ['000', '001', '002', '003']);
-  assert.equal(repoPlan.length, 53);
+  assert.equal(repoPlan.length, 54);
   const at = (id) => repoPlan.indexOf(id);
   assert.deepEqual(repoPlan.slice(at('013'), at('013') + 4), ['013', '052', '051', '014']);
-  const from014 = repoPlan.slice(at('014'));
-  assert.deepEqual(from014, Array.from({ length: 37 }, (_, index) => String(index + 14).padStart(3, '0')));
+  assert.equal(repoPlan[at('014') + 1], '053');
+  assert.equal(repoPlan[at('053') + 1], '015');
+  const from015 = repoPlan.slice(at('015'));
+  assert.deepEqual(from015, Array.from({ length: 36 }, (_, index) => String(index + 15).padStart(3, '0')));
   assert.throws(() => roadmapOrder('| <a id="pr-002"></a>002 |\n| <a id="pr-002"></a>002 |'));
 });
 
@@ -82,7 +84,7 @@ test('an added plan is accepted only as an insertion into the main order', () =>
   const baseOrder = headOrder.filter((id) => id !== '052');
   assert.deepEqual(
     baseOrder.slice(baseOrder.indexOf('013'), baseOrder.indexOf('015') + 1),
-    ['013', '051', '014', '015'],
+    ['013', '051', '014', '053', '015'],
   );
   assert.equal(roadmapExtension(baseOrder, headOrder), null);
   assert.equal(headOrder[headOrder.indexOf('013') + 1], '052');
@@ -134,7 +136,7 @@ test('an added plan is accepted only as an insertion into the main order', () =>
   const swapped = headOrder.slice();
   const at = swapped.indexOf('014');
   [swapped[at], swapped[at + 1]] = [swapped[at + 1], swapped[at]];
-  assert.match(roadmapExtension(baseOrder, swapped), /reorders plan 015/);
+  assert.match(roadmapExtension(baseOrder, swapped), /reorders plan 053/);
   const tail = headOrder.slice();
   const from = tail.indexOf('014');
   const to = tail.indexOf('050');
