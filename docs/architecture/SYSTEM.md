@@ -39,6 +39,8 @@ Independently build, version, manage, load on demand, and unload drivers. Candid
 - Share object IDs, references, and events through declared capabilities and versioned services. Validate required and optional dependencies, cycles, disablement, degradation, recovery, and independent updates. Access other modules through contracts.
 - Core indexes global search, related queries, and objects. Plugins provide business views. Trace source records, computations, confidence and coverage.
 
+See the [v1 protocol](PROTOCOLS.md) for event keys, object references, gap markers, diagnostics and compatibility rules.
+
 ### Build constraints
 
 Rust Core, web frontend, mixed runtimes, Windows artifacts, and Linux/Windows development are required. Tauri, React, TypeScript, Vite, Cargo and pnpm workspaces, SQLite, native Windows Rust bindings, async runtimes, and LLVM/LLD are candidates. Get approval before fixing packages or versions.

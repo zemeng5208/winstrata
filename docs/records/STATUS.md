@@ -16,10 +16,11 @@ The owner saved [Protect main](https://github.com/zemeng5208/winstrata/rules/282
 |---|---|---|
 | PR 000 | Accepted | Owner merged [GitHub PR #1](https://github.com/zemeng5208/winstrata/pull/1) as `c3e8abf07895edbdd1f84792dbab5c48b00c25e8`. Verified main has the reviewed tree and active PR protection. |
 | PR 001 | Accepted | Owner merged [GitHub PR #2](https://github.com/zemeng5208/winstrata/pull/2) as `e0a3bbf2ec8c6b3f322d3f0379e47618fd129c3c`. The merged tree matched the reviewed head. Linux doctor, build and verify passed on that tree. |
-| PR 002 | Partially enforced | Workspace checks is required. The first subsequent candidate merged despite policy rejection. See ERR-004. |
+| PR 002 | Accepted | Both GitHub Actions checks are required on an up-to-date branch. Effective rules and PR 004 results verified. See ERR-004. |
 | PR 003 | Merged with open acceptance items | The owner merged [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) as `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`. Its tree matched the submitted tree. Linux workspace and both x64 link probes passed on that baseline. Packaging, signing and actual driver loading remain open. |
-| PR 004 | Awaiting owner review | [Platform feasibility and selection](../architecture/PLATFORM_FEASIBILITY.md) records the measured candidates, environments and open items. Merge protection needs activation. |
-| PR 005–050 | Planned | Proceed by the roadmap after Phase 0 acceptance. |
+| PR 004 | Accepted for platform feasibility | The owner merged [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) as `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`. The file tree matched the reviewed head. Postmerge Linux, Windows and policy checks passed. |
+| PR 005 | Developing | The owner approved the initial [protocol contracts](../architecture/PROTOCOLS.md) and JSON dependencies. Real examples, version compatibility, error and gap semantics await verification. |
+| PR 006–050 | Planned | Follow the approved roadmap and verify prerequisites. |
 | Core and PL-01 through PL-25 | Planned | Runtime and metrics remain unverified. Maintain their evidence in requirements and module records as work lands. |
 
 ## PR 000 verification
@@ -44,6 +45,8 @@ On Linux x86_64 with Rust 1.100.0, bundled LLD 23.1.5 and Binutils 2.44, `cargo 
 
 Windows Server 2022 x64 exercised CIM and Event Log, Job Objects, an AppContainer file grant and revocation, local MCP and the three upstream components offline in WebView2. Linux regressions covered the workspace, both link probes, local transport, dependency resolution and upstream components. The selected UI dependencies were authorized for disposable trials. The [platform report](../architecture/PLATFORM_FEASIBILITY.md) records the measurements, controls, original runs and limits.
 
+Phase 0 acceptance covers the tested toolchain, enforced merge gates and feasibility probes. The three workflows passed on the actual PR 004 merge commit. AS-001 and AS-002 track the production and client checks carried into later phases. [Linux CI](https://github.com/zemeng5208/winstrata/actions/runs/45969082288) · [Windows feasibility](https://github.com/zemeng5208/winstrata/actions/runs/45969082284) · [Merge policy](https://github.com/zemeng5208/winstrata/actions/runs/45969082364)
+
 ## Decisions and open assumptions
 
 | ID | Status | Evidence and follow-up |
@@ -52,8 +55,9 @@ Windows Server 2022 x64 exercised CIM and Event Log, Job Objects, an AppContaine
 | ADR-001 | Accepted in PR 000 | Adopt linked bilingual documentation under `docs/` and `docs/zh-CN/`, stable plan and rule IDs, a single engineering record, and the proposed component directory layout. |
 | ADR-002 | Owner confirmed | Pin Rust and Cargo 1.100.0, Node.js 24.22.3 LTS, and pnpm 11.25.0. Use Cargo and pnpm root workspaces and keep this phase free of external Rust or JavaScript packages. |
 | ADR-003 | Owner confirmed | Use the official Microsoft WDK and Windows SDK x64 10.0.26100.6584 import libraries locally under their respective tool licenses for the Linux probe. |
-| AS-001 | Partially verified | Native Linux linking of both probes passed. Linux INF and CAT pipeline, official signing, actual Windows loading and the full cross-build remain pending. |
-| AS-002 | Partially verified | [PR 004 evidence](../architecture/PLATFORM_FEASIBILITY.md) covers the measured host, isolation, transport and components. Product authorization, full mixed-runtime containment and client-edition acceptance remain open. |
+| ADR-004 | Owner confirmed | Begin Phase 1 with the initial event, object, error and version contracts. Use `serde` 1.0.229 with `derive`, `serde_json` 1.0.154, and their locked transitive dependencies for JSON encoding and decoding. [Protocol contracts](../architecture/PROTOCOLS.md) |
+| AS-001 | Partially verified | Linux linked both x64 probes. PR 008 needs a validated INF/CAT package, Microsoft signing and representative load/unload on Windows with Secure Boot and HVCI enabled. PR 050 must verify the full Linux cross-build. |
+| AS-002 | Partially verified | The [platform report](../architecture/PLATFORM_FEASIBILITY.md) records Server 2022 probes. Verify product authorization in PR 008, mixed-runtime containment in PR 015, ordinary-user GUI in PR 016, sustained performance in PR 048 and Windows 10/11 clients in PR 049. |
 | AS-003 | Pending decision | Confirm accounting and cleanup semantics, untagged metadata retention, WebView2 themes, Windows support, and performance methods in the [open decision list](../roadmap/PLAN.md#section-19). |
 
 ## Errors and handover
@@ -64,6 +68,6 @@ Windows Server 2022 x64 exercised CIM and Event Log, Job Objects, an AppContaine
 | ERR-001 | Resolved by owner configuration | GitHub returned HTTP 403 for ruleset creation by the integration. The owner saved the protection ruleset. Retrieving the branch, rulesets and effective branch rules confirmed active enforcement. The integration still lacks the settings permission. |
 | ERR-002 | Resolved in the Linux workspace | PR 001 preflight found no Rust or Cargo on PATH. The approved official toolchain was installed into the project’s ignored local tooling directory after verifying the Rustup installer checksum. Both version checks and the actual build passed. |
 | ERR-003 | Resolved | The first Linux driver link failed because the selected x64 WDK import archive did not export `KeQueryInterruptTime`. Inspected the archive, switched to the documented export `KeQueryTimeIncrement`, and reran both probes and PE inspection. |
-| ERR-004 | Awaiting owner configuration; next merge blocked | The PR 003 candidate lacked an owner confirmation for the exact head and its policy status was failure. Only Workspace checks was required and strict latest-base was off. Both postmerge workflows succeeded. Keep the next candidate open until the policy succeeds and both required checks and strict latest-base are effective. [Policy status run](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [Main CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) |
+| ERR-004 | Resolved on PR 004 | PR 003 merged with a failed policy status while only Workspace checks was required and strict latest-base was off. PR 004 passed both checks on head `1788410`. The effective rules require `Workspace checks`, `winstrata/merge-policy` and an up-to-date branch, with GitHub Actions as the source for both checks and no bypass actors. [PR 003 policy failure](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 main CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 policy success](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [Effective rules](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-Continue verification on `pr/004-platform-feasibility`. Inspect effective rules and the current candidate's checks before merge. PR 005 remains planned pending Phase 0 review.
+Continue on `pr/005-protocol-contracts` from `36c12dd`. Verify the approved contracts against real observations, malformed input and supported and incompatible versions before requesting owner review. The service transport, authentication, authorization and audit remain in PR 008.

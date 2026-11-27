@@ -15,14 +15,14 @@
 | REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 控制台与内核链接已验证，完整产物链待验证。 |
 | REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收待完成。 |
 | REQ-03.01 | GUI 与 Core 普通权限，受控服务与内核权限分离 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
+| REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [版本与错误契约](../architecture/PROTOCOLS.md)实现中。PR 008 需在 Windows 上验证传输、对端身份、授权、请求校验及审计。 |
 | REQ-03.03 | 官方接口优先的混合采集与驱动独立按需生命周期 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-03.04 | 签名、Secure Boot 和 HVCI 保持启用 | [SECURITY](../standards/SECURITY.md#ag-47) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-04.01 | 当前用户、相关公共活动与用户选择的存储范围 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [006](PLAN.md#pr-006), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.02 | 初始化选择启用，默认手动启动且不开机自启 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-04.03 | 建立选定范围基线并标注重建历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [017](PLAN.md#pr-017), [021](PLAN.md#pr-021) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.04 | 实时与历史切换、暂停恢复、缺失记录和安全退出 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
-| REQ-05.01 | 事件稳定标识和版本、时间顺序、来源与完整性 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005) | [02](ACCEPTANCE.md#e2e-02), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
+| REQ-05.01 | 事件稳定标识和版本、时间顺序、来源与完整性 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005) | [02](ACCEPTANCE.md#e2e-02), [15](ACCEPTANCE.md#e2e-15) | [事件标识、排序、来源与缺口契约](../architecture/PROTOCOLS.md)实现中，真实示例与兼容性验证待完成。 |
 | REQ-05.02 | 有界批处理、队列、背压、吞吐及丢失记录 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [007](PLAN.md#pr-007) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-05.03 | 统一优先级、超时、取消和资源保护 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-45) | [007](PLAN.md#pr-007), [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-06.01 | 文件操作、所有权与权限；不存文件内容版本 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [009](PLAN.md#pr-009), [021](PLAN.md#pr-021) | [02](ACCEPTANCE.md#e2e-02) | 规划中 |
@@ -93,8 +93,8 @@
 | REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
 | REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 工具链配置已建立，运行配置规划中。 |
 | REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口、忽略规则、本地及托管工作区检查已验证。 |
-| REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验 main 原生保护。PR 002 检查待激活。 |
-| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Workspace checks 已强制。PR 003 的策略拒绝未阻止合并；见[工程记录](../records/STATUS.md)。 |
+| REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验所有者合并 PR 004。两项 GitHub Actions 检查和分支保持最新均已强制，绕过名单为空。[工程记录](../records/STATUS.md) |
+| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-30.02 | 逐项追踪需求、25 个插件和 61 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |

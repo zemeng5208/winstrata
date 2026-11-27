@@ -31,3 +31,25 @@ jobs:
       - name: Verify the workspace
         shell: bash
         run: bash .github/scripts/check-workspace.sh
+
+  windows-protocols:
+    name: Windows protocol checks
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - name: Fetch the exact GitHub candidate
+        shell: bash
+        run: |
+          git init --quiet
+          git fetch --depth=2 --no-tags "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Resolve the approved Node.js release
+        shell: pwsh
+        run: .\.github\scripts\install-windows-node.ps1
+      - name: Resolve the repository Rust toolchain
+        shell: pwsh
+        run: cargo --version
+      - name: Test protocol contracts with Windows Event Log and Node.js
+        shell: pwsh
+        run: cargo test --locked -p winstrata-protocols

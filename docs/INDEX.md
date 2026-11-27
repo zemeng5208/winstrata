@@ -10,6 +10,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Development toolchain](architecture/DEVELOPMENT_TOOLCHAIN.md)
 - [Windows x64 cross-build probe](architecture/WINDOWS_CROSS_BUILD.md)
 - [Platform feasibility](architecture/PLATFORM_FEASIBILITY.md)
+- [Event, object, error and version contracts](architecture/PROTOCOLS.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)

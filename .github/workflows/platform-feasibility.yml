@@ -5,11 +5,13 @@ on:
     branches: [pr/004-platform-feasibility, main]
     paths:
       - .github/scripts/pr004-*
+      - .github/scripts/install-windows-node.ps1
       - .github/workflows/platform-feasibility.yml
   pull_request:
     branches: [main]
     paths:
       - .github/scripts/pr004-*
+      - .github/scripts/install-windows-node.ps1
       - .github/workflows/platform-feasibility.yml
   workflow_dispatch:
 
@@ -43,19 +45,7 @@ jobs:
         id: node
         if: ${{ !cancelled() }}
         shell: pwsh
-        run: |
-          $version = (Get-Content -Raw package.json | ConvertFrom-Json).engines.node
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected an exact Node.js version' }
-          if ((node --version) -eq "v$version") { return }
-          $name = "node-v$version-win-x64"
-          $url = "https://nodejs.org/dist/v$version"
-          $archive = Join-Path $env:RUNNER_TEMP "$name.zip"
-          Invoke-WebRequest "$url/$name.zip" -OutFile $archive
-          $checks = (Invoke-RestMethod "$url/SHASUMS256.txt") -split '\r?\n'
-          $line = @($checks | Where-Object { $_.EndsWith("  $name.zip") })
-          if ($line.Count -ne 1 -or $line[0].Split(' ')[0] -ne (Get-FileHash $archive).Hash) { throw 'Unexpected Node archive digest' }
-          Expand-Archive $archive $env:RUNNER_TEMP
-          Join-Path $env:RUNNER_TEMP $name >> $env:GITHUB_PATH
+        run: .\.github\scripts\install-windows-node.ps1
       - name: Exercise MCP over local pipes
         if: ${{ !cancelled() && steps.node.outcome == 'success' }}
         shell: pwsh
