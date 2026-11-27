@@ -30,7 +30,9 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-017 | 已解决 | [服务](modules/services.md#err-017) |
 | ERR-018 | 已解决 | [Core](modules/core.md#err-018) |
 | ERR-019 | 已解决 | 本文件 |
-| ERR-020 | 已解决 | [Core](modules/core.md#err-020) |
+| ERR-020 | 已解决 | [服务插件](modules/strata-services.md#err-020) |
+| ERR-021 | 未解决 | [服务插件](modules/strata-services.md#err-021) |
+| ERR-023 | 已解决 | [Core](modules/core.md#err-023) |
 
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
 
@@ -111,5 +113,5 @@ ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进�
 - 根因: `ReadDirectoryChangesW` 发出时，`OVERLAPPED` 还在栈上的值里。把该值推进监视向量会移动这个结构。内核把完成状态写到旧地址，`GetOverlappedResult` 读到的是空副本。
 - 影响: 一次真实的文件创建被报成 `source_failure`。监视线程随后停止。Windows 工作区检查失败。
 - 修复计划: 先把目录放进向量，再在原地址发出读取。完成字节数也留在同一结构里。生产缓冲区仍是 16 KiB。实现于 `dc9d9e378f9f585929f6acfc18944411f1bbcc75`。
-- 重测结果: `dc9d9e378f9f585929f6acfc18944411f1bbcc75` 上的通过不能关闭换基之后的这项缺陷。换基后的头 `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200)。同一作业里 `windows_file_watch_overflow_records_a_lost_gap` 也通过，这不重新打开 OI-018。本文件的 ERR-019 是计划 021 的 `OVERLAPPED` 缺陷。计划 022 的未合并分支用同一个编号记录另一项服务插件缺陷，权威在它自己的模块登记。本记录不替换那项缺陷，也不给两项重新编号。
+- 重测结果: `dc9d9e378f9f585929f6acfc18944411f1bbcc75` 上的通过不能关闭换基之后的这项缺陷。换基后的头 `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200)。同一作业里 `windows_file_watch_overflow_records_a_lost_gap` 也通过，这不重新打开 OI-018。本文件的 ERR-019 是计划 021 的 `OVERLAPPED` 缺陷。计划 022 把另一项服务控制管理器身份读取被拒绝的缺陷记为 [ERR-020](modules/strata-services.md#err-020)。本记录不替换那项缺陷。
 - 当前状态: 已解决

@@ -19,6 +19,7 @@
 - [环境插件](architecture/ENV.md)
 - [跟踪插件](architecture/TRACE.md)
 - [进程、线程与模块来源](architecture/PROCESS.md)
+- [服务插件](architecture/SERVICES.md)
 - [脉冲计数器](architecture/PULSE.md)
 - [网络源、接口与归因](architecture/NETWORK-SOURCES.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)

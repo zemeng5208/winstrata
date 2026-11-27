@@ -133,11 +133,12 @@
 - 重测结果: `f4c95f2d0e0077d765ede17278348a679c75e165` 的 Windows 工作区检查通过。拉取请求作业检出合并提交 `5d8e81711740c84fab7d32bdc5270a5cdd5e89aa`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `f4c95f2d0e0077d765ede17278348a679c75e165`，文件树 `89b473da381c91a748bfa01e025b394650d87326` 与该头相同。Windows Server 2022 运行 `cargo test --locked --workspace`，通过 66 个 Core 测试，包括上面三项，以及 24 个内核测试、14 个协议库测试、2 个协议集成测试、1 个实时系统事件测试、1 个 Windows 语言测试、5 个运行时生命周期测试、7 个服务测试和 5 个桌面测试。[Windows](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708786928)。该头的 Linux 工作区检查和 Workspace 检查也通过。这次作业是 Windows Server 2022，不是 Windows 10/11 客户端，也不是 WebView2 会话。
 - 当前状态: 已解决
 
-<a id="err-020"></a>
+<a id="err-023"></a>
 
-## ERR-020
+## ERR-023
 
-- Error ID: ERR-020
+- Error ID: ERR-023
+- 编号: 计划 022 占用 ERR-020 和 ERR-021。开放的计划 027 分支占用 ERR-022。这项脉冲缺陷是 ERR-023。
 - 发现时间: 2026-11-27T21:04:07Z
 - 关联 PR: GitHub PR #33，计划 024，头 `a2606194d44534b1e9f0791711e5fc93c6c1704f`
 - 环境: GitHub Actions `windows-2022`，Windows Server 2022

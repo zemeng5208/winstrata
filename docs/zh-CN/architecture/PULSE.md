@@ -28,7 +28,7 @@ CPU 利用率是忙时计数差分除以总计数差分，单位是百万分之�
 
 采样文档保留进程数、RSS 最高的八个进程，以及 CPU 时间差分最高的八个进程。逐进程行不是指标序列。进程 CPU 的第一次采样是基线。读不到 RSS 的进程不进入 RSS 列表，并且该采样标为 limited。这个采集器不发布 `process.started` 或其他进程生命周期事件。
 
-Windows 用 `GetSystemTimes`、`GlobalMemoryStatusEx`、`CallNtPowerInformation`、`GetSystemPowerStatus`，以及 Toolhelp、`GetProcessTimes` 和 `GetProcessMemoryInfo` 填写同一份文档。负载、交换区、GPU、显存、温度、RAPL 和 perf 保持不支持，原因是 `reader_absent`、`no_loadavg` 或 `no_swap`。`reader_absent` 表示这个采集器没有调用该 API，不是设备报告计数器不存在。电池百分比 255 和无电池标志保持不支持，并且没有数值。[OI-040](../records/OPEN_ITEMS.md#oi-040) 追踪 Windows 的 GPU、显存和温度读取器。
+Windows 用 `GetSystemTimes`、`GlobalMemoryStatusEx`、`CallNtPowerInformation`、`GetSystemPowerStatus`，以及 Toolhelp、`GetProcessTimes` 和 `GetProcessMemoryInfo` 填写同一份文档。负载、交换区、GPU、显存、温度、RAPL 和 perf 保持不支持，原因是 `reader_absent`、`no_loadavg` 或 `no_swap`。`reader_absent` 表示这个采集器没有调用该 API，不是设备报告计数器不存在。电池百分比 255 和无电池标志保持不支持，并且没有数值。[OI-046](../records/OPEN_ITEMS.md#oi-046) 追踪 Windows 的 GPU、显存和温度读取器。
 
 驱动 SMART、逻辑和物理写入以及磨损仍属于计划 032。这个采集器不读取它们，也不编造它们。
 

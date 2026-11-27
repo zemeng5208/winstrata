@@ -133,11 +133,12 @@ Authoritative error records for `core`. [AG-63](../../../AGENTS.md#ag-63) requir
 - Retest result: `f4c95f2d0e0077d765ede17278348a679c75e165` passed Windows workspace checks. The pull request job checked out merge `5d8e81711740c84fab7d32bdc5270a5cdd5e89aa`. Its parents are `ad10523d81870d106eeef553a426beeb250e94ff` and `f4c95f2d0e0077d765ede17278348a679c75e165`, and its tree `89b473da381c91a748bfa01e025b394650d87326` equals that head. Windows Server 2022 ran `cargo test --locked --workspace` and passed 66 Core tests, including the three tests named above, 24 kernel tests, 14 protocol library tests, 2 protocol integration tests, 1 live system-event test, 1 Windows language test, 5 runtime lifecycle tests, 7 service tests, and 5 desktop tests. [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708786928). Linux workspace checks and Workspace checks on that head also passed. This job is Windows Server 2022. It is not a Windows 10/11 client or a WebView2 session.
 - Current state: resolved
 
-<a id="err-020"></a>
+<a id="err-023"></a>
 
-## ERR-020
+## ERR-023
 
-- Error ID: ERR-020
+- Error ID: ERR-023
+- Numbering: plan 022 owns ERR-020 and ERR-021. The open plan 027 branch owns ERR-022. This pulse defect is ERR-023.
 - Discovery time: 2026-11-27T21:04:07Z
 - Related PR: GitHub PR #33, plan 024, head `a2606194d44534b1e9f0791711e5fc93c6c1704f`
 - Environment: GitHub Actions `windows-2022`, Windows Server 2022
