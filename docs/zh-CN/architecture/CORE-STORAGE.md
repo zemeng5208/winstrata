@@ -1,6 +1,6 @@
 # Core 的用户配置与混合存储
 
-[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006) · [计划 012](../roadmap/PLAN.md#pr-012) · [计划 013](../roadmap/PLAN.md#pr-013)
+[English](../../architecture/CORE-STORAGE.md) · [Rust 库](../../../core/src/lib.rs) · [计划 006](../roadmap/PLAN.md#pr-006) · [计划 012](../roadmap/PLAN.md#pr-012) · [计划 013](../roadmap/PLAN.md#pr-013) · [计划 014](../roadmap/PLAN.md#pr-014)
 
 PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存储。调用方使用实际运行进程的操作系统账号身份。Windows 从进程令牌读取用户 SID，Linux 使用有效 UID。
 
@@ -46,6 +46,10 @@ Linux 使用系统 OpenSSL 3 的 `libcrypto.so.3` 封装记录。Windows 使用 
 `change_password` 重新封装当前数据密钥。`rotate_keys` 生成新的数据密钥，按原长度重写每条被引用的记录，再重新封装保险库。重写和重新封装之间如果崩溃，新密文可能还对应旧封装。重新封装在本进程内失败时，Core 会尝试写回旧密钥。这里不把轮换说成崩溃安全。
 
 `backup_full` 和 `backup_incremental` 在用户目录之外写一份 `WSB1` 包。包内复制普通文件，并为每个文件保存 CRC。增量包记录相对同一用户和工作区的完整包发生变化的文件，以及自那份完整包以来删除的路径。实时监视进行中时拒绝备份和恢复。锁定期间允许备份，包内保持密文。恢复核对用户、工作区、配置和每个文件的 CRC，并在写入之前拒绝 `..`。记录的设备标识不必与目标机器相同。这里没有明文导出、插件导出、按时间范围切分或删除配额。它们仍属于计划 038、042 和 030。
+
+## 插件控制文件
+
+`Core::open_at` 已公开，调用方可以指定定位目录。`Core::open()` 仍使用操作系统定位目录。选择存储后，`Core::open_plugins` 创建 `<用户>/plugins`。宿主状态、历史、包、恢复副本和插件私有目录都是该目录中的普通文件。它们不写入 `vault.wsv`。本计划不加密这些文件。生命周期见[插件宿主](PLUGINS.md)。
 
 ## 验证范围
 

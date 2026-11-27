@@ -7,6 +7,7 @@ mod hybrid;
 mod migration;
 mod network;
 mod platform;
+mod plugins;
 mod process;
 mod runtime;
 mod schedule;
@@ -36,6 +37,9 @@ pub use hybrid::{
 pub use network::{
     DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
     flow_event, interface_event,
+};
+pub use plugins::{
+    DependencyStatus, OFFICIAL, OfficialPlugin, PluginError, PluginHost, PluginReport,
 };
 pub use process::{
     MODULE_LOADED, MODULE_UNLOADED, PROCESS_EXITED, PROCESS_PROVIDER, PROCESS_SERVICE,
@@ -89,7 +93,7 @@ impl Core {
         Self::open_at(&platform::locator_parent()?, default)
     }
 
-    fn open_at(parent: &Path, default: Option<&Path>) -> io::Result<Self> {
+    pub fn open_at(parent: &Path, default: Option<&Path>) -> io::Result<Self> {
         let user = platform::current_id()?;
         let locator = Anchor::open(parent)?.child(OsStr::new("WinStrata"), true, true)?;
         let session = files::lock(&locator, "session.lock")?;
@@ -382,6 +386,17 @@ impl Core {
             }
         };
         self.publish(root, &target, &config)
+    }
+
+    // 在已选择的用户目录下打开插件宿主。尚未选择存储时拒绝。
+    pub fn open_plugins(&mut self, runtime: &Path) -> Result<PluginHost, PluginError> {
+        let (dir, _) = self
+            .active(0)
+            .map_err(|error| PluginError::new("storage_unavailable", error.to_string()))?;
+        let plugins = dir
+            .child(OsStr::new("plugins"), true, true)
+            .map_err(|error| PluginError::new("storage_unavailable", error.to_string()))?;
+        PluginHost::open(&plugins, runtime)
     }
 
     // 在当前用户目录打开混合存储。卷错误会暂停会话；记录内容错误不会。

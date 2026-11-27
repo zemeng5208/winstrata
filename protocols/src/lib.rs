@@ -3,12 +3,17 @@
 mod error;
 mod event;
 mod object;
+mod plugin;
 mod scalars;
 
 pub use error::{NativeError, ProtocolError};
 pub use event::{
     Attribution, Completeness, Event, EventTime, GapReason, ObjectRef, ProcessRef, Record,
     SequenceRange, Source,
+};
+pub use plugin::{
+    Dependency, MAX_PLUGIN_FRAME, Manifest, Permission, PluginFrame, PluginKind, PluginVersion,
+    Startup, VersionRange, compatible, read_plugin_frame, write_plugin_frame,
 };
 pub use scalars::{Counter, Id, SignedNanos};
 

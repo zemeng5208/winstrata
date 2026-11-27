@@ -18,6 +18,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Process, thread and module sources](architecture/PROCESS.md)
 - [Network sources, interfaces and attribution](architecture/NETWORK-SOURCES.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
+- [Native plugin contracts and lifecycle](architecture/PLUGINS.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)
 - [Development](standards/DEVELOPMENT.md)

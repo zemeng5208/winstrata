@@ -146,6 +146,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "winstrata-runtime"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-service"
 version = "0.1.0"
 dependencies = [
