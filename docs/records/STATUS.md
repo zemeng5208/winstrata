@@ -54,6 +54,12 @@ On the candidate for `995d148`, Linux passed 11 library tests and two integratio
 
 After merge, the workspace, Windows protocol and platform checks passed again. Both required status contexts and the strict latest-base rule remain active. [Main CI](https://github.com/zemeng5208/winstrata/actions/runs/45972348949) · [Windows platform](https://github.com/zemeng5208/winstrata/actions/runs/45972349084) · [Merge policy](https://github.com/zemeng5208/winstrata/actions/runs/45972348858)
 
+## PR 006 verification
+
+On code candidate `b3f56ab`, Linux passed 21 Core tests and Windows Server 2022 x64 passed 20. Both platforms also passed the existing protocol suite. A restricted Windows token read its permitted control file and received access denied for private data. Windows tests exercised the process SID, NTFS permissions, junctions, case aliases and named streams. Both platforms covered lock release on process exit, preservation of corrupt or unsupported documents and rereading the migrated files while retaining the source. [Linux workspace](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947697) · [Windows workspace](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947209)
+
+Earlier candidates hit a Windows sharing violation during config replacement. Long-lived pins on shared ancestors also interfered with sibling renames. The session now holds only its locator lock file between operations. Native NTFS regression confirmed that a private directory stays pinned while an ordinary sibling can be renamed. The missing-drive test selected a drive letter reported as unmounted. The capacity test exceeded the actual caller-available space with a write budget, without filling a physical disk. Both Linux cross-link probes and Core rustfmt passed locally. Workspace-wide rustfmt still reports legacy layout differences in unchanged developer-tool source. Windows 10/11 and ReFS behavior remain unverified.
+
 ## Decisions and open assumptions
 
 | ID | Status | Evidence and follow-up |

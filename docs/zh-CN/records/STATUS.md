@@ -54,6 +54,12 @@ Phase 0 验收范围为实测工具链、已生效的合并门禁和可行性探
 
 合并后复验了工作区、Windows 协议和平台探针。两项必需状态检查及最新基线要求仍生效。[主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45972348949) · [Windows 平台](https://github.com/zemeng5208/winstrata/actions/runs/45972349084) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45972348858)
 
+## PR 006 验证
+
+在候选代码 `b3f56ab` 上，Linux 通过 21 项 Core 测试，Windows Server 2022 x64 通过 20 项 Core 测试。两个平台也通过原有协议测试。Windows 以实际受限令牌读取获准的对照文件，访问用户私有文件时被拒绝；测试还覆盖当前 SID、NTFS 权限、联接点、大小写别名和命名数据流。两端验证会话锁随进程退出释放、配置损坏或版本不支持时保留原文件，以及迁移后重读文件并保留原目录。[Linux 工作区](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947697) · [Windows 工作区](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947209)
+
+Windows 早期候选在替换配置文件时遇到共享冲突，测试也发现长时间锁定公共祖先会影响同级目录更名。修复后，持久会话只持有定位锁文件。NTFS 回归确认私有目录保持固定、普通同级目录仍可改名。缺盘测试使用系统报告未挂载的盘符；空间不足通过真实可用容量与超额写入预算触发，未填满物理磁盘。开发环境还通过两个 Linux 交叉链接探针及 Core 的 rustfmt 检查。整个工作区的格式检查仍报告早于此 PR 的开发工具源码排版差异。Windows 10/11 与 ReFS 的行为尚未实测。
+
 ## 决策与技术假设
 
 | ID | 状态 | 依据与后续 |
