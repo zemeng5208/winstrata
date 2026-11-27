@@ -136,6 +136,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     let process_seeded = collector_present("winstrata-strata-process");
     let services_seeded = collector_present("winstrata-strata-services");
     let script_seeded = collector_present("winstrata-strata-script");
+    let startup_seeded = collector_present("winstrata-strata-startup");
     let registry = builtins
         .iter()
         .find(|report| report.id == "strata.registry")
@@ -169,6 +170,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.script" && script_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.startup" && startup_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else {
             report.phase == "implementation_absent"
         }
@@ -200,6 +203,12 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     if script_seeded {
         assert_eq!(
             host.uninstall("strata.script").unwrap_err().code(),
+            "builtin_retained"
+        );
+    }
+    if startup_seeded {
+        assert_eq!(
+            host.uninstall("strata.startup").unwrap_err().code(),
             "builtin_retained"
         );
     }
