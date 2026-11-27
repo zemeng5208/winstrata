@@ -125,6 +125,7 @@ dependencies = [
  "winstrata-protocols",
  "winstrata-strata-env",
  "winstrata-strata-registry",
+ "winstrata-strata-trace",
 ]
 
 [[package]]
@@ -205,6 +206,14 @@ dependencies = [
 
 [[package]]
 name = "winstrata-strata-registry"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
+ "winstrata-protocols",
+]
+
+[[package]]
+name = "winstrata-strata-trace"
 version = "0.1.0"
 dependencies = [
  "windows-sys",

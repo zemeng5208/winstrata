@@ -27,9 +27,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-013](#oi-013) | Untested | 016 |
 | [OI-014](#oi-014) | Unaccepted | 008 follow-up |
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
-| [OI-016](#oi-016) | Partly tested | 021 |
+| [OI-016](#oi-016) | Closed | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
-| [OI-018](#oi-018) | Untested | 021 |
+| [OI-018](#oi-018) | Closed | 021 |
 | [OI-019](#oi-019) | Partly tested | 015 |
 | [OI-020](#oi-020) | Untested | 015, 048 |
 | [OI-021](#oi-021) | Known limitation | 050 |
@@ -270,13 +270,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
-- Current state: partly tested
-- Reason it is incomplete: plan 019 records user-mode before/after values for current-user and local-machine keys. `precision_ns` and the acting process are still omitted. A signed registry callback was not loaded. Plan 021 still owns the file side.
+- Current state: closed
+- Reason it is incomplete: the live Windows result is now recorded. The evidence is user-mode size and permission metadata. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution.
 - Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows file watch or a later approved kernel callback
 - Acceptance criteria: plan 021 tests its before/after attribution, or the omitted fields stay documented
-- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution.
+- Close conditions: met on `dc9d9e378f9f585929f6acfc18944411f1bbcc75`. Windows Server 2022 passed `windows_trace_records_metadata_without_content`: a real create, size change, and removal were observed, the secret file bytes were absent, `precision_ns` was omitted, and the process field was omitted. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512). Not closed by plan 019. Not kernel attribution. [ERR-019](ERRORS.md#err-019) is the failed run that preceded this result.
 
 <a id="oi-017"></a>
 
@@ -298,13 +298,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: plan 009 file-watch behavior
 - Source PR: plan 009. A live overflow of the 16 KiB file buffer was not forced.
-- Current state: untested
-- Reason it is incomplete: the overflow path was not driven
+- Current state: closed
+- Reason it is incomplete: the live overflow has now been recorded. The production buffer stayed 16 KiB.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows file watch with a change larger than the 16 KiB buffer
+- Verification environment: Windows Server 2022, GitHub Actions `windows-2022`
 - Acceptance criteria: the test forces the overflow and records the gap behavior
-- Close conditions: that result is recorded. Not marked passed.
+- Close conditions: met. On head `0b46a2edba97a587d774d1b721f714dde840f6a6`, `windows_file_watch_overflow_records_a_lost_gap` passed. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687). The same job later failed [ERR-019](ERRORS.md#err-019) in the trace plugin. That failure does not reopen this overflow result.
 
 <a id="oi-019"></a>
 
@@ -565,7 +565,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - Source PR: plans 009 and 010 record that E2E-02 was not run
 - Current state: not done
-- Reason it is incomplete: plan 020 watches user and system environment and PATH. This scenario still needs the GUI query, files, other users, and a chosen disk. That run was not done.
+- Reason it is incomplete: plan 020 watches user and system environment and PATH. Plan 021 adds the file plugin and an exact-path history projection. This scenario still needs the GUI query, a chosen disk, and other users. That run was not done. Not marked passed.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with a chosen disk and test keys
