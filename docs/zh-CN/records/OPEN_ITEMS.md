@@ -50,6 +50,7 @@
 | [OI-036](#oi-036) | 登记与本提交一致；E2E-19 仍开放 | 016，不新增前驱 |
 | [OI-037](#oi-037) | 未实现 | 无路线图行 |
 | [OI-038](#oi-038) | 待决定 | 所有者 |
+| [OI-039](#oi-039) | 编写主机未测试 | 020 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -564,7 +565,7 @@
 - 关联需求: [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - 来源 PR: 计划 009 和 010 记录 E2E-02 未运行
 - 当前状态: 未完成
-- 未完成原因: 用户态监视和进程采样不是对选定磁盘、其他用户和更广场景的 GUI 查询
+- 未完成原因: 计划 020 监视用户和系统环境以及 PATH。这个场景仍需要 GUI 查询、文件、其他用户和选定磁盘。该运行没有做。
 - 负责 PR: 021
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 带选定磁盘和测试键的 Windows
@@ -808,6 +809,20 @@
 - 验证环境: 方案自身的实测证据，在实现之前记录
 - 验收标准: [方案一节](../roadmap/ACCEPTANCE.md#gui-proposal)
 - 关闭条件: 所有者批准经过验证的方案，或记录撤回该能力。点名一个候选不关闭它。
+
+<a id="oi-039"></a>
+
+## OI-039
+
+- 关联需求: [REQ-06.03](../roadmap/REQUIREMENTS.md) 和 [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
+- 来源 PR: 计划 020
+- 当前状态: 编写主机未测试
+- 未完成原因: Linux 编写主机打不开 `HKCU\Environment`，也打不开 `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`。Windows 测试 `environment_is_in_process_and_linux_does_not_publish` 在两个真实存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。这里没有运行该测试。
+- 负责 PR: 020
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: Windows 工作区作业，Windows Server 2022，运行 `cargo test --locked --workspace`。Windows 10 和 Windows 11 客户端仍属于 [OI-001](#oi-001)。
+- 验收标准: 该测试在送审头上通过。它必须展示探测变量的用户和系统前后值、证据包含所追加段的 PATH 事件、不发布被隐藏值的暂停缺口，以及停止期间的变化不会被重放。原来的 PATH 字节被恢复。
+- 关闭条件: 本计划送审头的 Windows 工作区日志显示该测试通过，并且本行写上该结果。Linux 运行不关闭它。通过它也不关闭 E2E-02。
 
 <a id="e2e-17"></a>
 

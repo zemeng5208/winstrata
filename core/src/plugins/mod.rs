@@ -3,8 +3,10 @@
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
 //! `strata.process` 只在同目录存在采集程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
+//! `strata.env` 由计划 020 在进程内启动，没有包。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
+mod env;
 mod language;
 mod process;
 mod registry;
@@ -22,7 +24,8 @@ use winstrata_protocols::{
     PluginFrame, PluginKind, PluginVersion, Record as EventRecord, SignedNanos, Source, Version,
 };
 
-use winstrata_strata_registry::PLUGIN_ID;
+use winstrata_strata_env::PLUGIN_ID as ENV_PLUGIN_ID;
+use winstrata_strata_registry::PLUGIN_ID as REGISTRY_PLUGIN_ID;
 
 use crate::bus::{EventBus, Filter};
 use crate::files;
@@ -312,6 +315,12 @@ struct StoredHost {
     registry_availability: String,
     #[serde(default)]
     registry_scope: Vec<StoredRegistryKey>,
+    #[serde(default)]
+    env_enabled: bool,
+    #[serde(default = "ready_availability")]
+    env_availability: String,
+    #[serde(default)]
+    env_scope: Vec<StoredRegistryKey>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -344,6 +353,12 @@ pub struct PluginHost {
     registry_availability: String,
     registry_epoch: u64,
     registry_scope: Vec<(String, String)>,
+    environment: Option<winstrata_strata_env::Session>,
+    env_enabled: bool,
+    env_paused: bool,
+    env_availability: String,
+    env_epoch: u64,
+    env_scope: Vec<(String, String)>,
 }
 
 impl Drop for PluginHost {
@@ -389,6 +404,12 @@ impl PluginHost {
             registry_availability: ready_availability(),
             registry_epoch: 0,
             registry_scope: Vec::new(),
+            environment: None,
+            env_enabled: false,
+            env_paused: false,
+            env_availability: ready_availability(),
+            env_epoch: 0,
+            env_scope: Vec::new(),
         };
         host.read_entries()?;
         host.seed_process_collector()?;
@@ -479,8 +500,11 @@ impl PluginHost {
     }
 
     pub fn enable(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.enable_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.enable_environment();
         }
         self.absent(id)?;
         {
@@ -501,8 +525,11 @@ impl PluginHost {
     }
 
     pub fn start(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.start_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.start_environment();
         }
         self.absent(id)?;
         if self.live.contains_key(id) {
@@ -525,8 +552,11 @@ impl PluginHost {
     }
 
     pub fn pause(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.pause_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.pause_environment();
         }
         self.roundtrip(id, "pause")?;
         self.drop_subscriptions(id);
@@ -538,8 +568,11 @@ impl PluginHost {
     }
 
     pub fn resume(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.resume_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.resume_environment();
         }
         self.roundtrip(id, "resume")?;
         self.subscribe(id)?;
@@ -551,8 +584,11 @@ impl PluginHost {
     }
 
     pub fn stop(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.stop_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.stop_environment();
         }
         self.finish_process(id, "stop", "ready")?;
         self.audit(id, "stop", "ok", "stopped")?;
@@ -560,8 +596,11 @@ impl PluginHost {
     }
 
     pub fn disable(&mut self, id: &str) -> Result<PluginReport, PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return self.disable_registry();
+        }
+        if id == ENV_PLUGIN_ID {
+            return self.disable_environment();
         }
         self.absent(id)?;
         if self.live.contains_key(id) {
@@ -938,7 +977,11 @@ impl PluginHost {
         if self.registry_enabled && self.registry.is_none() && self.registry_availability == "ready"
         {
             self.start_registry()?;
-            started.push(PLUGIN_ID.to_owned());
+            started.push(REGISTRY_PLUGIN_ID.to_owned());
+        }
+        if self.env_enabled && self.environment.is_none() && self.env_availability == "ready" {
+            self.start_environment()?;
+            started.push(ENV_PLUGIN_ID.to_owned());
         }
         Ok(started)
     }
@@ -1496,10 +1539,16 @@ impl PluginHost {
     }
 
     fn absent(&self, id: &str) -> Result<(), PluginError> {
-        if id == PLUGIN_ID {
+        if id == REGISTRY_PLUGIN_ID {
             return Err(PluginError::new(
                 "builtin_closed",
                 "strata.registry runs in process and has no package",
+            ));
+        }
+        if id == ENV_PLUGIN_ID {
+            return Err(PluginError::new(
+                "builtin_closed",
+                "strata.env runs in process and has no package",
             ));
         }
         if official(id).is_some() && self.entry(id).is_err() {
@@ -1532,8 +1581,11 @@ impl PluginHost {
     }
 
     fn report_official(&self, plugin: &OfficialPlugin) -> PluginReport {
-        if plugin.id == PLUGIN_ID {
+        if plugin.id == REGISTRY_PLUGIN_ID {
             return self.report_registry();
+        }
+        if plugin.id == ENV_PLUGIN_ID {
+            return self.report_environment();
         }
         if let Ok(entry) = self.entry(plugin.id) {
             let mut report = self.report_entry(entry);
@@ -1659,6 +1711,29 @@ impl PluginHost {
                 .map_err(|error| PluginError::new("invalid_record", error.detail()))?;
             self.registry_scope = owned;
         }
+        self.env_enabled = stored.env_enabled;
+        self.env_availability = if matches!(
+            stored.env_availability.as_str(),
+            "ready" | "unsupported" | "collector_fault" | "collector_os"
+        ) {
+            stored.env_availability
+        } else {
+            ready_availability()
+        };
+        if !stored.env_scope.is_empty() {
+            let owned: Vec<(String, String)> = stored
+                .env_scope
+                .iter()
+                .map(|key| (key.hive.clone(), key.subkey.clone()))
+                .collect();
+            let pairs: Vec<(&str, &str)> = owned
+                .iter()
+                .map(|(hive, subkey)| (hive.as_str(), subkey.as_str()))
+                .collect();
+            winstrata_strata_env::Scope::from_pairs(&pairs)
+                .map_err(|error| PluginError::new("invalid_record", error.detail()))?;
+            self.env_scope = owned;
+        }
         Ok(())
     }
 
@@ -1728,6 +1803,16 @@ impl PluginHost {
             registry_availability: self.registry_availability.clone(),
             registry_scope: self
                 .registry_scope
+                .iter()
+                .map(|(hive, subkey)| StoredRegistryKey {
+                    hive: hive.clone(),
+                    subkey: subkey.clone(),
+                })
+                .collect(),
+            env_enabled: self.env_enabled,
+            env_availability: self.env_availability.clone(),
+            env_scope: self
+                .env_scope
                 .iter()
                 .map(|(hive, subkey)| StoredRegistryKey {
                     hive: hive.clone(),

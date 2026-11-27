@@ -2,11 +2,11 @@
 
 [简体中文](../zh-CN/architecture/REGISTRY.md) · [Plugin host](PLUGINS.md) · [Plan 009 watch](FILE-REGISTRY.md) · [Plan 019](../roadmap/PLAN.md#pr-019)
 
-Plan 019 is `strata.registry`. It watches current-user and local-machine registry values from the plugin host process and publishes before/after evidence on the existing event bus. It does not load `strata-reg.sys`. It does not replace the plan 009 watch, which still observes one chosen directory and one `HKEY_CURRENT_USER` subkey. Environment variables and PATH remain plan 020. The file plugin remains plan 021. Startup Run keys are not this plugin's purpose.
+Plan 019 is `strata.registry`. It watches current-user and local-machine registry values from the plugin host process and publishes before/after evidence on the existing event bus. It does not load `strata-reg.sys`. It does not replace the plan 009 watch, which still observes one chosen directory and one `HKEY_CURRENT_USER` subkey. Environment variables and PATH are [plan 020](ENV.md) and are not this plugin. The file plugin remains plan 021. Startup Run keys are not this plugin's purpose.
 
 ## In-process host
 
-The native frame protocol cannot carry a before/after value and a child process cannot push an event. The watch therefore stays inside `PluginHost`. Enabling `strata.registry` does not write an installed package and does not start `winstrata-runtime`. `load`, `update`, `pin`, `grant`, `call`, and `ping` return `builtin_closed`. `uninstall` still returns `builtin_retained`, the same as the other official identities. The other 24 official identities still report `implementation_absent`.
+The native frame protocol cannot carry a before/after value and a child process cannot push an event. The watch therefore stays inside `PluginHost`. Enabling `strata.registry` does not write an installed package and does not start `winstrata-runtime`. `load`, `update`, `pin`, `grant`, `call`, and `ping` return `builtin_closed`. `uninstall` still returns `builtin_retained`, the same as the other official identities. `strata.env` is the separate plan 020 watch. Official identities that still have no collector report `implementation_absent`.
 
 `host.json` stores `registry_enabled`, `registry_availability`, and `registry_scope` beside the installed entries. Missing fields read as disabled, `ready`, and an empty scope. An empty scope means the product default. An invalid stored scope makes `open` fail with `invalid_record`. Reopening an enabled plugin does not start the watch. The next `start` or `enable_batch` does, and only when the saved availability is `ready`. A saved `unsupported` result is not retried by the batch.
 
@@ -32,4 +32,4 @@ Each key is opened with `KEY_QUERY_VALUE | KEY_NOTIFY | KEY_WOW64_64KEY`. `RegNo
 
 ## Limits that remain
 
-No signed registry callback was loaded. Secure Boot and HVCI were not exercised. Windows 10 and Windows 11 clients were not tested by this change. The Windows tests are compiled for `x86_64-pc-windows-msvc` and run in the Windows workspace job. That job is Windows Server 2022. The Linux authoring host cannot open a real registry. E2E-02 still requires the GUI query, files, PATH, and other users. Plan 020 and plan 021 are not started.
+No signed registry callback was loaded. Secure Boot and HVCI were not exercised. Windows 10 and Windows 11 clients were not tested by this change. The Windows tests are compiled for `x86_64-pc-windows-msvc` and run in the Windows workspace job. That job is Windows Server 2022. The Linux authoring host cannot open a real registry. E2E-02 still requires the GUI query, files, and other users. Plan 020 watches environment and PATH in [Environment plugin](ENV.md) and does not replace this plugin. Plan 021 is not started.

@@ -10,6 +10,7 @@ serde.workspace = true
 serde_json.workspace = true
 winstrata-kernel = { path = "../kernel" }
 winstrata-protocols = { path = "../protocols" }
+winstrata-strata-env = { path = "../plugins/strata-env" }
 winstrata-strata-registry = { path = "../plugins/strata-registry" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
