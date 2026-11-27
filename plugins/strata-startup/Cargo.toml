@@ -1,0 +1,40 @@
+[package]
+name = "winstrata-strata-startup"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "winstrata-strata-startup"
+path = "src/main.rs"
+
+[dependencies]
+serde_json.workspace = true
+winstrata-protocols = { path = "../../protocols" }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_System_Registry",
+    "Win32_UI_Shell",
+] }
+
+[dev-dependencies]
+serde_json.workspace = true
+winstrata-core = { path = "../../core" }
+winstrata-protocols = { path = "../../protocols" }
+
+[target.'cfg(windows)'.dev-dependencies]
+windows-sys = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_System_Registry",
+    "Win32_UI_Shell",
+] }

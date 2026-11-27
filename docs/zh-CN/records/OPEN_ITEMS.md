@@ -55,6 +55,7 @@
 | [OI-043](#oi-043) | 未测试 | 022 |
 | [OI-047](#oi-047) | 未实现 | 022、026、030、032、042 |
 | [OI-048](#oi-048) | 已知限制 | 无路线图行 |
+| [OI-049](#oi-049) | `01f26d1` 上的 Server 2022 探测已记录；Windows 10/11 仍属于 [OI-001](#oi-001) | 023 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -841,6 +842,20 @@
 - 验证环境: Windows Server 2022 的服务控制管理器，运行计划 022 的插件测试
 - 验收标准: Windows 作业至少观察到一个驱动、一次拒绝访问的枚举、创建、一次启动类型变更、缺失映像探测的启动失败，以及删除 `WinStrata022Probe`，并且只在非停止状态实际变为停止时记录 `service.stopped`
 - 关闭条件: 该作业的日志写入 [STATUS.md](STATUS.md)。Linux 跟踪测试不能关闭它。把 E2E-03 或 E2E-14 标成通过不能关闭它。它不能代替 Windows 10/11。
+
+<a id="oi-049"></a>
+
+## OI-049
+
+- 关联需求: [REQ-06.04](../roadmap/REQUIREMENTS.md)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
+- 来源 PR: 计划 023
+- 当前状态: Windows Server 2022 探测已记在审查头 `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b`
+- 未完成原因: Linux 编写主机打不开 Windows 的 Run 键、启动文件夹、StartupApproved、快捷方式本地路径或任务计划程序。pid 1 是 tini。那台主机上的 Linux 测试没有观察 Windows 启动项。满足本行的结果只属于头 `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b` 的 Windows 工作区作业，镜像 `windows-2022`，系统是 Windows Server 2022。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46073259939/job/140754957334)。2026-11-27T21:55:44Z（北京时间 05:55:44）的日志显示 `windows_run_folder_link_and_task_changes_are_attributed ... ok`。同一作业显示 `real_startup_and_task_observation_releases_on_disable ... ok`。本项是 OI-049。OI-043 和 [ERR-021](modules/strata-services.md#err-021) 仍属于计划 022。[OI-001](#oi-001)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14) 保持开放。头 `67eeb5f48163574d60ea317a2172473623e8419e` 不是这次结果。
+- 负责 PR: 023 负责把 Windows 工作区作业记入记录。E2E-03 和 E2E-14 保持开放。
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: Windows 工作区作业，Windows Server 2022，运行 `cargo test --locked --workspace`，包括 `windows_run_folder_link_and_task_changes_are_attributed`。Windows 10 和 Windows 11 客户端仍属于 [OI-001](#oi-001)。
+- 验收标准: 该测试在送审头上通过。它必须展示一条 HKCU Run 值的增加、变化、通过 StartupApproved 禁用和删除；一个本地路径为 `C:\Probe.exe` 的用户启动快捷方式；以及一条计划任务的创建、变化和删除。Linux 运行不能关闭它。
+- 关闭条件: 对审查头 `01f26d1a7d09712436b1b27eefdc02a6d49b4e8b` 上的 Windows Server 2022 探测已经满足。日志是上面的作业，本行写入了该结果。Linux 运行不能满足它。这不关闭 [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03)、[E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)、[OI-043](#oi-043)、[ERR-021](modules/strata-services.md#err-021) 或 [OI-001](#oi-001)。Windows 10 和 Windows 11 仍属于 OI-001。
 
 <a id="e2e-17"></a>
 

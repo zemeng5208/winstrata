@@ -6,7 +6,7 @@
 
 ## 进程内宿主
 
-原生帧协议放不下前后值，子进程也不能主动推送事件。监视留在 `PluginHost` 内。启用 `strata.env` 不写入已安装包，也不启动 `winstrata-runtime`。`load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。`uninstall` 返回 `builtin_retained`。注册表插件仍是计划 019 的监视。其余仍没有采集器的官方身份保持 `implementation_absent`。
+原生帧协议放不下前后值，子进程也不能主动推送事件。监视留在 `PluginHost` 内。启用 `strata.env` 不写入已安装包，也不启动 `winstrata-runtime`。`load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。`uninstall` 返回 `builtin_retained`。注册表插件仍是计划 019 的监视。只有 `winstrata-strata-services` 是运行时旁边的普通文件时才登记 `strata.services`。只有 `winstrata-strata-startup` 是运行时旁边的普通文件时才登记 `strata.startup`。其余仍没有采集器的官方身份保持 `implementation_absent`。
 
 `host.json` 在已安装条目旁边保存 `env_enabled`、`env_availability` 和 `env_scope`。缺少这些字段时读成未启用、`ready` 和空范围。空范围表示产品默认范围。保存的范围无效时，打开失败，错误是 `invalid_record`。重新打开已启用的插件不会启动监视。下一次 `start` 或 `enable_batch` 才会启动，并且只在保存的可用性是 `ready` 时启动。批量启用不会重试已经保存的 `unsupported`。
 

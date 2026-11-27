@@ -34,4 +34,4 @@ Linux is active-only. A disappeared service is `service.stopped`, not `service.d
 
 ## Limits that remain
 
-Startup items and scheduled tasks remain plan 023. E2E-03 and E2E-14 are not complete. Windows 10 and Windows 11, signed driver load, Secure Boot, and HVCI were not run.
+Startup items and scheduled tasks are [plan 023](STARTUP.md). E2E-03 and E2E-14 are not complete. Windows 10 and Windows 11, signed driver load, Secure Boot, and HVCI were not run.
