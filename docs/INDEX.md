@@ -16,6 +16,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Privileged service, controlled IPC and driver management](architecture/SERVICE-KERNEL.md)
 - [File and registry collection](architecture/FILE-REGISTRY.md)
 - [Registry plugin](architecture/REGISTRY.md)
+- [Environment plugin](architecture/ENV.md)
 - [Process, thread and module sources](architecture/PROCESS.md)
 - [Health diagnostics](architecture/HEALTH.md)
 - [Network sources, interfaces and attribution](architecture/NETWORK-SOURCES.md)

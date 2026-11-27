@@ -16,6 +16,7 @@
 - [受控服务、受控 IPC 与驱动管理](architecture/SERVICE-KERNEL.md)
 - [文件与注册表采集](architecture/FILE-REGISTRY.md)
 - [注册表插件](architecture/REGISTRY.md)
+- [环境插件](architecture/ENV.md)
 - [进程、线程与模块来源](architecture/PROCESS.md)
 - [自身诊断](architecture/HEALTH.md)
 - [网络源、接口与归因](architecture/NETWORK-SOURCES.md)

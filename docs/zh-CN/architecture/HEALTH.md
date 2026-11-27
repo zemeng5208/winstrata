@@ -31,4 +31,4 @@
 
 ## 验证
 
-证据在[工程记录](../records/STATUS.md)。本计划不关闭的缺口是 [OI-039](../records/OPEN_ITEMS.md#oi-039)、[OI-040](../records/OPEN_ITEMS.md#oi-040) 和 [OI-041](../records/OPEN_ITEMS.md#oi-041)。
+证据在[工程记录](../records/STATUS.md)。本计划不关闭的缺口是 [OI-040](../records/OPEN_ITEMS.md#oi-040)、[OI-041](../records/OPEN_ITEMS.md#oi-041) 和 [OI-042](../records/OPEN_ITEMS.md#oi-042)。

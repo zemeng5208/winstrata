@@ -38,7 +38,7 @@ Windows 的设备标识是 `MachineGuid`，启动标识是注册表 `BootId`，�
 
 计划 018 在 `plugins/strata-process` 中运行该采样器。程序名是 `winstrata-strata-process`。它使用现有的原生帧协议：绝对路径 `--manifest` 和 `--state`，一次一帧 JSON。它不新增帧操作，也不新增依赖。
 
-只有当该程序是宿主收到的运行时同目录下的普通文件时，`PluginHost::open` 才登记 `strata.process`。这条记录是内置插件，版本 1.0.0，默认禁用。授予的权限是 `event.publish` 和 `storage.private`。第三方 `install` 仍返回 `builtin_closed`。`uninstall` 仍返回 `builtin_retained`。其余 24 个官方身份在各自的计划之前仍是 `implementation_absent`。
+只有当该程序是宿主收到的运行时同目录下的普通文件时，`PluginHost::open` 才登记 `strata.process`。这条记录是内置插件，版本 1.0.0，默认禁用。授予的权限是 `event.publish` 和 `storage.private`。第三方 `install` 仍返回 `builtin_closed`。`uninstall` 仍返回 `builtin_retained`。`strata.registry` 和 `strata.env` 是后来的进程内监视，不再处于缺失状态。其余官方身份在各自的计划之前仍是 `implementation_absent`。
 
 启用后启动采集进程。进程大约每 200 毫秒通过 `capture` 和 `ProcessTracker` 采样一次。成功的采样把跟踪器的协议事件追加到私有状态目录的 `events.jsonl`，并替换 `tree.json`。树里包含父子链接、映像、服务名、线程和模块。启动时间和模块基址写成十进制字符串，因为它们不能精确放进 JSON 数字。日志达到 16 MiB 时，下一次追加前改名为 `events.prev.jsonl`，只保留上一份。跟踪状态留在进程内，因此轮转不会再次发出启动。
 

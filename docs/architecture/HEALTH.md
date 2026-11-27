@@ -31,4 +31,4 @@ StrataBudget still owns dynamic limits, pause and resume under pressure, and los
 
 ## Verification
 
-The evidence is in the [engineering record](../records/STATUS.md). Gaps that this plan does not close are [OI-039](../records/OPEN_ITEMS.md#oi-039), [OI-040](../records/OPEN_ITEMS.md#oi-040), and [OI-041](../records/OPEN_ITEMS.md#oi-041).
+The evidence is in the [engineering record](../records/STATUS.md). Gaps that this plan does not close are [OI-040](../records/OPEN_ITEMS.md#oi-040), [OI-041](../records/OPEN_ITEMS.md#oi-041), and [OI-042](../records/OPEN_ITEMS.md#oi-042).

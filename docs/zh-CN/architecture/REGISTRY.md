@@ -2,11 +2,11 @@
 
 [English](../../architecture/REGISTRY.md) · [插件宿主](PLUGINS.md) · [计划 009 监视](FILE-REGISTRY.md) · [计划 019](../roadmap/PLAN.md#pr-019)
 
-计划 019 是 `strata.registry`。它在插件宿主进程内监视当前用户和本机注册表值，并把前后证据发布到现有事件总线。它不加载 `strata-reg.sys`。它不替换计划 009 的监视。计划 009 仍然观察一个选定目录和一个 `HKEY_CURRENT_USER` 子键。环境变量和 PATH 仍属于计划 020。文件插件仍属于计划 021。启动项 Run 键不是这个插件的用途。
+计划 019 是 `strata.registry`。它在插件宿主进程内监视当前用户和本机注册表值，并把前后证据发布到现有事件总线。它不加载 `strata-reg.sys`。它不替换计划 009 的监视。计划 009 仍然观察一个选定目录和一个 `HKEY_CURRENT_USER` 子键。环境变量和 PATH 属于[计划 020](ENV.md)，不是这个插件。文件插件仍属于计划 021。启动项 Run 键不是这个插件的用途。
 
 ## 进程内宿主
 
-原生帧协议放不下前后值，子进程也不能主动推送事件。因此监视留在 `PluginHost` 内。启用 `strata.registry` 不写入已安装包，也不启动 `winstrata-runtime`。`load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。`uninstall` 仍返回 `builtin_retained`，与其他官方身份相同。其余 24 个官方身份仍报告 `implementation_absent`。
+原生帧协议放不下前后值，子进程也不能主动推送事件。因此监视留在 `PluginHost` 内。启用 `strata.registry` 不写入已安装包，也不启动 `winstrata-runtime`。`load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。`uninstall` 仍返回 `builtin_retained`，与其他官方身份相同。`strata.env` 是独立的计划 020 监视。其余仍没有采集器的官方身份报告 `implementation_absent`。
 
 `host.json` 在已安装条目旁边保存 `registry_enabled`、`registry_availability` 和 `registry_scope`。缺少这些字段时读成未启用、`ready` 和空范围。空范围表示产品默认范围。保存的范围无效时，打开失败，错误是 `invalid_record`。重新打开已启用的插件不会启动监视。下一次 `start` 或 `enable_batch` 才会启动，并且只在保存的可用性是 `ready` 时启动。批量启用不会重试已经保存的 `unsupported`。
 
@@ -32,4 +32,4 @@
 
 ## 仍保留的限制
 
-没有加载已签名的注册表回调。没有在 Secure Boot 和 HVCI 下验证。本变更没有测试 Windows 10 和 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。Linux 编写主机打不开真实注册表。E2E-02 仍要求 GUI 查询、文件、PATH 和其他用户。计划 020 和计划 021 没有开始。
+没有加载已签名的注册表回调。没有在 Secure Boot 和 HVCI 下验证。本变更没有测试 Windows 10 和 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。Linux 编写主机打不开真实注册表。E2E-02 仍要求 GUI 查询、文件和其他用户。计划 020 在[环境插件](ENV.md)中监视环境和 PATH，不替换这个插件。计划 021 没有开始。

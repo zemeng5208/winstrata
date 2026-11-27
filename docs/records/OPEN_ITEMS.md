@@ -50,9 +50,10 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
-| [OI-039](#oi-039) | Unimplemented | 022, 026, 030, 032, 042 |
-| [OI-040](#oi-040) | Known limitation | No roadmap row |
-| [OI-041](#oi-041) | Untested | 025 Windows job, then 049 for clients |
+| [OI-039](#oi-039) | Untested on the authoring host | 020 |
+| [OI-040](#oi-040) | Unimplemented | 022, 026, 030, 032, 042 |
+| [OI-041](#oi-041) | Known limitation | No roadmap row |
+| [OI-042](#oi-042) | Untested | 025 Windows job, then 049 for clients |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -567,7 +568,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - Source PR: plans 009 and 010 record that E2E-02 was not run
 - Current state: not done
-- Reason it is incomplete: user-mode watches and process samples are not the GUI query over a chosen disk, other users, and the broader scenario
+- Reason it is incomplete: plan 020 watches user and system environment and PATH. This scenario still needs the GUI query, files, other users, and a chosen disk. That run was not done.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with a chosen disk and test keys
@@ -812,6 +813,20 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: [the proposal section](../roadmap/ACCEPTANCE.md#gui-proposal)
 - Close conditions: the owner approves a verified proposal, or records that the capability is withdrawn. Not closed by naming a candidate.
 
+<a id="oi-039"></a>
+
+## OI-039
+
+- Related requirement: [REQ-06.03](../roadmap/REQUIREMENTS.md) and [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
+- Source PR: plan 020
+- Current state: untested on the authoring host
+- Reason it is incomplete: the Linux authoring host cannot open `HKCU\Environment` or `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`. The Windows test `environment_is_in_process_and_linux_does_not_publish` writes one probe variable and appends one PATH segment on both real stores, then restores the previous bytes. That test has not run here.
+- Responsible PR: 020
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
+- Acceptance criteria: that test passes on the review head. It must show user and system before/after values for the probe, a PATH event whose evidence contains the appended segment, a paused gap that does not publish the hidden value, and no replay of a change made while stopped. The previous PATH bytes are restored.
+- Close conditions: the Windows workspace log for this plan's review head shows that test passed, and this row is updated with that result. A Linux run does not close it. Passing it does not close E2E-02.
+
 <a id="e2e-17"></a>
 
 ## E2E-17
@@ -854,9 +869,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: the scenario text
 - Close conditions: the register and the files match. Not closed by the empty table.
 
-<a id="oi-039"></a>
+<a id="oi-040"></a>
 
-## OI-039
+## OI-040
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and PL-13
 - Source PR: plan 025, `plugins/strata-health`
@@ -868,9 +883,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: that plan records the reading from its own source. E2E-08 and E2E-15 are not closed by plan 025.
 - Close conditions: those records exist, or the owner narrows PL-13. Not closed by the plan 025 queue report.
 
-<a id="oi-040"></a>
+<a id="oi-041"></a>
 
-## OI-040
+## OI-041
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md) and [REQ-05.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 025
@@ -882,9 +897,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: the health report includes that collector's queue and loss, or the owner records that those buses stay separate
 - Close conditions: that evidence is recorded. Not closed by the attached-bus test in plan 025.
 
-<a id="oi-041"></a>
+<a id="oi-042"></a>
 
-## OI-041
+## OI-042
 
 - Related requirement: [REQ-08.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 025
