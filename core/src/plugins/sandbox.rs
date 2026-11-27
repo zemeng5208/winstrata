@@ -213,7 +213,7 @@ mod windows {
     };
     use windows_sys::Win32::Storage::FileSystem::{
         CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_EXECUTE,
-        FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ, OPEN_ALWAYS,
+        FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_ALWAYS,
     };
     use windows_sys::Win32::System::Environment::{
         CreateEnvironmentBlock, DestroyEnvironmentBlock,
@@ -663,7 +663,7 @@ mod windows {
             CreateFileW(
                 log.as_ptr(),
                 FILE_GENERIC_WRITE,
-                FILE_SHARE_READ,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
                 &inherit,
                 OPEN_ALWAYS,
                 FILE_ATTRIBUTE_NORMAL,

@@ -1,8 +1,12 @@
 //! 项目声明的 Python 与 Node 解释器，以及按语言启动的命令。
 
-use std::fs::{self, OpenOptions};
+use std::fs;
+#[cfg(unix)]
+use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Command;
+#[cfg(unix)]
+use std::process::Stdio;
 
 use serde::Deserialize;
 use winstrata_protocols::Manifest;
@@ -252,13 +256,17 @@ pub(super) fn launch(
         command.arg("--catalog").arg(catalog);
     }
     command.current_dir(state);
-    let log = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(state.join("stderr.log"))
-        .map_err(|error| PluginError::new("environment_failed", error.to_string()))?;
-    command.stderr(Stdio::from(log));
+    // Windows 由沙箱自己创建 stderr.log。这里提前打开会让后续 CreateFileW 得到共享冲突。
+    #[cfg(unix)]
+    {
+        let log = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(state.join("stderr.log"))
+            .map_err(|error| PluginError::new("environment_failed", error.to_string()))?;
+        command.stderr(Stdio::from(log));
+    }
 
     let mut read = vec![prefix, tools.sdk.clone(), package.to_path_buf()];
     for optional in [
