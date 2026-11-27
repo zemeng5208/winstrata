@@ -129,11 +129,30 @@ name = "winstrata-dev"
 version = "0.1.0"
 
 [[package]]
+name = "winstrata-kernel"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
+]
+
+[[package]]
 name = "winstrata-protocols"
 version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "winstrata-service"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "serde",
+ "serde_json",
+ "windows-sys",
+ "winstrata-kernel",
+ "winstrata-protocols",
 ]
 
 [[package]]
