@@ -123,6 +123,7 @@ dependencies = [
  "windows-sys",
  "winstrata-kernel",
  "winstrata-protocols",
+ "winstrata-strata-registry",
 ]
 
 [[package]]
@@ -190,6 +191,14 @@ dependencies = [
  "serde_json",
  "winstrata-core",
  "winstrata-kernel",
+ "winstrata-protocols",
+]
+
+[[package]]
+name = "winstrata-strata-registry"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
  "winstrata-protocols",
 ]
 

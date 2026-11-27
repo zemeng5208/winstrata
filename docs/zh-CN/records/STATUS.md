@@ -36,10 +36,11 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
 | PR 015 | 已合并，验收仍有待项 | 所有者于 2026-11-27T18:50:26Z 将 [GitHub PR #22](https://github.com/zemeng5208/winstrata/pull/22) 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。审查头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。E2E-06、E2E-07 和 E2E-12 仍开放。 |
 | PR 016 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。已关闭的 PR #21 和 `pr/016-desktop-gui` 不是那个分支。E2E-11、E2E-17、E2E-18 和 E2E-19 没有关闭。 |
-| PR 017 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。E2E-01 和 E2E-11 没有关闭。 |
-| PR 018 | 待审查 | `plugins/strata-process`，分支 `pr/018-strata-process`。请求的合并位置是紧接计划 017 之后、计划 019 之前。已换基到 `88249119943516437819d93eb7f7bcd50c3b45b8`。 |
-| PR 019–050 | 规划中 | 未改。路线图顺序中计划 019 在 018 之后。 |
-| Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。计划 017 记录启用选择，不启动采集器。计划 018 运行进程采集，并在启用前保持禁用。计划 019–047 的采集实现仍待完成。 |
+| PR 017 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-01 和 E2E-11 没有关闭。 |
+| PR 018 | 已合并，验收仍有待项 | 所有者于 2026-11-27T20:02:11Z 将 [GitHub PR #26](https://github.com/zemeng5208/winstrata/pull/26) 合并为 `857115ebbdc364358e6487609b59c56be80b2e3c`。父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8` 和 `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`。文件树 `e3504f162f67459ddfed19ffa0e17ed71186f551`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-02 和 E2E-03 没有关闭。 |
+| PR 019 | 待审查 | 进程内 `strata.registry`，分支 `pr/019-strata-registry`，已换基到 `857115ebbdc364358e6487609b59c56be80b2e3c`。请求的合并位置是紧接计划 018 之后、计划 020 之前。本次变更不开始计划 020。E2E-02 未完成。 |
+| PR 020–050 | 规划中 | 本次变更不开始它们。 |
+| Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。计划 017 记录启用选择，不启动采集器。计划 018 运行进程采集，并在启用前保持禁用。计划 019 在进程内运行 `strata.registry`。其余采集实现仍属于计划 020–047。 |
 
 ## PR 000 验证
 
@@ -301,6 +302,16 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 在 `f4c95f2d0e0077d765ede17278348a679c75e165` 上，Linux 工作区检查、Windows 工作区检查和 Workspace 检查通过。拉取请求作业检出合并提交 `5d8e81711740c84fab7d32bdc5270a5cdd5e89aa`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `f4c95f2d0e0077d765ede17278348a679c75e165`，文件树 `89b473da381c91a748bfa01e025b394650d87326` 与该头相同。Linux 通过 66 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试和 5 个桌面测试。Windows Server 2022 运行 `cargo test --locked --workspace`，通过 66 个 Core 测试，包括在 `df34c74` 上失败的三项，以及 24 个内核测试、14 个协议库测试、2 个协议集成测试、1 个实时系统事件测试、1 个 Windows 语言测试、5 个运行时生命周期测试、7 个服务测试和 5 个桌面测试。桌面环回桥测试在那里通过。这次运行不是 Windows 10/11 客户端，也不是 WebView2 会话。E2E-01 和 E2E-11 未完成。已发布的提交状态 `winstrata/merge-policy` 为成功。说明是 “Merge order, blockers, and policy files checked”。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708787222) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140708786928) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46059119581/job/140709323825) · [策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46059132995)。名为 “Evaluate merge policy from main” 的工作流检查成功，并不是这份已发布状态。那个头是审查头。这份较晚的记录只是写下该结果，所以它自己的四项门禁不是那些结果。
 
+## PR 019 验证
+
+计划 019 换基到 main `857115ebbdc364358e6487609b59c56be80b2e3c`，即 GitHub PR #26 的合并。父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8` 和 `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`。文件树 `e3504f162f67459ddfed19ffa0e17ed71186f551`。签名验证为 GitHub。分支仍是 `pr/019-strata-registry`。`PLAN.md` 未改。请求的合并位置是紧接计划 018 之后、计划 020 之前。计划 018 已在这个 main 上。本计划不实现 020。
+
+在先前的头 `18a5bf8a44ebeb363dba05ddb7b346eb2f903950` 上，父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8`。Linux 工作区检查、Windows 工作区检查和 Workspace 检查成功。已发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 018 must merge before plan 019”。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46060324821/job/140712736878) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/46060324821/job/140712737247) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46060324821/job/140713283732) · [策略状态](https://github.com/zemeng5208/winstrata/actions/runs/46060594152)。Windows 作业运行了 `cargo test --locked --workspace`，通过 67 个 Core 测试。`product_keys_open_and_the_baseline_is_not_a_change`、`current_user_and_system_values_keep_before_and_after`、`an_incomplete_snapshot_does_not_invent_a_value_diff` 和 `registry_is_in_process_and_other_official_plugins_stay_absent` 在那里通过。注册表包报告 5 项通过。同一次运行里，工作流检查 “Evaluate merge policy from main” 成功。那不是已发布状态。那些结果属于 `18a5bf8`，不属于这次换基。这台主机没有打开 HKCU 或 HKLM。
+
+这次 Linux 换基使用 Rust 1.100.0 和 Node.js 24.22.3。`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 67 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试、5 个桌面测试、1 个 `winstrata-strata-process` 测试和 3 个 `winstrata-strata-registry` 测试。
+
+这次换基自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。OI-016 和 E2E-02 仍开放。
+
 ## 交接
 
 所有者于 2026-11-27T15:48:53Z 将计划 013 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树为 `68a5db4598a9659a437368289d368ce60dd5b7d2`。当时的 main Windows 工作区检查失败。见 [ERR-005](modules/core.md#err-005)。
@@ -313,11 +324,13 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T18:50:26Z 将计划 015 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。该 main 是计划 016 的基线。路线图顺序仍是 015，然后 016，然后 017。
 
-所有者将计划 016 作为 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。该 main 是计划 017 的基线。路线图顺序仍是 016，然后 017，然后 018。
+所有者将计划 016 作为 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。该 main 是计划 017 的基线。
 
-所有者将计划 017 作为 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。E2E-01 和 E2E-11 仍开放。
+所有者将计划 017 作为 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-01 和 E2E-11 仍开放。
 
-当前交接点是计划 018，分支 `pr/018-strata-process`，已换基到该 main。它增加 `plugins/strata-process`，并且只在 `winstrata-strata-process` 位于 `winstrata-runtime` 旁边时登记 `strata.process`。请求的合并位置是紧接计划 017 之后、计划 019 之前。由所有者合并。不要绕过 Protect main。
+所有者于 2026-11-27T20:02:11Z 将计划 018 作为 [GitHub PR #26](https://github.com/zemeng5208/winstrata/pull/26) 合并为 `857115ebbdc364358e6487609b59c56be80b2e3c`。父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8` 和 `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`。文件树 `e3504f162f67459ddfed19ffa0e17ed71186f551`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-02 和 E2E-03 仍开放。
+
+当前交接点是计划 019，分支 `pr/019-strata-registry`。请求的合并位置是紧接计划 018 之后、计划 020 之前。计划 018 已在 main `857115ebbdc364358e6487609b59c56be80b2e3c` 上。本计划不开始计划 020。这次换基的四项门禁还没有回来。所有者合并。本 Agent 不合并。
 
 ## PR 018 验证
 

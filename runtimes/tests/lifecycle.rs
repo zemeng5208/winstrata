@@ -123,7 +123,7 @@ fn process_collector_present() -> bool {
 }
 
 #[test]
-fn official_plugins_stay_installed_and_absent_until_their_own_plans() {
+fn official_plugins_stay_absent_until_their_own_plans() {
     let scratch = Scratch::new();
     let (mut core, _) = session(&scratch);
     let mut host = host(&mut core);
@@ -134,13 +134,26 @@ fn official_plugins_stay_installed_and_absent_until_their_own_plans() {
         .collect();
     assert_eq!(builtins.len(), 25);
     let seeded = process_collector_present();
+    let registry = builtins
+        .iter()
+        .find(|report| report.id == "strata.registry")
+        .expect("strata.registry");
+    assert_eq!(registry.phase, "disabled");
+    assert_eq!(registry.availability, "ready");
+    assert!(!registry.enabled);
     assert!(builtins.iter().all(|report| {
-        if report.id == "strata.process" && seeded {
+        if report.id == "strata.registry" {
+            true
+        } else if report.id == "strata.process" && seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else {
             report.phase == "implementation_absent"
         }
     }));
+    assert_eq!(
+        host.uninstall("strata.registry").unwrap_err().code(),
+        "builtin_retained"
+    );
     if seeded {
         assert_eq!(
             host.uninstall("strata.process").unwrap_err().code(),
