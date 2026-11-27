@@ -26,7 +26,7 @@ SDK 使用与 `winstrata-runtime` 相同的长度前缀帧。它们用自己的�
 
 ## Windows 隔离
 
-Windows 宿主创建没有额外能力的 AppContainer 配置文件，以及最多一个活动进程并在关闭时终止的作业。它把包 SID 的读取和执行授予解释器前缀、SDK、包和目录，并把读写授予状态目录。解释器在该配置中以挂起状态创建，加入作业后再恢复。环境块来自操作系统。只有标准输入和输出管道被继承。撰写本计划的 Linux 主机没有执行这条路径。Windows 测试是 `runtimes/tests/languages_windows.rs`。
+Windows 宿主创建没有额外能力的 AppContainer 配置文件，以及最多一个活动进程并在关闭时终止的作业。它把包 SID 的读取和执行授予解释器前缀、SDK、包和目录，并把读写授予状态目录。这条允许项合并进现有 DACL。受保护的私有目录保持受保护，所有者的允许项也保留。宿主仍然拒绝任何不是该插件 AppContainer 配置文件的额外允许项。解释器在该配置中以挂起状态创建，加入作业后再恢复。Windows 上的 Python 直接启动项目解释器，因为 venv 可执行文件只是启动器，而作业只允许一个进程。环境块来自当前用户令牌。只有标准输入和输出管道被继承。撰写本计划的 Linux 主机没有执行这条路径。Windows 测试是 `runtimes/tests/languages_windows.rs`。
 
 ## 仍属后续计划的部分
 

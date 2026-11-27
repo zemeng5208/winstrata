@@ -26,7 +26,7 @@ The native `winstrata-runtime` process is unchanged. It is still a separate proc
 
 ## Windows containment
 
-The Windows host creates an AppContainer profile with no extra capabilities and a job with one active process and kill-on-close. It grants the package SID read and execute on the interpreter prefix, SDK, package, and catalog, and read and write on the state directory. The interpreter is created suspended inside that profile, assigned to the job, then resumed. The environment block comes from the operating system. Standard input and output are the only inherited pipes. This path was not executed on the Linux host that wrote this plan. The Windows test is `runtimes/tests/languages_windows.rs`.
+The Windows host creates an AppContainer profile with no extra capabilities and a job with one active process and kill-on-close. It grants the package SID read and execute on the interpreter prefix, SDK, package, and catalog, and read and write on the state directory. That allow entry is merged into the existing DACL. A protected private directory stays protected, and its owner allow entry stays in place. The host still rejects an extra allow entry for any SID that is not that plugin's AppContainer profile. The interpreter is created suspended inside that profile, assigned to the job, then resumed. On Windows, Python starts from the project interpreter because the venv executable is only a redirector and the job allows one process. The environment block comes from the current user token. Standard input and output are the only inherited pipes. This path was not executed on the Linux host that wrote this plan. The Windows test is `runtimes/tests/languages_windows.rs`.
 
 ## What remains later
 

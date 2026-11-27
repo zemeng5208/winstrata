@@ -208,7 +208,8 @@ mod windows {
         CreateAppContainerProfile, DeleteAppContainerProfile,
     };
     use windows_sys::Win32::Security::{
-        CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, OBJECT_INHERIT_ACE, PSID,
+        CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, GetSecurityDescriptorControl,
+        OBJECT_INHERIT_ACE, PROTECTED_DACL_SECURITY_INFORMATION, PSID, SE_DACL_PROTECTED,
         SECURITY_ATTRIBUTES, SECURITY_CAPABILITIES, TOKEN_DUPLICATE, TOKEN_QUERY,
     };
     use windows_sys::Win32::Storage::FileSystem::{
@@ -504,10 +505,25 @@ mod windows {
         Ok((profile, sid))
     }
 
+    fn is_volume_root(path: &Path) -> bool {
+        path.components().all(|component| {
+            matches!(
+                component,
+                std::path::Component::Prefix(_) | std::path::Component::RootDir
+            )
+        })
+    }
+
     fn grant_tree(root: &Path, sid: PSID, write: bool) -> Result<(), PluginError> {
         let root = std::fs::canonicalize(root).map_err(|error| {
             PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
         })?;
+        if is_volume_root(&root) {
+            return Err(PluginError::new(
+                "isolation_unavailable",
+                "sandbox grant would cover a volume root",
+            ));
+        }
         let mut visited = 0u32;
         grant_one(&root, sid, write)?;
         if root.is_dir() {
@@ -602,6 +618,12 @@ mod windows {
         };
         let mut new_acl = null_mut();
         let merged = unsafe { SetEntriesInAclW(1, &entry, old_acl, &mut new_acl) };
+        let mut control = 0;
+        let mut revision = 0;
+        let protected = unsafe {
+            GetSecurityDescriptorControl(descriptor, &mut control, &mut revision) != 0
+                && control & SE_DACL_PROTECTED != 0
+        };
         unsafe { LocalFree(descriptor.cast()) };
         if merged != 0 {
             return Err(PluginError::new(
@@ -609,11 +631,16 @@ mod windows {
                 format!("sandbox grant was not merged: {merged}"),
             ));
         }
+        // 只写 DACL 会清掉 SE_DACL_PROTECTED。私有目录随后会因不再受保护而被拒绝。
+        let mut information = DACL_SECURITY_INFORMATION;
+        if protected {
+            information |= PROTECTED_DACL_SECURITY_INFORMATION;
+        }
         let written = unsafe {
             SetNamedSecurityInfoW(
                 name.as_ptr(),
                 SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
+                information,
                 null_mut(),
                 null_mut(),
                 new_acl,
