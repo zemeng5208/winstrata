@@ -1,5 +1,5 @@
 [workspace]
-members = ["core", "kernel", "protocols", "runtimes", "runtimes/shim", "services", "toolchains/dev"]
+members = ["apps/desktop", "core", "kernel", "protocols", "runtimes", "runtimes/shim", "services", "toolchains/dev"]
 resolver = "3"
 
 [workspace.package]

@@ -126,6 +126,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "winstrata-desktop"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "serde",
+ "serde_json",
+ "windows-sys",
+ "winstrata-core",
+ "winstrata-service",
+]
+
+[[package]]
 name = "winstrata-dev"
 version = "0.1.0"
 
