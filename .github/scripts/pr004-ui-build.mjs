@@ -24,7 +24,7 @@ const sources = {
   },
 };
 
-function checkout(name, work) {
+async function checkout(name, work) {
   const source = sources[name];
   const root = path.join(work, name);
   const git = (...args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' });
@@ -32,7 +32,18 @@ function checkout(name, work) {
   git('remote', 'add', 'origin', 'https://github.com/' + source.repo + '.git');
   git('fetch', '--quiet', '--no-tags', '--depth=1', '--filter=blob:none', 'origin', source.version);
   if (git('rev-parse', 'FETCH_HEAD').trim() !== source.version) throw Error('Unexpected source revision for ' + name);
-  git('checkout', '--quiet', 'FETCH_HEAD', '--', ...source.files);
+  // 仅读取所需文件，并用固定提交的 Git blob 核验原始字节，避免下载演示素材。
+  for (const file of source.files) {
+    const expected = git('rev-parse', 'FETCH_HEAD:' + file).trim();
+    const destination = path.join(root, file);
+    await mkdir(path.dirname(destination), { recursive: true });
+    execFileSync('curl', ['--proto', '=https', '--fail', '--silent', '--show-error', '--retry', '2',
+      '--max-time', '90', '--output', destination,
+      'https://raw.githubusercontent.com/' + source.repo + '/' + source.version + '/' + file], { stdio: 'inherit' });
+    if (git('hash-object', '--no-filters', '--', file).trim() !== expected) {
+      throw Error('Upstream file does not match the pinned revision: ' + name + '/' + file);
+    }
+  }
   return root;
 }
 
@@ -46,9 +57,9 @@ function bundle(binary, root, entry, out, modules) {
 }
 
 async function build(work, output) {
-  const amicro = checkout('amicro', work);
-  const glass = checkout('glasswork', work);
-  const shadcn = checkout('shadcn', work);
+  const amicro = await checkout('amicro', work);
+  const glass = await checkout('glasswork', work);
+  const shadcn = await checkout('shadcn', work);
   const { amicroModules, shadcnModules, esbuildBinary } = await installProbePackages({
     amicroRoot: amicro, shadcnRoot: shadcn, work,
   });

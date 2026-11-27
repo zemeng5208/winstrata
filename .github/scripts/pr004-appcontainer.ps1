@@ -41,6 +41,12 @@ public static class WinStrataContainerProbe {
     private static extern int GetAppContainerFolderPath(string sid, out IntPtr path);
     [DllImport("userenv.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern int DeleteAppContainerProfile(string name);
+    [DllImport("userenv.dll", SetLastError = true)]
+    private static extern bool CreateEnvironmentBlock(out IntPtr environment, IntPtr token, bool inherit);
+    [DllImport("userenv.dll", SetLastError = true)]
+    private static extern bool DestroyEnvironmentBlock(IntPtr environment);
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetCurrentProcess();
     [DllImport("advapi32.dll")]
     private static extern IntPtr FreeSid(IntPtr sid);
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -132,8 +138,11 @@ public static class WinStrataContainerProbe {
             Require(UpdateProcThreadAttribute(list, 0, (IntPtr)SecurityCapabilitiesAttribute, caps, (IntPtr)size,
                 IntPtr.Zero, IntPtr.Zero), "Set security capabilities");
 
-            string root = Directory.GetParent(system).FullName;
-            environment = Marshal.StringToHGlobalUni("SystemRoot=" + root + "\0windir=" + root + "\0");
+            IntPtr parentToken;
+            Require(OpenProcessToken(GetCurrentProcess(), 0x0008 | 0x0002, out parentToken), "Open current user token");
+            try {
+                Require(CreateEnvironmentBlock(out environment, parentToken, false), "Create clean user environment");
+            } finally { CloseHandle(parentToken); }
             var startup = new Startup { Attributes = list };
             startup.Size = Marshal.SizeOf(startup);
             Child child;
@@ -166,7 +175,7 @@ public static class WinStrataContainerProbe {
             if (initialized) DeleteProcThreadAttributeList(list);
             Marshal.FreeHGlobal(list);
             Marshal.FreeHGlobal(caps);
-            Marshal.FreeHGlobal(environment);
+            if (environment != IntPtr.Zero) DestroyEnvironmentBlock(environment);
         }
     }
 }
