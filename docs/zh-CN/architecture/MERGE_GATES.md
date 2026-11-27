@@ -8,10 +8,10 @@ PR 002 实现 [Git 与 PR 规范](../standards/GIT_AND_PR.md#section-13)所述�
 
 | 检查 | 来源及范围 |
 |---|---|
-| `Workspace checks` | `WinStrata CI` 获取 GitHub 为 PR 生成的精确测试合并提交。Linux 运行器按项目声明安装工具链，检查空白、纳入 Git 的生成产物、合并策略回归测试，并运行与本地相同的 `cargo dev init`、`build` 和 `verify`。两个锁文件须保持一致。任务没有 GitHub API 权限，也不接收项目密钥。 |
+| `Workspace checks` | Linux 和 Windows 任务检出同一个 GitHub PR 测试合并提交，推送到 main 时则检出该次推送的精确提交。Linux 工作区脚本检查生成产物和空白、策略回归测试、固定版本的开发命令及锁文件。Windows 使用项目指定的工具链和 Node.js 执行 `cargo test --locked --workspace`。仅当两边均成功时，强制检查才通过。三个任务的 GitHub API 权限均为空。 |
 | `winstrata/merge-policy` | 策略流程只拉取受保护的 `main`，验证当前测试合并提交及两个父提交，确认 PR 的头提交包含当前 main 后，将策略状态写入头提交。GitHub Actions 工作区检查也记录在该头提交。流程读取仓库及 PR 元数据，权限仅包含必要的状态写入。候选代码不参与此流程。PR、所有者评论、阻断问题和 `main` 更新时重新检查相关候选。 |
 
-本地复用时，使用[已批准的工具链](DEVELOPMENT_TOOLCHAIN.md)。在 Linux 的 Git 工作区检出候选提交并保留其第一父提交，然后运行 `bash .github/scripts/check-workspace.sh`。
+本地复用时，使用[已批准的工具链](DEVELOPMENT_TOOLCHAIN.md)。在 Linux 的 Git 工作区检出候选提交并保留其第一父提交，然后运行 `bash .github/scripts/check-workspace.sh`。 在安装项目固定版本 Node.js 与 Rust 工具链的 Windows 宿主上，从仓库根目录运行 `cargo test --locked --workspace`。
 
 ## 合并判定
 

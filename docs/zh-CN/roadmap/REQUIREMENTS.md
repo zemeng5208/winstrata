@@ -18,7 +18,7 @@
 | REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [版本与错误契约](../architecture/PROTOCOLS.md)已在 Linux 与 Windows 验证。PR 008 需在 Windows 上验证传输、对端身份、授权、请求校验及审计。 |
 | REQ-03.03 | 官方接口优先的混合采集与驱动独立按需生命周期 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-03.04 | 签名、Secure Boot 和 HVCI 保持启用 | [SECURITY](../standards/SECURITY.md#ag-47) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-04.01 | 当前用户、相关公共活动与用户选择的存储范围 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [006](PLAN.md#pr-006), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
+| REQ-04.01 | 当前用户、相关公共活动与用户选择的存储范围 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [006](PLAN.md#pr-006), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | [已实现当前用户身份、私有目录和监视范围配置](../architecture/CORE-STORAGE.md)。采集端过滤按 PR 017 验证。 |
 | REQ-04.02 | 初始化选择启用，默认手动启动且不开机自启 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-04.03 | 建立选定范围基线并标注重建历史 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [017](PLAN.md#pr-017), [021](PLAN.md#pr-021) | [01](ACCEPTANCE.md#e2e-01), [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-04.04 | 实时与历史切换、暂停恢复、缺失记录和安全退出 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [017](PLAN.md#pr-017) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
@@ -40,7 +40,7 @@
 | REQ-10.01 | 记录风险标记来源、依据、时间与可信度 | [DATA](../architecture/DATA.md#section-7) | [029](PLAN.md#pr-029) | [04](ACCEPTANCE.md#e2e-04) | 规划中 |
 | REQ-10.02 | 未标记原始数据包从采集到释放均不落盘 | [DATA](../architecture/DATA.md#section-7) | [031](PLAN.md#pr-031) | [04](ACCEPTANCE.md#e2e-04), [05](ACCEPTANCE.md#e2e-05) | 规划中 |
 | REQ-10.03 | 配置有界抓包缓冲并导出风险抓包 | [DATA](../architecture/DATA.md#section-7) | [031](PLAN.md#pr-031) | [04](ACCEPTANCE.md#e2e-04) | 规划中 |
-| REQ-11.01 | 默认 D 盘、手动回退与安全迁移 | [DATA](../architecture/DATA.md#section-8) | [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [10](ACCEPTANCE.md#e2e-10) | 规划中 |
+| REQ-11.01 | 默认 D 盘、手动回退与安全迁移 | [DATA](../architecture/DATA.md#section-8) | [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [10](ACCEPTANCE.md#e2e-10) | [Core 选择存储、在失卷后暂停写入并校验文件迁移](../architecture/CORE-STORAGE.md)。Windows 客户端界面按 PR 016 验证。 |
 | REQ-11.02 | 支持结构化、分段、时序、抓包和快照存储 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012) | [05](ACCEPTANCE.md#e2e-05), [10](ACCEPTANCE.md#e2e-10) | 规划中 |
 | REQ-11.03 | 共享标识、唯一源记录与统一索引 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-44) | [012](PLAN.md#pr-012), [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-12.01 | 合格数据默认永久；可配置保留期限 | [DATA](../architecture/DATA.md#section-8) | [012](PLAN.md#pr-012), [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) | 规划中 |
@@ -91,7 +91,7 @@
 | REQ-27.02 | 实测 GUI 350 MB 内存、产物 250 MB 及冷启动 3 秒目标 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048), [050](PLAN.md#pr-050) | [08](ACCEPTANCE.md#e2e-08), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-27.03 | 验证未标记包零写入、禁用插件近零专属资源及 I/O 开销 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [031](PLAN.md#pr-031), [048](PLAN.md#pr-048) | [04](ACCEPTANCE.md#e2e-04), [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
-| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 工具链配置已建立，运行配置规划中。 |
+| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 已实现工具链配置与[按用户隔离的版本化运行配置](../architecture/CORE-STORAGE.md)。密钥管理和加密迁移留待 PR 013。 |
 | REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口、忽略规则、本地及托管工作区检查已验证。 |
 | REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验所有者合并 PR 004。两项 GitHub Actions 检查和分支保持最新均已强制，绕过名单为空。[工程记录](../records/STATUS.md) |
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
