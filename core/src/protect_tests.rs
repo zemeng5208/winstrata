@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::ErrorKind;
+use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
@@ -359,11 +359,10 @@ fn backup_and_restore_keep_ciphertext_integrity() {
     let last = tampered.len() - 1;
     tampered[last] ^= 0x5a;
     let tampered_path = temp.0.join("tampered.wsb");
-    fs::write(&tampered_path, &tampered).unwrap();
-    #[cfg(unix)]
+    // 默认 ACL 会先被私有文件检查拒绝，校验值还没机会失败。
     {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&tampered_path, fs::Permissions::from_mode(0o600)).unwrap();
+        let mut file = crate::files::create_private(&tampered_path).unwrap();
+        file.write_all(&tampered).unwrap();
     }
     assert_eq!(
         core.verify_backup(&tampered_path).unwrap_err().kind(),
