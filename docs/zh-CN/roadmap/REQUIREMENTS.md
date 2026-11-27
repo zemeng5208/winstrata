@@ -26,7 +26,7 @@
 | REQ-05.02 | 有界批处理、队列、背压、吞吐及丢失记录 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [007](PLAN.md#pr-007) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | [Core 运行时](../architecture/CORE-RUNTIME.md)已限制队列和批量，在记录丢失前等待，并发布协议缺口。Linux release 在 39.925 毫秒内传送 20,000 条事件。E2E-08 与 E2E-15 仍待完成。 |
 | REQ-05.03 | 统一优先级、超时、取消和资源保护 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-45) | [007](PLAN.md#pr-007), [025](PLAN.md#pr-025), [026](PLAN.md#pr-026) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 调度器已实现优先级、超时、取消和固定的工作者与队列上限。动态预算和健康诊断仍属 PR 025 与 PR 026。E2E-08 与 E2E-15 仍待完成。 |
 | REQ-06.01 | 文件操作、所有权与权限；不存文件内容版本 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [009](PLAN.md#pr-009), [021](PLAN.md#pr-021) | [02](ACCEPTANCE.md#e2e-02) | [文件与注册表采集](../architecture/FILE-REGISTRY.md)报告单个目录的创建、修改、重命名和删除，以及单个 HKCU 子键的值新增、修改和删除。不读取文件字节。所有者和 SDDL 仅在能放入标识符时写入。这些 API 不报告变更时刻的精度，因此省略 `precision_ns`。进程归因属于计划 010。插件呈现仍属于 PR 021。E2E-02 尚未完成。 |
-| REQ-06.02 | 观测进程、线程、模块、来源及 PID 生命周期 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [010](PLAN.md#pr-010), [018](PLAN.md#pr-018), [052](PLAN.md#pr-052) | [02](ACCEPTANCE.md#e2e-02), [03](ACCEPTANCE.md#e2e-03) | [进程来源](../architecture/PROCESS.md)采样线程、模块和父子链接。Linux 观察到真实子进程的生命周期并完成去重。Windows Server 2022 在计划 010 上通过了这些测试。main `a2471d5` 随后有一次 `real_process_tree_pid_lifecycle_and_dedup` 失败；同一文件树在几分钟前通过。计划 052 等到完整采样，并且仍然要求这次退出。该 Windows 复验尚未返回。见 ERR-005。这台 Linux 主机没有服务单元。已签名 `strata-proc` 加载、ETW、命令行、服务停止记录、Windows 10/11 客户端、E2E-02、E2E-03 和计划 018 仍待完成。 |
+| REQ-06.02 | 观测进程、线程、模块、来源及 PID 生命周期 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [010](PLAN.md#pr-010), [018](PLAN.md#pr-018), [052](PLAN.md#pr-052) | [02](ACCEPTANCE.md#e2e-02), [03](ACCEPTANCE.md#e2e-03) | [进程来源](../architecture/PROCESS.md)采样线程、模块和父子链接。Linux 观察到真实子进程的生命周期并完成去重。Windows Server 2022 在计划 010 和计划 013 的送审头上通过了这些测试。main `a2471d5` 随后有一次 `real_process_tree_pid_lifecycle_and_dedup` 失败；同一文件树在几分钟前通过。计划 052 等到完整采样，并且仍然要求这次退出。合并提交 `004974215e239f96160b47d3eef40a84c316e802` 的 Windows 工作区检查通过。持久编号是 [ERR-005](../records/modules/core.md#err-005)。ERR-013 是同一次缺陷。计划 007 的线程释放失败是 ERR-016。这台 Linux 主机没有服务单元。已签名 `strata-proc` 加载、ETW、命令行、服务停止记录、Windows 10/11 客户端、E2E-02、E2E-03 和计划 018 仍待完成。 |
 | REQ-06.03 | 归因注册表与环境变量并呈现前后值 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [019](PLAN.md#pr-019), [020](PLAN.md#pr-020) | [02](ACCEPTANCE.md#e2e-02) | 规划中 |
 | REQ-06.04 | 观测服务、驱动、启动项与计划任务变化 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [022](PLAN.md#pr-022), [023](PLAN.md#pr-023) | [03](ACCEPTANCE.md#e2e-03), [14](ACCEPTANCE.md#e2e-14) | 规划中 |
 | REQ-07.01 | 识别自动与手动的软件生命周期会话 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [035](PLAN.md#pr-035) | [03](ACCEPTANCE.md#e2e-03) | 规划中 |
@@ -50,7 +50,7 @@
 | REQ-13.01 | 避免自监视递归，保留相关外部修改 | [DATA](../architecture/DATA.md#section-8) | [028](PLAN.md#pr-028) | [05](ACCEPTANCE.md#e2e-05), [08](ACCEPTANCE.md#e2e-08) | 规划中 |
 | REQ-13.02 | GUI 与批处理脚本过滤，失败安全回退 | [DATA](../architecture/DATA.md#section-8) | [027](PLAN.md#pr-027), [028](PLAN.md#pr-028) | [04](ACCEPTANCE.md#e2e-04), [07](ACCEPTANCE.md#e2e-07) | 规划中 |
 | REQ-13.03 | 减少无效 I/O 和写入放大，验证完整性 | [DATA](../architecture/DATA.md#section-8) | [032](PLAN.md#pr-032), [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-14.01 | 可选本地加密及锁定，锁定时保持监视 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [042](PLAN.md#pr-042) | [10](ACCEPTANCE.md#e2e-10) | 加密在启用前保持关闭。锁定挡住读取，实时提交可以继续。界面锁定显示仍属于 PR 042。E2E-10 未完成。 |
+| REQ-14.01 | 可选本地加密及锁定，锁定时保持监视 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [042](PLAN.md#pr-042) | [10](ACCEPTANCE.md#e2e-10) | 加密在启用前保持关闭。锁定挡住读取，实时提交可以继续。界面锁定显示仍属于 PR 042。密钥轮换不是崩溃安全的，也不标成已验收。见 [OI-008](../records/OPEN_ITEMS.md#oi-008)。E2E-10 未完成。 |
 | REQ-14.02 | 验证备份、恢复、完整性、迁移及设备标识 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [038](PLAN.md#pr-038) | [10](ACCEPTANCE.md#e2e-10) | Linux 测试覆盖完整包和增量包、校验、路径穿越、用户不匹配、恢复、设备标识，以及保留源目录的迁移。没有运行第二台设备。插件导出和按时间范围导出仍属于 PR 038。E2E-10 未完成。 |
 | REQ-14.03 | 授权并验证导入导出，明文转换须确认 | [DATA](../architecture/DATA.md#section-8) | [038](PLAN.md#pr-038), [042](PLAN.md#pr-042) | [09](ACCEPTANCE.md#e2e-09), [10](ACCEPTANCE.md#e2e-10) | 规划中 |
 | REQ-15.01 | 手动自选范围的完整及增量快照与差异视图 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [038](PLAN.md#pr-038) | [07](ACCEPTANCE.md#e2e-07) | 规划中 |
@@ -62,7 +62,7 @@
 | REQ-17.02 | 只读展示可观测安全与证书状态 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [037](PLAN.md#pr-037) | [14](ACCEPTANCE.md#e2e-14) | 规划中 |
 | REQ-18.01 | 检索和关联授权来源，并追溯对象证据 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-18.02 | 多轨时间线、仅供分析的回放及区间导出 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [041](PLAN.md#pr-041) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-19.01 | 验证三项指定来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查三个指定修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。产品布局仍待验收。 |
+| REQ-19.01 | 验证指定 UI 来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查 Amicro、Glasswork、shadcn-admin 三个修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。UI Moments 已于 2026-11-27 指定，尚未做同等实测。产品布局仍待验收。 |
 | REQ-19.02 | 三套共享主题可运行时切换并持久保存 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.03 | 完整双语与 Windows WebView2 可读的真实交互 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.04 | 持久化单首页布局并接入动态插件界面 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
@@ -97,7 +97,7 @@
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-30.02 | 逐项追踪需求、25 个插件和 61 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
+| REQ-30.02 | 逐项追踪需求、25 个插件和 63 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。 |
 
 ## 原生插件
 
@@ -131,6 +131,6 @@
 | PL-24 | StrataTag | [029](PLAN.md#pr-029) | [04](ACCEPTANCE.md#e2e-04), [05](ACCEPTANCE.md#e2e-05) |
 | PL-25 | StrataStorage | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) |
 
-## 61 项 Agent 规范
+## 63 项 Agent 规范
 
-每条独立编号和权威位置见 [AG-01 至 AG-61 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对全量条款及双语映射。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。
+每条独立编号和权威位置见 [AG-01 至 AG-63 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。

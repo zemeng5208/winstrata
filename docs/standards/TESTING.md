@@ -12,13 +12,13 @@ Distinguish development, test, and real user environments. Prefer isolated VMs o
 
 ## AG-16 Regression and premerge validation
 
-Validate new and existing behavior on the actual merge candidate. Run integrated regressions for plugin cooperation, compatibility, stability, performance, preceding fixes, and removed behavior. Fix and retest confirmed failures. Update module and global records with actual results and unverified items. Preserve preceding work.
+Validate new and existing behavior on the actual merge candidate. Run integrated regressions for plugin cooperation, compatibility, stability, performance, preceding fixes, and removed behavior. Fix and retest confirmed failures. Update module and global records with actual results. Unverified items use the [open-item register](../records/OPEN_ITEMS.md). Confirmed defects use the [error register](../records/ERRORS.md) and are not recorded as limitations. Preserve preceding work.
 
 <a id="ag-17"></a>
 
 ## AG-17 Defect root causes and related issues
 
-Investigate the root cause and scan the repository for related faults, shared components, and upstream and downstream dependencies. Fix within scope and report out-of-scope findings for approval. Coordinated delegation may help. Run overall regression, update errors and docs, and block merge until confirmed defects are resolved.
+Investigate the root cause and scan the repository for related faults, shared components, and upstream and downstream dependencies. Fix within scope and report out-of-scope findings for approval. Coordinated delegation may help. Run overall regression, update the error register and docs, and block merge until confirmed defects are resolved. [AG-63](../../AGENTS.md#ag-63) applies. Do not weaken an assertion to close a failure.
 
 <a id="ag-18"></a>
 

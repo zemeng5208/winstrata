@@ -61,4 +61,4 @@ Each record identifies commit, OS and Windows version, hardware, driver and tool
 3. Establish Windows 10/11 x64 operation and both development/build capabilities with separate evidence. Record visibility limits.
 4. Verify selective raw capture, both warning ladders, authorized cleanup, manual storage fallback, self-filtering, I/O and resource budgets, integrity, encryption, backup and migration.
 5. Pass real usability, integrated regression, sustained stability, security and performance without open confirmed defects. Retain evidence.
-6. Reconcile every atomic requirement, all 61 rules, records, files and documentation. The owner merges in order and reviews the verified release.
+6. Reconcile every atomic requirement, all 63 rules, records, files and documentation. The owner merges in order and reviews the verified release.

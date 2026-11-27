@@ -34,6 +34,6 @@ Windows 的设备标识是 `MachineGuid`，启动标识是注册表 `BootId`，�
 
 在 Linux x86_64、Rust 1.100.0 上，`RUSTFLAGS="-Dwarnings" cargo test --workspace` 通过 32 项 Core 测试、9 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。新增测试读取真实进程表。一个真实子进程被连接到本次测试进程，只出现一次；第二次采样没有再次发出启动；回收后只发出一次退出。进程表中存在至少三个进程的链。这些事件发布到 Core 总线后序号连续，且没有记录丢失。本机这次采样有 33 个进程，没有 `.service` cgroup 单元，因此服务测试确认没有编造间接事件。
 
-复用测试把两个真实启动时间先后放到同一个 PID 上，关闭前者并打开后者。这个组合是跟踪器的输入安排。测试期间操作系统没有回收 PID。`cargo check --target x86_64-pc-windows-msvc --tests` 在拒绝警告的条件下对 Toolhelp、注册表和服务控制管理器代码做了类型检查。这些 Windows 测试没有执行。没有加载已签名的 `strata-proc` 映像。E2E-02 和 E2E-03 仍待完成。计数和 Windows 运行结果记入[工程记录](../records/STATUS.md)。
+复用测试把两个真实启动时间先后放到同一个 PID 上，关闭前者并打开后者。这个组合是跟踪器的输入安排。测试期间操作系统没有回收 PID。`cargo check --target x86_64-pc-windows-msvc --tests` 在拒绝警告的条件下对 Toolhelp、注册表和服务控制管理器代码做了类型检查。这些 Windows 测试没有在那台主机上执行。后来的 Windows Server 2022 作业运行了 `real_process_tree_pid_lifecycle_and_dedup`。它在计划 010 的证据和计划 013 的送审头上通过。main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上失败。见 [ERR-005](../records/modules/core.md#err-005)。计划 052 已合并为 `004974215e239f96160b47d3eef40a84c316e802`，该提交的 Windows 工作区检查通过。先前失败的根因仍然未知。没有加载已签名的 `strata-proc` 映像。E2E-02 和 E2E-03 仍待完成。计数和 Windows 运行结果记入[工程记录](../records/STATUS.md)。
 
-计划 052 不改变这条退出规则。`real_process_tree_pid_lifecycle_and_dedup` 仍然要求子进程被回收后只有一条 `process.exited`。测试会等到完整采样不再包含该实例，或该实例被另一个启动时间替换。仍列出该 PID 但没有正的启动时间的采样不是这条退出，被截断的采样也不是。主分支失败日志没有包含那次采样，因此记录不声称当时是这两种条件中的哪一种。
+计划 052 不改变这条退出规则。`real_process_tree_pid_lifecycle_and_dedup` 仍然要求子进程被回收后只有一条 `process.exited`。测试会等到完整采样不再包含该实例，或该实例被另一个启动时间替换。仍列出该 PID 但没有正的启动时间的采样不是这条退出，被截断的采样也不是。主分支失败日志没有包含那次采样，因此记录不声称当时是这两种条件中的哪一种。计划 051 不修改这个测试。
