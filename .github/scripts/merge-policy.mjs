@@ -7,6 +7,8 @@ export const BLOCK_LABEL = 'merge-blocked';
 const STATUS_CONTEXT = 'winstrata/merge-policy';
 const SHA = /^[a-f0-9]{40}$/;
 
+const PLAN_FILE = 'docs/roadmap/PLAN.md';
+
 export function roadmapOrder(markdown) {
   const ids = [...markdown.matchAll(/^\| <a id="pr-(\d{3})"><\/a>\1 \|/gm)]
     .map((match) => match[1]);
@@ -14,6 +16,23 @@ export function roadmapOrder(markdown) {
     throw new Error('Roadmap plan IDs are missing or duplicated');
   }
   return ids;
+}
+
+// main 上已有的编号必须按原相对顺序保留。新增编号只能是候选路线图多出来的那些。
+export function roadmapExtension(baseOrder, headOrder) {
+  const base = new Set(baseOrder);
+  const head = new Set(headOrder);
+  const dropped = baseOrder.find((id) => !head.has(id));
+  if (dropped) return `Roadmap drops plan ${dropped}`;
+  const kept = headOrder.filter((id) => base.has(id));
+  const moved = kept.find((id, index) => id !== baseOrder[index]);
+  if (moved) return `Roadmap reorders plan ${moved}`;
+  return null;
+}
+
+function changesPlan(files) {
+  return files.some(({ filename, previous_filename }) =>
+    filename === PLAN_FILE || previous_filename === PLAN_FILE);
 }
 
 function planId(pull) {
@@ -32,7 +51,7 @@ export function changesPolicy(files) {
       path === 'docs/zh-CN/AGENTS.md' ||
       path?.startsWith('docs/standards/') ||
       path?.startsWith('docs/zh-CN/standards/') ||
-      path === 'docs/roadmap/PLAN.md' ||
+      path === PLAN_FILE ||
       path === 'docs/zh-CN/roadmap/PLAN.md',
     ),
   );
@@ -105,6 +124,15 @@ async function list(api, path) {
   }
 }
 
+async function roadmapMarkdown(api, sha) {
+  if (!SHA.test(sha)) throw new Error('The PR roadmap could not be read');
+  const payload = await api(`contents/${PLAN_FILE}?ref=${sha}`);
+  if (payload?.encoding !== 'base64' || typeof payload.content !== 'string') {
+    throw new Error('The PR roadmap could not be read');
+  }
+  return Buffer.from(payload.content.replace(/\s/g, ''), 'base64').toString('utf8');
+}
+
 async function currentCandidate(api, number, base) {
   // GitHub 在请求 PR 后异步生成测试合并提交。仅接受父提交与当前 PR 相符的候选。
   for (let attempt = 0; attempt < 10; attempt += 1) {
@@ -139,7 +167,7 @@ async function main() {
   const base = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const branch = await api('branches/main');
   if (branch.commit.sha !== base) throw new Error('Main changed during policy checkout; rerun');
-  const order = roadmapOrder(readFileSync('docs/roadmap/PLAN.md', 'utf8'));
+  const baseOrder = roadmapOrder(readFileSync(PLAN_FILE, 'utf8'));
   const open = await list(api, 'pulls?state=open&base=main');
   let related = null;
   if (eventName === 'pull_request_target') related = event.pull_request;
@@ -185,10 +213,24 @@ async function main() {
         const comments = changesPolicy(files)
           ? await list(api, `issues/${pull.number}/comments`)
           : [];
+        // 候选代码不执行。PR 修改路线图时，只把测试合并提交里的 PLAN.md 当作数据读取。
+        let order = baseOrder;
+        let roadmapFailure = null;
+        if (changesPlan(files)) {
+          try {
+            const headOrder = roadmapOrder(await roadmapMarkdown(api, pull.merge_commit_sha));
+            roadmapFailure = roadmapExtension(baseOrder, headOrder);
+            if (!roadmapFailure) order = headOrder;
+          } catch (error) {
+            roadmapFailure = error.message === 'Roadmap plan IDs are missing or duplicated'
+              ? error.message
+              : 'The PR roadmap could not be read';
+          }
+        }
         const shared = open.some((other) =>
           other.number !== pull.number && other.head.sha === pull.head.sha,
         );
-        const failure = shared ? 'Multiple open PRs share this head commit' : policyDecision({
+        const failure = shared ? 'Multiple open PRs share this head commit' : roadmapFailure ?? policyDecision({
           pull, order, merged, blockedIssues, files, comments, ownerId: repository.owner.id,
           upToDate: comparison.merge_base_commit?.sha === base,
         });

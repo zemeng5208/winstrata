@@ -4,7 +4,7 @@
 
 <a id="section-14"></a>
 
-## 51 proposed PRs
+## 52 proposed PRs
 
 The owner reviews the proposed order in PR 000. Plan numbers are independent of GitHub PR numbers. Dependencies listed are direct and also imply their ancestors. Use named component paths and directly affected documents. Seek approval for scope expansion, unapproved interfaces or dependencies, or additions, reordering, splits and combinations. Every PR requests a merge position under the [Git standard](../standards/GIT_AND_PR.md#section-13) and applies the [acceptance plan](ACCEPTANCE.md). Confirm interfaces, exact test scenarios, and measurable criteria before implementing affected work. Record evidence for each scope during review.
 
@@ -33,6 +33,7 @@ Accept after PR 000 is in effect, enforced gates and feasibility risks are under
 | <a id="pr-011"></a>011 | kernel and core for network sources, interfaces and attribution | 008 | Observe real inbound/outbound traffic, interface differences, encryption and gaps. Verify selective persistence behavior. |
 | <a id="pr-012"></a>012 | core shared structured, event, metric, snapshot and capture storage | 006,007 | Write and query actual data, segment and index it, measure capacity, and test corruption and rollback. |
 | <a id="pr-013"></a>013 | core encryption, backup, restore, migration and data isolation | 012 | Verify passwords and locking, encryption and decryption, cross-location and cross-device integrity. |
+| <a id="pr-052"></a>052 | core process-tree exit sample | 013 | The real process-tree test reports one exit only after the child leaves a complete sample. A visible PID without a start time is not an exit. |
 | <a id="pr-014"></a>014 | core and runtimes plugin contracts, dependencies and lifecycle | 005,007,008,012 | Load, disable, update and isolate real plugins and recover dependencies. |
 | <a id="pr-015"></a>015 | runtimes and sdk for Python/TS/JS and isolation | 004,014 | Run real scripts and plugins, test revocation and boundary enforcement, release resources and check project-level dependencies. |
 | <a id="pr-016"></a>016 | apps/desktop and packages for GUI, navigation, languages, tray, IPC, upstream UI and three themes | 006,014 | Use real Windows GUI and tray under ordinary privileges. Verify theme persistence, reuse and adaptation, performance and licenses. |

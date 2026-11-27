@@ -9,13 +9,13 @@ PR 002 实现 [Git 与 PR 规范](../standards/GIT_AND_PR.md#section-13)所述�
 | 检查 | 来源及范围 |
 |---|---|
 | `Workspace checks` | Linux 和 Windows 任务检出同一个 GitHub PR 测试合并提交，推送到 main 时则检出该次推送的精确提交。Linux 工作区脚本检查生成产物和空白、策略回归测试、固定版本的开发命令及锁文件。Windows 使用项目指定的工具链和 Node.js 执行 `cargo test --locked --workspace`。仅当两边均成功时，强制检查才通过。三个任务的 GitHub API 权限均为空。 |
-| `winstrata/merge-policy` | 策略流程只拉取受保护的 `main`，验证当前测试合并提交及两个父提交，确认 PR 的头提交包含当前 main 后，将策略状态写入头提交。GitHub Actions 工作区检查也记录在该头提交。流程读取仓库及 PR 元数据，权限仅包含必要的状态写入。候选代码不参与此流程。PR、所有者评论、阻断问题和 `main` 更新时重新检查相关候选。 |
+| `winstrata/merge-policy` | 策略流程只拉取受保护的 `main`，验证当前测试合并提交及两个父提交，确认 PR 的头提交包含当前 main 后，将策略状态写入头提交。GitHub Actions 工作区检查也记录在该头提交。流程读取仓库及 PR 元数据，权限仅包含必要的状态写入。候选代码不参与此流程。PR 修改 `docs/roadmap/PLAN.md` 时，`main` 上的脚本把已验证测试合并提交里的该文件当作数据读取。PR、所有者评论、阻断问题和 `main` 更新时重新检查相关候选。 |
 
 本地复用时，使用[已批准的工具链](DEVELOPMENT_TOOLCHAIN.md)。在 Linux 的 Git 工作区检出候选提交并保留其第一父提交，然后运行 `bash .github/scripts/check-workspace.sh`。 在安装项目固定版本 Node.js 与 Rust 工具链的 Windows 宿主上，从仓库根目录运行 `cargo test --locked --workspace`。
 
 ## 合并判定
 
-分支用 `pr/NNN-description`，标题用 `PR NNN: Title`，两处计划编号须一致。门禁读取 `main` 的有序路线图，核对 GitHub 上的前序合并和重复编号。草稿不能通过检查。
+分支用 `pr/NNN-description`，标题用 `PR NNN: Title`，两处计划编号须一致。门禁读取 `main` 的有序路线图。PR 修改 `docs/roadmap/PLAN.md` 时，使用已验证测试合并提交里的顺序。`main` 上已有的每个计划编号都必须按原来的相对顺序保留。只出现在测试合并提交里的编号是该 PR 新增的。删除或重排已有编号会失败。门禁核对 GitHub 上的前序合并和重复编号。已合并的计划编号不能再次使用。草稿不能通过检查。
 
 PR 本身有确认缺陷时加 `merge-blocked` 标签。相同标签的未关闭议题阻断所有待合并 PR，包括合并后发现的缺陷。修复并复验后，所有者可关闭议题或移除标签，并等待更新后的状态。审查对话仍由 GitHub 原生规则检查。
 
