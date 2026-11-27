@@ -2,7 +2,7 @@
 
 [English](../../architecture/SERVICE-KERNEL.md) · [服务](../../../services/src/lib.rs) · [驱动管理](../../../kernel/src/lib.rs) · [计划 008](../roadmap/PLAN.md#pr-008)
 
-计划 008 增加 `winstrata-service` 与 `winstrata-kernel`。服务与当前用户交换带版本、带长度前缀的 JSON。kernel crate 跟踪四个驱动订阅。它不采集文件、注册表、进程或网络活动，产品宿主也不加载内核映像。
+计划 008 增加 `winstrata-service` 与 `winstrata-kernel`。服务与当前用户交换带版本、带长度前缀的 JSON。kernel crate 跟踪四个驱动订阅。进程、线程和模块的用户态采样属于[计划 010](PROCESS.md)。该 crate 不采集文件、注册表或网络活动，产品宿主也不加载内核映像。
 
 ## 权限
 
@@ -36,4 +36,4 @@ Windows 使用重叠 I/O 的命名管道。临时名为 `\\.\pipe\winstrata-<pid
 
 ## 验证边界
 
-Linux 运行了管理器和服务测试。在修正后的提交上，Windows Server 2022 通过了管理器测试、三项服务控制管理器测试、真实管道交换，以及受限令牌对 SCM 创建权限和管道的拒绝。没有构建或加载已签名的 INF/CAT 包。采集仍属于 PR 009 至 PR 011。E2E-14 和 E2E-15 仍是后续场景。命令、计数和剩余缺口见[工程记录](../records/STATUS.md)。
+Linux 运行了管理器和服务测试。在修正后的提交上，Windows Server 2022 通过了管理器测试、三项服务控制管理器测试、真实管道交换，以及受限令牌对 SCM 创建权限和管道的拒绝。没有构建或加载已签名的 INF/CAT 包。进程用户态采样属于计划 010。文件、注册表和网络采集仍属于 PR 009 和 PR 011。E2E-14 和 E2E-15 仍是后续场景。命令、计数和剩余缺口见[工程记录](../records/STATUS.md)。
