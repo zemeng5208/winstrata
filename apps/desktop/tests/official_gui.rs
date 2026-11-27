@@ -72,6 +72,40 @@ fn bridge_persists_theme_and_rejects_driver_commands() {
 }
 
 #[test]
+fn filter_page_stays_idle_and_does_not_create_plugins_before_a_location() {
+    let root = scratch("filter");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("state");
+    std::fs::create_dir_all(&locator).unwrap();
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator.clone(), None).unwrap();
+    let idle = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"filter-apply","payload":"{\"op\":\"show\"}"}"#),
+        true,
+    );
+    assert!(idle.contains("200"), "{idle}");
+    assert!(idle.contains("\"enabled\":false"), "{idle}");
+    assert!(idle.contains("\"kept\":0"), "{idle}");
+    assert!(idle.contains("\"avoided\":0"), "{idle}");
+    assert!(!locator.join("WinStrata").join("plugins").exists());
+    let source = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/compose/filter-page.tsx"),
+    )
+    .unwrap();
+    assert!(source.contains("filter-apply"));
+    assert!(!source.contains("\"enable\""));
+    assert!(source.contains("Button"));
+    assert!(source.contains("Input"));
+    assert!(source.contains("Badge"));
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
 fn script_page_stays_idle_and_does_not_create_plugins_before_a_location() {
     let root = scratch("script");
     let _ = std::fs::remove_dir_all(&root);

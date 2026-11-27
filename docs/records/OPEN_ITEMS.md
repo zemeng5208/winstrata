@@ -61,6 +61,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-049](#oi-049) | Server 2022 probe recorded on `01f26d1`; Windows 10/11 stay [OI-001](#oi-001) | 023 |
 | [OI-050](#oi-050) | Untested on the authoring host | 026 |
 | [OI-051](#oi-051) | Unimplemented | 030, 031, 032, 016, 042 |
+| [OI-052](#oi-052) | Closed on Windows Server 2022 for head `bc009ea` | 028 |
+| [OI-053](#oi-053) | Untested | 028 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -931,6 +933,34 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the later plan's own run, on the source that produces that budget
 - Acceptance criteria: that plan records the budget from its own source, or the owner narrows PL-15
 - Close conditions: those records exist. Not closed by the CPU, memory, and queue test in plan 026. Not an exemption.
+
+<a id="oi-052"></a>
+
+## OI-052
+
+- Related requirement: [REQ-13.01](../roadmap/REQUIREMENTS.md) and [REQ-13.02](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 028, `plugins/strata-filter`
+- Current state: closed for the Windows Server 2022 job on head `bc009ea2ee3481ae8a9fea295c246380249cd32a`
+- Reason it is incomplete: the Linux authoring host did not execute the Windows filter tests. Pid 1 is tini. A Linux pass of `gui_script_batch_io_and_self_recursion` is not a Windows pass. This item is OI-052 because OI-039 through OI-051 are already used. The result that meets this row is the Windows workspace job on that head, image `windows-2022`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46082494823/job/140784426136). At 2026-11-27T23:28:02Z that log shows `gui_script_batch_io_and_self_recursion ... ok`, and the filter library tests passed 4. The same job shows `filter_page_stays_idle_and_does_not_create_plugins_before_a_location ... ok`. That idle bridge test does not close [OI-053](#oi-053).
+- Responsible PR: 028, on the Windows workspace job for this plan's review head
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job for this plan's review head, `cargo test --locked --workspace`
+- Acceptance criteria: that job passes the `winstrata-strata-filter` tests, including `gui_script_batch_io_and_self_recursion`
+- Close conditions: met for head `bc009ea2ee3481ae8a9fea295c246380249cd32a` by the job above. A Linux pass does not close it. This row does not close [OI-001](#oi-001), [OI-053](#oi-053), [E2E-04](#e2e-04), [E2E-05](#e2e-05), [E2E-07](#e2e-07), or [E2E-08](#e2e-08). It is not an exemption. Windows 10 and Windows 11 stay [OI-001](#oi-001).
+
+<a id="oi-053"></a>
+
+## OI-053
+
+- Related requirement: [REQ-13.02](../roadmap/REQUIREMENTS.md) and [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07)
+- Source PR: plan 028
+- Current state: untested
+- Reason it is incomplete: no Windows session opened the official filter page. The Linux bridge test returns the idle body before a storage location and does not create a plugins directory. That test does not open the page on Windows. This item is OI-053 because [OI-044](#oi-044) is the plan 027 scripts page.
+- Responsible PR: 028
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, with storage selected, `winstrata-strata-filter` beside the runtime and already running, and the official filter page
+- Acceptance criteria: save an include or exclude rule, show kept, avoided, and overhead, and confirm the page does not send `enable` or grant a permission
+- Close conditions: that Windows page run is recorded. A Linux test is not this close. The idle bridge response is not this close. Not closed by [OI-052](#oi-052).
 
 <a id="e2e-17"></a>
 

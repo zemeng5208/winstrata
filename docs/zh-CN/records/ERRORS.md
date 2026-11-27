@@ -37,6 +37,8 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 
 `plugins/strata-script` 没有未解决错误。[ERR-022](modules/strata-script.md#err-022) 留在它的登记里。Windows AppContainer 缺口是 [OI-045](OPEN_ITEMS.md#oi-045)，不是错误。[ERR-020](modules/strata-services.md#err-020) 和 [ERR-021](modules/strata-services.md#err-021) 属于 `strata.services`。
 
+计划 028 的模块登记在[过滤插件](modules/strata-filter.md)。该文件尚未记录错误。[OI-052](OPEN_ITEMS.md#oi-052) 对头 `bc009ea2ee3481ae8a9fea295c246380249cd32a` 上的 Windows Server 2022 作业已经关闭。[OI-053](OPEN_ITEMS.md#oi-053) 仍是 Windows 页面缺口。这两项都不是错误编号。
+
 计划 023 的模块登记在[启动插件](modules/strata-startup.md)。该文件还没有错误。[OI-049](OPEN_ITEMS.md#oi-049) 是 Windows 启动项缺口，不是错误编号。
 
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
