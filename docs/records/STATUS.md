@@ -19,8 +19,9 @@ The owner saved [Protect main](https://github.com/zemeng5208/winstrata/rules/282
 | PR 002 | Accepted | Both GitHub Actions checks are required on an up-to-date branch. Effective rules and PR 004 results verified. See ERR-004. |
 | PR 003 | Merged with open acceptance items | The owner merged [GitHub PR #4](https://github.com/zemeng5208/winstrata/pull/4) as `f8809cc68c97ea841ca02ebe5e8c7a17a6287994`. Its tree matched the submitted tree. Linux workspace and both x64 link probes passed on that baseline. Packaging, signing and actual driver loading remain open. |
 | PR 004 | Accepted for platform feasibility | The owner merged [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) as `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`. The file tree matched the reviewed head. Postmerge Linux, Windows and policy checks passed. |
-| PR 005 | Awaiting owner review | The [public protocols](../architecture/PROTOCOLS.md) passed live cross-language and Windows Server 2022 x64 Event Log read-back checks. [GitHub PR #6](https://github.com/zemeng5208/winstrata/pull/6) |
-| PR 006–050 | Planned | Follow the approved roadmap and verify prerequisites. |
+| PR 005 | Accepted | The owner merged [protocols PR #6](https://github.com/zemeng5208/winstrata/pull/6). Main commit `14a8ec6` has the same tree as reviewed head `e446453`. |
+| PR 006 | In preparation | The core configuration and per-user storage branch starts at the verified PR 005 merge. |
+| PR 007–050 | Planned | Follow the approved roadmap and verify prerequisites. |
 | Core and PL-01 through PL-25 | Planned | Runtime and metrics remain unverified. Maintain their evidence in requirements and module records as work lands. |
 
 ## PR 000 verification
@@ -51,6 +52,8 @@ Phase 0 acceptance covers the tested toolchain, enforced merge gates and feasibi
 
 On the candidate for `995d148`, Linux passed 11 library tests and two integration tests. Windows Server 2022 x64 also passed a fourteenth test reading a real System event and querying it again by record ID to compare its provider and native timestamp. A live Node child verified its PID. Rust and Node exchanged events and errors with precision above the JavaScript safe-integer range. Review found that the default decoder accepted positional arrays or numeric enum tags. The named-object and string-tag checks rejected the original cases on both systems. All six JSON blocks across the two document languages passed typed decode, encode and decode again. Linux also type-checked the tests for the Windows MSVC x64 target. [Linux workspace](https://github.com/zemeng5208/winstrata/actions/runs/45971619572/job/140413162125) · [Windows protocols](https://github.com/zemeng5208/winstrata/actions/runs/45971619572/job/140413162795)
 
+After merge, the workspace, Windows protocol and platform checks passed again. Both required status contexts and the strict latest-base rule remain active. [Main CI](https://github.com/zemeng5208/winstrata/actions/runs/45972348949) · [Windows platform](https://github.com/zemeng5208/winstrata/actions/runs/45972349084) · [Merge policy](https://github.com/zemeng5208/winstrata/actions/runs/45972348858)
+
 ## Decisions and open assumptions
 
 | ID | Status | Evidence and follow-up |
@@ -74,4 +77,4 @@ On the candidate for `995d148`, Linux passed 11 library tests and two integratio
 | ERR-003 | Resolved | The first Linux driver link failed because the selected x64 WDK import archive did not export `KeQueryInterruptTime`. Inspected the archive, switched to the documented export `KeQueryTimeIncrement`, and reran both probes and PE inspection. |
 | ERR-004 | Resolved on PR 004 | PR 003 merged with a failed policy status while only Workspace checks was required and strict latest-base was off. PR 004 passed both checks on head `1788410`. The effective rules require `Workspace checks`, `winstrata/merge-policy` and an up-to-date branch, with GitHub Actions as the source for both checks and no bypass actors. [PR 003 policy failure](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 main CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 policy success](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [Effective rules](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-On `pr/005-protocol-contracts`, verify workspace and Windows checks for the current candidate. After exact-head owner confirmation and merge, verify main before PR 006. Service authentication and audit remain in PR 008.
+Continue on `pr/006-core-user-storage` from `14a8ec6`. PR 006 covers current-user identity, runtime configuration, directory selection, migration preflight and real permissions.
