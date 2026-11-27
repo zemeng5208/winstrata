@@ -20,7 +20,7 @@
 
 | 路径 | 内容 |
 |---|---|
-| `host.json` | 已安装条目、授权、待授权权限、版本锁定、启用状态，以及 `strata.registry` 的启用标志、可用性和范围 |
+| `host.json` | 已安装条目、授权、待授权权限、版本锁定、启用状态，以及 `strata.registry`、`strata.env` 和 `strata.trace` 的启用标志、可用性和范围 |
 | `history/<id>.jsonl` | 生命周期动作，保留最近 1,024 行 |
 | `packages/<id>/` | 当前运行的包 |
 | `recovery/<id>/` | 最近一次安装或成功更新的包 |
@@ -33,7 +33,7 @@
 
 ## 官方目录
 
-`list` 始终返回这 25 个身份。`strata.registry` 是[注册表插件](REGISTRY.md)里的进程内监视。它没有包。对它调用 `load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。只有 `winstrata-strata-process` 位于运行时旁边时，宿主才登记 `strata.process`，并且在启用前保持禁用。只有 `winstrata-strata-script` 位于运行时旁边时，宿主才登记 `strata.script`，并且在启用前保持禁用。见[脚本插件](SCRIPT.md)。没有包的官方 id，`enable` 返回 `implementation_absent`。每个官方 id 的 `uninstall` 都返回 `builtin_retained`，包括 `strata.registry` 和 `strata.process`。第三方包不能占用这些 id，也不能把 `kind` 设为 `builtin`。只有 `strata.rescue` 关闭批量启用。
+`list` 始终返回这 25 个身份。`strata.registry` 是[注册表插件](REGISTRY.md)里的进程内监视。`strata.env` 是[环境插件](ENV.md)里的进程内监视。`strata.trace` 是[跟踪插件](TRACE.md)里的进程内文件监视。三者都没有包，也都不启动 `winstrata-runtime`。对它们调用 `load`、`update`、`pin`、`grant`、`call` 和 `ping` 返回 `builtin_closed`。对它们调用 `uninstall` 返回 `builtin_retained`。只有 `winstrata-strata-process` 位于运行时旁边时，宿主才登记 `strata.process`，并且在启用前保持禁用。只有 `winstrata-strata-script` 位于运行时旁边时，宿主才登记 `strata.script`，并且在启用前保持禁用。见[脚本插件](SCRIPT.md)。仍没有实现的官方 id，`enable` 返回 `implementation_absent`。每个官方 id 的 `uninstall` 都返回 `builtin_retained`，包括 `strata.registry`、`strata.env`、`strata.trace`、`strata.process` 和 `strata.script`。第三方包不能占用这些 id，也不能把 `kind` 设为 `builtin`。只有 `strata.rescue` 关闭批量启用。
 
 | Id | 名称 | 计划 |
 |---|---|---|
@@ -83,4 +83,4 @@
 
 ## 本计划未完成的部分
 
-计划 014 对原生运行时实际使用的隔离是独立进程、私有目录，以及一个插件失败时另一个插件继续运行。这不是 AppContainer、Job Object 或 seccomp 沙箱。语言运行时及其操作系统隔离属于[计划 015](RUNTIMES.md)。官方默认界面属于计划 016。计划 017 把首次启用选择写入 `onboarding.json`，不调用 `enable`，也不启动官方采集器。救援是单独的标志，并且不进入该批量选择。计划 018 提供 `strata.process` 采集实现，见[进程来源](PROCESS.md#plugin)。只有 `winstrata-strata-process` 位于运行时旁边时，宿主才登记它，并且在启用前保持禁用。计划 019 在进程内运行 `strata.registry`。计划 027 在[脚本插件](SCRIPT.md)提供脚本工作台。只有 `winstrata-strata-script` 位于运行时旁边时，宿主才登记它，并且在启用前保持禁用。该计划不改变 `strata.process` 或 `strata.registry` 的采集。其余采集实现仍属于计划 020 至 047。市场属于计划 043。签名更新和事务回退属于计划 044。救援行为属于计划 047。完整 GUI 替换是 [AG-64](../AGENTS.md#ag-64)，记为计划 053。这里没有实现它，它也不是计划 016 的验收。计划 053 不另加实现计划编号。E2E-06、E2E-11 和 E2E-15 未完成。证据见[工程记录](../records/STATUS.md)。
+计划 014 对原生运行时实际使用的隔离是独立进程、私有目录，以及一个插件失败时另一个插件继续运行。这不是 AppContainer、Job Object 或 seccomp 沙箱。语言运行时及其操作系统隔离属于[计划 015](RUNTIMES.md)。官方默认界面属于计划 016。计划 017 把首次启用选择写入 `onboarding.json`，不调用 `enable`，也不启动官方采集器。救援是单独的标志，并且不进入该批量选择。计划 018 提供 `strata.process` 采集实现，见[进程来源](PROCESS.md#plugin)。只有 `winstrata-strata-process` 位于运行时旁边时，宿主才登记它，并且在启用前保持禁用。计划 019 在进程内运行 `strata.registry`。计划 020 在进程内运行 `strata.env`。计划 021 在进程内运行 `strata.trace`。计划 027 在[脚本插件](SCRIPT.md)提供脚本工作台。只有 `winstrata-strata-script` 位于运行时旁边时，宿主才登记它，并且在启用前保持禁用。该计划不改变 `strata.process`、`strata.registry`、`strata.env` 或 `strata.trace` 的采集。其余采集实现仍属于计划 022 至 047。市场属于计划 043。签名更新和事务回退属于计划 044。救援行为属于计划 047。完整 GUI 替换是 [AG-64](../AGENTS.md#ag-64)，记为计划 053。这里没有实现它，它也不是计划 016 的验收。计划 053 不另加实现计划编号。E2E-06、E2E-11 和 E2E-15 未完成。证据见[工程记录](../records/STATUS.md)。

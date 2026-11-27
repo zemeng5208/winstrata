@@ -4,4 +4,4 @@
 
 Authoritative error records for `plugins/strata-script`.
 
-Plan 027 has no open error. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is an open item, not an error recorded here.
+Plan 027 has no open error. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is [OI-041](../OPEN_ITEMS.md#oi-041), not an error recorded here. The Windows workbench session is [OI-040](../OPEN_ITEMS.md#oi-040).

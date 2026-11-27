@@ -38,7 +38,7 @@ Python 在真实源码上使用 `sys.settrace`。JavaScript 和 TypeScript 在 N
 
 ## 隔离
 
-当 `libwinstrata_shim.so` 位于运行时旁边时，每个用户脚本子进程使用与[计划 015](RUNTIMES.md)相同的 Landlock 和 `LD_PRELOAD` 垫片。读访问覆盖解释器前缀、加载器路径和插件状态。调试期间的写访问覆盖 `debug`。只有授予 `storage.private` 时，写访问才覆盖 `private`。垫片或 Landlock 无法安装时不启动子进程，结果是 `isolation_unavailable`。本计划不把 Windows 子进程放入 AppContainer。这个缺口是未验收事项，不记为成功。
+当 `libwinstrata_shim.so` 位于运行时旁边时，每个用户脚本子进程使用与[计划 015](RUNTIMES.md)相同的 Landlock 和 `LD_PRELOAD` 垫片。读访问覆盖解释器前缀、加载器路径和插件状态。调试期间的写访问覆盖 `debug`。只有授予 `storage.private` 时，写访问才覆盖 `private`。垫片或 Landlock 无法安装时不启动子进程，结果是 `isolation_unavailable`。本计划不把 Windows 子进程放入 AppContainer。这个缺口是 [OI-041](../records/OPEN_ITEMS.md#oi-041)，不记为成功。
 
 ## 官方页面
 
