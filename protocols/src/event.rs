@@ -23,7 +23,7 @@ pub(crate) struct EventWire {
     sequence: Counter,
     #[serde(deserialize_with = "object::required")]
     time: EventTime,
-    #[serde(deserialize_with = "object::required")]
+    #[serde(deserialize_with = "object::tagged")]
     record: Record,
 }
 
@@ -90,9 +90,9 @@ pub enum Record {
             skip_serializing_if = "Option::is_none"
         )]
         process: Option<ProcessRef>,
-        #[serde(deserialize_with = "object::required")]
+        #[serde(deserialize_with = "object::tagged")]
         attribution: Attribution,
-        #[serde(deserialize_with = "object::required")]
+        #[serde(deserialize_with = "object::tagged")]
         completeness: Completeness,
     },
     Gap {
