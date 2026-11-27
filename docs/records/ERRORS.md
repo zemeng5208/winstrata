@@ -37,7 +37,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 
 `plugins/strata-script` has no open error. [ERR-022](modules/strata-script.md#err-022) stays in its register. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
 
-`plugins/strata-tag` has no open error. The Windows job that was not run is [OI-052](OPEN_ITEMS.md#oi-052), not an error. [ERR-021](modules/strata-services.md#err-021) stays with services.
+`plugins/strata-tag` has no open error. The Windows job that was not run is [OI-055](OPEN_ITEMS.md#oi-055), not an error. Plan 028 keeps OI-052 and OI-053. This file does not rewrite them. [ERR-021](modules/strata-services.md#err-021) stays with services.
 
 Plan 023 keeps its module register at [Startup plugin](modules/strata-startup.md). That file records no error yet. [OI-049](OPEN_ITEMS.md#oi-049) is the Windows startup gap and is not an error id.
 

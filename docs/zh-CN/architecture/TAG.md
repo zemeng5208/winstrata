@@ -14,7 +14,7 @@
 
 宿主是标记判定和报文字节的唯一写入者。插件进程只保存宿主已经做出的判定。调用方的 `actor`、`time_unix_ns` 和 `safety` 会被丢掉。宿主把 `safety` 写成 `none`。没有标记不是安全结论，打上标记也不是。
 
-actor 由调用方决定。来自 `strata.tag` 的调用是 `user`，`actor_id` 是 Core 的当前用户。来自 `strata.mcp` 的调用会是 `agent`。这个调用方没有安装。缺口是 [OI-053](../records/OPEN_ITEMS.md#oi-053)。其他通过 `plugin.call` 到达 `tag.apply` 的调用方是 `plugin`，`actor_id` 是该插件 id。
+actor 由调用方决定。来自 `strata.tag` 的调用是 `user`，`actor_id` 是 Core 的当前用户。来自 `strata.mcp` 的调用会是 `agent`。这个调用方没有安装。缺口是 [OI-056](../records/OPEN_ITEMS.md#oi-056)。其他通过 `plugin.call` 到达 `tag.apply` 的调用方是 `plugin`，`actor_id` 是该插件 id。
 
 `kind` 是 `event`、`packet`、`file`、`process`、`software`、`registry` 或 `system`。`subject` 为 1 到 256 字节。`attribution` 是 `observed`、`inferred` 或 `unknown`。`evidence` 为空，或为 1 到 256 字节。报文还需要一个正的 `packet` 编号。`reason`、`source` 和 `confidence` 要么一起为空，要么各自为 1 到 128 字节，没有首尾空白，也没有控制字符。其他组合是 `tag_rejected`。三者都空时，非报文记为 `untagged`；策略允许写入时，报文账本返回同一个代码。
 
@@ -42,7 +42,7 @@ actor 由调用方决定。来自 `strata.tag` 的调用是 `user`，`actor_id` 
 
 ## 本计划不做什么
 
-本计划不在插件内从网卡采集，不导出 PCAPNG，不绘制拓扑，也不做网络发现。这些仍属于计划 031。[E2E-04](../../roadmap/ACCEPTANCE.md#e2e-04) 保持开放。未标记连接元数据仍是 [OI-025](../records/OPEN_ITEMS.md#oi-025)。[E2E-05](../../roadmap/ACCEPTANCE.md#e2e-05) 仍属于计划 030。本计划不启动计划 028 或计划 030。本机 Agent 标记仍是 [OI-053](../records/OPEN_ITEMS.md#oi-053)。这台 Linux 编写主机没有执行该插件的 Windows `cargo test --locked --workspace`。该缺口是 [OI-052](../records/OPEN_ITEMS.md#oi-052)。
+本计划不在插件内从网卡采集，不导出 PCAPNG，不绘制拓扑，也不做网络发现。这些仍属于计划 031。[E2E-04](../../roadmap/ACCEPTANCE.md#e2e-04) 保持开放。未标记连接元数据仍是 [OI-025](../records/OPEN_ITEMS.md#oi-025)。[E2E-05](../../roadmap/ACCEPTANCE.md#e2e-05) 仍属于计划 030。本计划不启动计划 028 或计划 030。本机 Agent 标记仍是 [OI-056](../records/OPEN_ITEMS.md#oi-056)。这台 Linux 编写主机没有执行该插件的 Windows `cargo test --locked --workspace`。该缺口是 [OI-055](../records/OPEN_ITEMS.md#oi-055)。计划 028 保留 OI-052 和 OI-053。本计划不改写它们。
 
 ## 验证
 

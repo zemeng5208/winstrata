@@ -14,7 +14,7 @@ Enable starts the tag process. Pause and resume keep the process. While the plug
 
 The host is the only writer of a tag decision and of packet bytes. The plugin process stores the decision the host already made. Caller fields `actor`, `time_unix_ns`, and `safety` are discarded. The host writes `safety` as `none`. A missing tag is not a safety conclusion, and an applied tag is not one either.
 
-The actor stamp depends on the caller. A call from `strata.tag` is `user`, and `actor_id` is the Core user. A call from `strata.mcp` would be `agent`. That caller is not installed. The gap is [OI-053](../records/OPEN_ITEMS.md#oi-053). Any other caller that reaches `tag.apply` through `plugin.call` is `plugin`, and `actor_id` is that plugin id.
+The actor stamp depends on the caller. A call from `strata.tag` is `user`, and `actor_id` is the Core user. A call from `strata.mcp` would be `agent`. That caller is not installed. The gap is [OI-056](../records/OPEN_ITEMS.md#oi-056). Any other caller that reaches `tag.apply` through `plugin.call` is `plugin`, and `actor_id` is that plugin id.
 
 `kind` is `event`, `packet`, `file`, `process`, `software`, `registry`, or `system`. `subject` is 1 to 256 bytes. `attribution` is `observed`, `inferred`, or `unknown`. `evidence` is empty or 1 to 256 bytes. A packet also needs a positive `packet` id. `reason`, `source`, and `confidence` are empty together, or each is 1 to 128 bytes with no surrounding whitespace and no control characters. Any other mix is `tag_rejected`. All three empty is `untagged` for a non-packet, and the packet ledger returns the same code when the policy allows a write.
 
@@ -42,7 +42,7 @@ The official page at `/tags` composes the existing shadcn-admin [Button](../../p
 
 ## What this plan does not do
 
-This plan does not capture from a NIC inside the plugin, export PCAPNG, draw topology, or discover a network. Those stay plan 031. [E2E-04](../roadmap/ACCEPTANCE.md#e2e-04) stays open. Untagged connection metadata stays [OI-025](../records/OPEN_ITEMS.md#oi-025). [E2E-05](../roadmap/ACCEPTANCE.md#e2e-05) stays plan 030. This plan does not start plan 028 or plan 030. Local-agent tagging stays [OI-053](../records/OPEN_ITEMS.md#oi-053). The Windows `cargo test --locked --workspace` run for this plugin was not executed on the Linux authoring host. That gap is [OI-052](../records/OPEN_ITEMS.md#oi-052).
+This plan does not capture from a NIC inside the plugin, export PCAPNG, draw topology, or discover a network. Those stay plan 031. [E2E-04](../roadmap/ACCEPTANCE.md#e2e-04) stays open. Untagged connection metadata stays [OI-025](../records/OPEN_ITEMS.md#oi-025). [E2E-05](../roadmap/ACCEPTANCE.md#e2e-05) stays plan 030. This plan does not start plan 028 or plan 030. Local-agent tagging stays [OI-056](../records/OPEN_ITEMS.md#oi-056). The Windows `cargo test --locked --workspace` run for this plugin was not executed on the Linux authoring host. That gap is [OI-055](../records/OPEN_ITEMS.md#oi-055). Plan 028 keeps OI-052 and OI-053. This plan does not rewrite them.
 
 ## Verification
 

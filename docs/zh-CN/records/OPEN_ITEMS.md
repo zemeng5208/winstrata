@@ -61,9 +61,9 @@
 | [OI-049](#oi-049) | `01f26d1` 上的 Server 2022 探测已记录；Windows 10/11 仍属于 [OI-001](#oi-001) | 023 |
 | [OI-050](#oi-050) | 编写主机未测试 | 026 |
 | [OI-051](#oi-051) | 未实现 | 030、031、032、016、042 |
-| [OI-052](#oi-052) | 编写主机未测试 | 029 |
-| [OI-053](#oi-053) | 未实现 | 045 |
 | [OI-054](#oi-054) | 未测试 | 029 |
+| [OI-055](#oi-055) | 编写主机未测试 | 029 |
+| [OI-056](#oi-056) | 未实现 | 045 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -935,34 +935,6 @@
 - 验收标准: 该计划记录来自其自身来源的限额，或所有者收窄 PL-15
 - 关闭条件: 这些记录存在。计划 026 的 CPU、内存和队列测试不关闭它。这不是豁免。
 
-<a id="oi-052"></a>
-
-## OI-052
-
-- 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
-- 来源 PR: 计划 029，`plugins/strata-tag`
-- 当前状态: 未测试
-- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-tag` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。这台主机没有安装 `x86_64-pc-windows-msvc` 目标，因此本行也不是类型检查结果。
-- 负责 PR: 029，在本计划审查头的 Windows 工作区作业上
-- 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 本计划审查头的 Windows 工作区作业，`cargo test --locked --workspace`
-- 验收标准: 该作业通过 `winstrata-strata-tag` 测试，包括 `manual_script_and_plugin_tags_keep_untagged_packets_off_disk` 和 `tag_stays_absent_until_the_binary_is_beside_the_runtime`
-- 关闭条件: 该作业记在本计划的审查头上。Linux 通过不关闭它。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04) 或 [OI-054](#oi-054)。这不是豁免。
-
-<a id="oi-053"></a>
-
-## OI-053
-
-- 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
-- 来源 PR: 计划 029，`plugins/strata-tag`
-- 当前状态: 未实现
-- 未完成原因: 只有调用方是 `strata.mcp` 时，宿主才会把 actor 标成 `agent`。该插件没有安装。计划 029 不编造一次 Agent 标记。手工、脚本和第三方插件关联已经实现。
-- 负责 PR: 045
-- 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 计划 045 的运行，`strata.mcp` 已安装并调用 `tag.apply`
-- 验收标准: 来自 `strata.mcp` 的调用记录 actor `agent`、`actor_id` `strata.mcp` 和 `safety` `none`，并且仍然不能持久化未标记报文
-- 关闭条件: 该运行被记录。计划 029 的用户、脚本或插件标记不关闭它。这不是豁免。
-
 <a id="oi-054"></a>
 
 ## OI-054
@@ -970,12 +942,40 @@
 - 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
 - 来源 PR: 计划 029，`plugins/strata-tag`
 - 当前状态: 未测试
-- 未完成原因: 没有 Windows 会话打开官方标记页。Linux 桥测试只检查尚未选择存储位置时 `tag-apply` 保持空闲，以及 `enable` 仍然被拒绝。计划 027 持有 [OI-044](#oi-044)。这个页面会话是 OI-054。
+- 未完成原因: 没有 Windows 会话打开官方标记页。Linux 桥测试只检查尚未选择存储位置时 `tag-apply` 保持空闲，以及 `enable` 仍然被拒绝。计划 027 持有 [OI-044](#oi-044)。这个页面会话是 OI-054。计划 028 在自己的分支上持有 OI-052 和 OI-053。这里不改写那两行。以后换基时按计划 028 写下的内容保留它们。
 - 负责 PR: 029，在打开 `/tags` 的 Windows 会话上
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows 10 或 11 x64，官方外壳，页面不启动 `strata.tag`
 - 验收标准: 页面显示空闲状态，只发送 `tag-apply`，并且不发送 `enable` 或 `grant`。Linux 桥测试不关闭它。
-- 关闭条件: 该会话被记录。本行不关闭 [OI-001](#oi-001) 或 [E2E-04](#e2e-04)。这不是豁免。
+- 关闭条件: 该会话被记录。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04) 或 [OI-055](#oi-055)。这不是豁免。
+
+<a id="oi-055"></a>
+
+## OI-055
+
+- 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
+- 来源 PR: 计划 029，`plugins/strata-tag`
+- 当前状态: 未测试
+- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-tag` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。这台主机没有安装 `x86_64-pc-windows-msvc` 目标，因此本行也不是类型检查结果。本项是 OI-055，因为计划 028 持有 OI-052 和 OI-053。这里不改写那两行。[OI-054](#oi-054) 是 Windows 标记页。
+- 负责 PR: 029，在本计划审查头的 Windows 工作区作业上
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: 本计划审查头的 Windows 工作区作业，`cargo test --locked --workspace`
+- 验收标准: 该作业通过 `winstrata-strata-tag` 测试，包括 `manual_script_and_plugin_tags_keep_untagged_packets_off_disk` 和 `tag_stays_absent_until_the_binary_is_beside_the_runtime`
+- 关闭条件: 该作业记在本计划的审查头上。Linux 通过不关闭它。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04) 或 [OI-054](#oi-054)。这不是豁免。它不关闭计划 028 的 OI-052。
+
+<a id="oi-056"></a>
+
+## OI-056
+
+- 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
+- 来源 PR: 计划 029，`plugins/strata-tag`
+- 当前状态: 未实现
+- 未完成原因: 只有调用方是 `strata.mcp` 时，宿主才会把 actor 标成 `agent`。该插件没有安装。计划 029 不编造一次 Agent 标记。手工、脚本和第三方插件关联已经实现。本项是 OI-056，因为计划 028 持有 OI-052 和 OI-053。这里不改写那两行。
+- 负责 PR: 045
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: 计划 045 的运行，`strata.mcp` 已安装并调用 `tag.apply`
+- 验收标准: 来自 `strata.mcp` 的调用记录 actor `agent`、`actor_id` `strata.mcp` 和 `safety` `none`，并且仍然不能持久化未标记报文
+- 关闭条件: 该运行被记录。计划 029 的用户、脚本或插件标记不关闭它。这不是豁免。它不关闭计划 028 的 OI-053。
 
 <a id="e2e-17"></a>
 

@@ -37,7 +37,7 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 
 `plugins/strata-script` 没有未解决错误。[ERR-022](modules/strata-script.md#err-022) 留在它的登记里。Windows AppContainer 缺口是 [OI-045](OPEN_ITEMS.md#oi-045)，不是错误。[ERR-020](modules/strata-services.md#err-020) 和 [ERR-021](modules/strata-services.md#err-021) 属于 `strata.services`。
 
-`plugins/strata-tag` 没有未解决错误。没有运行的 Windows 作业是 [OI-052](OPEN_ITEMS.md#oi-052)，不是错误。[ERR-021](modules/strata-services.md#err-021) 仍属于服务。
+`plugins/strata-tag` 没有未解决错误。没有运行的 Windows 作业是 [OI-055](OPEN_ITEMS.md#oi-055)，不是错误。计划 028 保留 OI-052 和 OI-053。本文件不改写它们。[ERR-021](modules/strata-services.md#err-021) 仍属于服务。
 
 计划 023 的模块登记在[启动插件](modules/strata-startup.md)。该文件还没有错误。[OI-049](OPEN_ITEMS.md#oi-049) 是 Windows 启动项缺口，不是错误编号。
 
