@@ -21,6 +21,7 @@ import {
 } from '../vendor/shadcn-admin/src/components/ui/sidebar'
 import { useLayout } from '../vendor/shadcn-admin/src/context/layout-provider'
 import { copyFor, type Copy, type Language } from './copy'
+import { InkSwitch, SignalReturn } from './moments'
 
 export type ThemeName = 'white-acrylic' | 'black-acrylic' | 'liquid-glass'
 export type CloseName = 'ask' | 'tray' | 'exit'
@@ -245,6 +246,9 @@ export function ServicePage() {
   return (
     <section>
       <h1 className='text-2xl font-semibold'>{copy.service}</h1>
+      {state.service.startsWith('connected') ? null : (
+        <SignalReturn dark={state.theme === 'black-acrylic'} label={copy.service} />
+      )}
       <p>{state.service || copy.serviceDown}</p>
       <p>{state.privilege}</p>
     </section>
@@ -263,13 +267,14 @@ export function SettingsPage() {
         <ThemeButton copy={copy} theme='black-acrylic' active={state.theme === 'black-acrylic'} label={copy.blackAcrylic} />
         <ThemeButton copy={copy} theme='liquid-glass' active={state.theme === 'liquid-glass'} label={copy.liquidGlass} />
       </div>
-      <div className='flex flex-wrap gap-2'>
-        <Button type='button' variant={state.language === 'en' ? 'default' : 'outline'} onClick={() => command({ command: 'set-language', language: 'en' })}>
-          {copy.english}
-        </Button>
-        <Button type='button' variant={state.language === 'zh-CN' ? 'default' : 'outline'} onClick={() => command({ command: 'set-language', language: 'zh-CN' })}>
-          {copy.chinese}
-        </Button>
+      <div className='flex items-center gap-3'>
+        <InkSwitch
+          checked={state.language === 'zh-CN'}
+          dark={state.theme === 'black-acrylic'}
+          label={`${copy.language}: ${state.language === 'zh-CN' ? copy.chinese : copy.english}`}
+          onChange={(on) => command({ command: 'set-language', language: on ? 'zh-CN' : 'en' })}
+        />
+        <span>{state.language === 'zh-CN' ? copy.chinese : copy.english}</span>
       </div>
       <div className='flex flex-wrap gap-2'>
         <Button type='button' variant={state.close === 'ask' || state.close === null ? 'default' : 'outline'} onClick={() => command({ command: 'set-close', close: 'ask' })}>

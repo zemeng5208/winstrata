@@ -284,7 +284,7 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 计划 016 从 main `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 开始，即 2026-11-27T18:50:26Z 合并的 GitHub PR #22。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。分支是 `pr/016-official-default-gui`。它不复用已关闭的 PR #21 或 `pr/016-desktop-gui`。路线图顺序仍是 015，然后 016，然后 017。`PLAN.md` 未改。
 
-在 Linux x86_64、Rust 1.100.0、Node.js 24.22.3 和 Python 3.12.3 上，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 61 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试和 4 个桌面测试。桌面测试通过 `gui.json` 保存主题，拒绝 subscribe 命令，用 `GuiClient` 读取服务状态，并核对入库文件的 SHA-256 登记。`cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-desktop` 对窗口、托盘和 WebView2 加载器路径做了类型检查。这些 Windows 测试没有执行。没有运行普通用户的 Windows GUI 会话。E2E-11 未完成。`Cargo.lock` 增加路径包 `winstrata-desktop`。没有新增外部 crate 版本。官方外壳用 esbuild 从已批准来源自己的锁文件打包。没有采用 Vite。
+在 Linux x86_64、Rust 1.100.0、Node.js 24.22.3 和 Python 3.12.3 上，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 61 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试和 4 个桌面测试。桌面测试通过 `gui.json` 保存主题，拒绝 subscribe 命令，用 `GuiClient` 读取服务状态，并核对入库文件的 SHA-256 登记。`cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-desktop` 对窗口、托盘和 WebView2 加载器路径做了类型检查。这些 Windows 测试没有执行。没有运行普通用户的 Windows GUI 会话。E2E-11 未完成。`Cargo.lock` 增加路径包 `winstrata-desktop`。没有新增外部 crate 版本。官方外壳用 esbuild 从已批准来源自己的锁文件打包。它挂载 UI Moments 修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 的 Ink Switch 和 Signal Return。没有采用 Vite。
 
 这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。
 

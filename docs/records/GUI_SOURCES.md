@@ -70,6 +70,10 @@ Closed PR #21's `packages/ui/static/shell.js` and `packages/ui/static/themes.css
 | shadcn-admin-src-lib-utils-ts | `packages/ui/vendor/shadcn-admin/src/lib/utils.ts` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/lib/utils.ts` | MIT | compiled into the official shell | none | 016 | in-product | `cc244af40baa5fe88abff3f80b424a7aa654b3137a7db612a8fe94861b61e04e` |
 | shadcn-admin-src-styles-index-css | `packages/ui/vendor/shadcn-admin/src/styles/index.css` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/styles/index.css` | MIT | compiled into the official shell | none | 016 | in-product | `ee0477a25d5836191f9efcdd7260aa2b75e358865f4fecdeb59ac4e3bbefce46` |
 | shadcn-admin-src-styles-theme-css | `packages/ui/vendor/shadcn-admin/src/styles/theme.css` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/styles/theme.css` | MIT | compiled into the official shell | none | 016 | in-product | `faee559c9a21b2084bf7bae193e70f0ab18b18a393a06fec1408669652c266a1` |
+| ui-moments-LICENSE | `packages/ui/vendor/ui-moments/LICENSE` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `LICENSE` | MIT | license text, verbatim | none | 016 | in-product | `107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299` |
+| ui-moments-gallery-originals-index-html | `packages/ui/vendor/ui-moments/gallery/originals/index.html` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/originals/index.html` | MIT | compiled into the official shell | none | 016 | in-product | `7bbb1b694c613be66a6f6f419419e08db789a996f816bce3e1c40eb279ca23ab` |
+| ui-moments-gallery-loaders-originals-mjs | `packages/ui/vendor/ui-moments/gallery/loaders/originals.mjs` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/loaders/originals.mjs` | MIT | compiled into the official shell | none | 016 | in-product | `f48cf7a012041f445a25846f410f857a3ebf87e60ddefbee2adcc9977406d29c` |
+| ui-moments-gallery-loaders-motifs-mjs | `packages/ui/vendor/ui-moments/gallery/loaders/motifs.mjs` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/loaders/motifs.mjs` | MIT | vendored with the loader source, mounted through originals.mjs | none | 016 | in-product | `013b74576fd8040c3ed66840151a2add452ff5413c57fa1289d71c4c03c8937a` |
 
 ## Composition
 
@@ -79,14 +83,10 @@ These files bind the official shell to host state. They are not upstream compone
 |---|---|---|---|---|---|---|---|---|---|
 | winstrata-copy | `packages/ui/compose/copy.ts` | none | none | none | Apache-2.0 | WinStrata composition | English and zh-CN strings. English is the fallback. | 016 | in-product |
 | winstrata-entry | `packages/ui/compose/entry.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Memory-router routes for the official pages. | 016 | in-product |
-| winstrata-shell | `packages/ui/compose/shell.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the shadcn shell, Glasswork material, and Amicro fade. Binds real host state. | 016 | in-product |
+| winstrata-shell | `packages/ui/compose/shell.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the shadcn shell, Glasswork material, Amicro fade, and the UI Moments controls below. Binds real host state. | 016 | in-product |
+| winstrata-moments | `packages/ui/compose/moments.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the Ink Switch for language and Signal Return while the service is not connected. Tokens are scoped to the switch host. The label uses the active locale. | 016 | in-product |
+| winstrata-ink-switch | `packages/ui/compose/ink-switch.js` | none | none | none | Apache-2.0 | WinStrata composition | The behavior block is the upstream `standalone:ink-switch-script` section. Queries are scoped to the mounted node. | 016 | in-product |
 
-The three themes share this shell. White rounded acrylic uses the shadcn light tokens and Glasswork `data-kind=light`. Black rounded acrylic uses the shadcn `html.dark` tokens and Glasswork `data-kind=dark`. Liquid Glass uses the light glass panels and `liquidGlass()` on buttons that carry `data-lens`. No theme is stored until the user chooses one. [OI-023](OPEN_ITEMS.md#oi-023) stays open.
+The three themes share this shell. White rounded acrylic uses the shadcn light tokens and Glasswork `data-kind=light`. Black rounded acrylic uses the shadcn `html.dark` tokens and Glasswork `data-kind=dark`. Liquid Glass uses the light glass panels and `liquidGlass()` on buttons that carry `data-lens`. The Ink Switch uses the UI Moments light tokens, and the black acrylic theme uses that source's dark tokens inside the switch only. No theme is stored until the user chooses one. [OI-023](OPEN_ITEMS.md#oi-023) stays open.
 
-## Gap
-
-| ID | Product path | Upstream repository | Version | Source path | License | Reuse method | Modifications | Introducing plan | State |
-|---|---|---|---|---|---|---|---|---|---|
-| ui-moments | none | guanmo-ai/ui-moments | revision `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | none | not reviewed | not included | none | 016 | not-in-this-commit |
-
-UI Moments stays [OI-009](OPEN_ITEMS.md#oi-009). This plan does not invent a component to fill that gap and does not add another source.
+The shadcn-admin shell remains the layout. Fluent UI and Astryx example trees from this UI Moments revision are not product files. The Geist face file is not vendored; the control keeps the upstream font stack and its system fallback. WebView2 and performance measurement of this revision stay [OI-009](OPEN_ITEMS.md#oi-009).

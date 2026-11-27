@@ -172,7 +172,7 @@
 - 关联需求: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 2026-11-27 的所有者指定，由计划 051 记录。计划 004 只测量了 Amicro、Glasswork 和 shadcn-admin。指定时读到的上游提交是 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`。
 - 当前状态: 未测试
-- 未完成原因: 计划 016 没有加入 UI Moments 产品文件。该指定修订仍然没有做过计划 004 那种修订、许可证闭合、WebView2 或性能测量。Fluent UI 和 Astryx 不是产品依赖。
+- 未完成原因: 计划 016 挂载了修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 的原创 Ink Switch 和 Signal Return。Fluent UI、Astryx 和 Geist 字体文件不是产品文件。该修订仍然没有做过计划 004 那种 WebView2 或性能测量。
 - 负责 PR: 016
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 与三个已测量来源同类的离线 WebView2 测量，加上所选修订的许可证和版本审查
@@ -774,7 +774,7 @@
 - 关联需求: [REQ-19.01](../roadmap/REQUIREMENTS.md) 和 [REQ-19.15](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 未合并的 GitHub PR #21，`pr/016-desktop-gui`，头 `64bd627c362ad025869905441bee7802dda19ac1`。main `0accacb` 没有 GUI 文件。
 - 当前状态: 登记与本提交一致；E2E-19 仍开放
-- 未完成原因: 本提交的来源登记与入库文件一致。已关闭的 PR #21 中的 `packages/ui/static/shell.js` 和 `packages/ui/static/themes.css` 不在本提交中。UI Moments 仍是 [OI-009](#oi-009)。E2E-19 没有实现计划编号，也不是计划 016 的验收。
+- 未完成原因: 本提交的来源登记与入库文件一致，包括 UI Moments 原创控件。已关闭的 PR #21 中的 `packages/ui/static/shell.js` 和 `packages/ui/static/themes.css` 不在本提交中。WebView2 测量仍是 [OI-009](#oi-009)。E2E-19 没有实现计划编号，也不是计划 016 的验收。
 - 负责 PR: 计划 016 的现有行。计划 053 不写入该直接依赖格，也不修改那个分支。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 合并官方 GUI 文件的计划 016 变更，与上游修订对照

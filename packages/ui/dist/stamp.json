@@ -9,8 +9,16 @@
       "sha256": "d0ad02a9f5db6112bc86a4facf5f8160ab83f3fe8abbc1ad77c8b5fc71829670"
     },
     {
+      "path": "compose/ink-switch.js",
+      "sha256": "38d0684ae972102b41186d798d1693715a2f561e537508e8533c7731a54495ca"
+    },
+    {
+      "path": "compose/moments.tsx",
+      "sha256": "f276b5f43138ce9feeb93ef9b60e79d3b2df10d5cbc02988a26c686447d1cc37"
+    },
+    {
       "path": "compose/shell.tsx",
-      "sha256": "6437a1ecbf67dc4170e1438f74abf7c7bcd699634cc3615021265cd4ff0e9577"
+      "sha256": "aa97b3b688711e4b05cf74e700ffaebaf319e41b7abe43331bbff7f146eafb51"
     },
     {
       "path": "vendor/amicro/fade-in.tsx",

@@ -70,6 +70,10 @@ Glasswork 的 `NOTICE`（`824058026d7338161460df1fda278d593e7a1682d9601c3780167c
 | shadcn-admin-src-lib-utils-ts | `packages/ui/vendor/shadcn-admin/src/lib/utils.ts` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/lib/utils.ts` | MIT | 编入官方界面 | none | 016 | in-product | `cc244af40baa5fe88abff3f80b424a7aa654b3137a7db612a8fe94861b61e04e` |
 | shadcn-admin-src-styles-index-css | `packages/ui/vendor/shadcn-admin/src/styles/index.css` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/styles/index.css` | MIT | 编入官方界面 | none | 016 | in-product | `ee0477a25d5836191f9efcdd7260aa2b75e358865f4fecdeb59ac4e3bbefce46` |
 | shadcn-admin-src-styles-theme-css | `packages/ui/vendor/shadcn-admin/src/styles/theme.css` | satnaing/shadcn-admin | 2.2.1, `a156d9b90519348c4d71f0f0e6fcea179c49a43f` | `src/styles/theme.css` | MIT | 编入官方界面 | none | 016 | in-product | `faee559c9a21b2084bf7bae193e70f0ab18b18a393a06fec1408669652c266a1` |
+| ui-moments-LICENSE | `packages/ui/vendor/ui-moments/LICENSE` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `LICENSE` | MIT | 许可证文本，逐字节 | none | 016 | in-product | `107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299` |
+| ui-moments-gallery-originals-index-html | `packages/ui/vendor/ui-moments/gallery/originals/index.html` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/originals/index.html` | MIT | 编入官方界面 | none | 016 | in-product | `7bbb1b694c613be66a6f6f419419e08db789a996f816bce3e1c40eb279ca23ab` |
+| ui-moments-gallery-loaders-originals-mjs | `packages/ui/vendor/ui-moments/gallery/loaders/originals.mjs` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/loaders/originals.mjs` | MIT | 编入官方界面 | none | 016 | in-product | `f48cf7a012041f445a25846f410f857a3ebf87e60ddefbee2adcc9977406d29c` |
+| ui-moments-gallery-loaders-motifs-mjs | `packages/ui/vendor/ui-moments/gallery/loaders/motifs.mjs` | guanmo-ai/ui-moments | 0.1.0, `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | `gallery/loaders/motifs.mjs` | MIT | 随加载动效源码入库，通过 originals.mjs 挂载 | none | 016 | in-product | `013b74576fd8040c3ed66840151a2add452ff5413c57fa1289d71c4c03c8937a` |
 
 ## 组合
 
@@ -79,14 +83,10 @@ Glasswork 的 `NOTICE`（`824058026d7338161460df1fda278d593e7a1682d9601c3780167c
 |---|---|---|---|---|---|---|---|---|---|
 | winstrata-copy | `packages/ui/compose/copy.ts` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 英文和 zh-CN 文案。未设置语言时使用英文。 | 016 | in-product |
 | winstrata-entry | `packages/ui/compose/entry.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 官方页面的内存路由。 | 016 | in-product |
-| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质和 Amicro 淡入。绑定真实宿主状态。 | 016 | in-product |
+| winstrata-shell | `packages/ui/compose/shell.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 挂载 shadcn 外壳、Glasswork 材质、Amicro 淡入，以及下面的 UI Moments 控件。绑定真实宿主状态。 | 016 | in-product |
+| winstrata-moments | `packages/ui/compose/moments.tsx` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 语言使用 Ink Switch。服务尚未连接时显示 Signal Return。开关令牌只作用在开关宿主上。文案使用当前语言。 | 016 | in-product |
+| winstrata-ink-switch | `packages/ui/compose/ink-switch.js` | 无 | 无 | 无 | Apache-2.0 | WinStrata 组合 | 行为块是上游 `standalone:ink-switch-script` 段落。查询范围限定在挂载节点。 | 016 | in-product |
 
-三套主题共用这个外壳。白色圆角亚克力使用 shadcn 浅色令牌和 Glasswork `data-kind=light`。黑色圆角亚克力使用 shadcn `html.dark` 令牌和 Glasswork `data-kind=dark`。液态玻璃使用浅色玻璃面板，并只在带 `data-lens` 的按钮上调用 `liquidGlass()`。用户选择之前不保存主题。[OI-023](OPEN_ITEMS.md#oi-023) 仍开放。
+三套主题共用这个外壳。白色圆角亚克力使用 shadcn 浅色令牌和 Glasswork `data-kind=light`。黑色圆角亚克力使用 shadcn `html.dark` 令牌和 Glasswork `data-kind=dark`。液态玻璃使用浅色玻璃面板，并只在带 `data-lens` 的按钮上调用 `liquidGlass()`。Ink Switch 使用 UI Moments 的浅色令牌；黑色亚克力主题只在开关内部使用该来源的深色令牌。用户选择之前不保存主题。[OI-023](OPEN_ITEMS.md#oi-023) 仍开放。
 
-## 缺口
-
-| ID | 产品路径 | 上游仓库 | 版本 | 源码路径 | 许可证 | 复用方式 | 修改内容 | 引入计划 | 状态 |
-|---|---|---|---|---|---|---|---|---|---|
-| ui-moments | 无 | guanmo-ai/ui-moments | 修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | 无 | 未审查 | 未纳入 | none | 016 | not-in-this-commit |
-
-UI Moments 仍是 [OI-009](OPEN_ITEMS.md#oi-009)。本计划不自造组件填补这个缺口，也不另加来源。
+整体布局仍是 shadcn-admin。该 UI Moments 修订里的 Fluent UI 和 Astryx 示例树不是产品文件。没有入库 Geist 字体文件；控件保留上游字体栈及其系统回退。该修订的 WebView2 和性能测量仍是 [OI-009](OPEN_ITEMS.md#oi-009)。

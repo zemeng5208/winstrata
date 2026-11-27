@@ -4,20 +4,22 @@
       "packages/ui/compose/copy.ts",
       "packages/ui/compose/entry.tsx",
       "packages/ui/compose/shell.tsx",
-      "packages/ui/build.mjs"
+      "packages/ui/build.mjs",
+      "packages/ui/compose/moments.tsx",
+      "packages/ui/compose/ink-switch.js"
     ],
     "note": "WinStrata composition and real-data binding. Not an upstream component and not a new visual system."
   },
   "gaps": [
     {
-      "id": "ui-moments",
+      "id": "ui-moments-third-party-examples",
       "repository": "guanmo-ai/ui-moments",
       "revision": "c9eece0fe425ee7dfe97d162d39d1665c3bf9368",
       "productPath": "",
       "state": "not-in-this-commit",
       "plan": "016",
       "openItem": "OI-009",
-      "note": "Designated source. No product file until the same license, WebView2, and performance measurement as the other three."
+      "note": "Fluent UI and Astryx example trees are not product dependencies. Original controls and loaders from this revision are in the product rows. WebView2 and performance measurement remain open."
     }
   ],
   "absent": [
@@ -624,6 +626,70 @@
       "modifications": "none",
       "sha256": "faee559c9a21b2084bf7bae193e70f0ab18b18a393a06fec1408669652c266a1",
       "upstreamSha256": "faee559c9a21b2084bf7bae193e70f0ab18b18a393a06fec1408669652c266a1",
+      "plan": "016",
+      "state": "in-product"
+    },
+    {
+      "id": "ui-moments-LICENSE",
+      "productPath": "packages/ui/vendor/ui-moments/LICENSE",
+      "repository": "guanmo-ai/ui-moments",
+      "version": "0.1.0",
+      "revision": "c9eece0fe425ee7dfe97d162d39d1665c3bf9368",
+      "sourcePath": "LICENSE",
+      "license": "MIT",
+      "licenseSha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "reuse": "license text, verbatim",
+      "modifications": "none",
+      "sha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "upstreamSha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "plan": "016",
+      "state": "in-product"
+    },
+    {
+      "id": "ui-moments-gallery-originals-index-html",
+      "productPath": "packages/ui/vendor/ui-moments/gallery/originals/index.html",
+      "repository": "guanmo-ai/ui-moments",
+      "version": "0.1.0",
+      "revision": "c9eece0fe425ee7dfe97d162d39d1665c3bf9368",
+      "sourcePath": "gallery/originals/index.html",
+      "license": "MIT",
+      "licenseSha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "reuse": "compiled into the official shell",
+      "modifications": "none",
+      "sha256": "7bbb1b694c613be66a6f6f419419e08db789a996f816bce3e1c40eb279ca23ab",
+      "upstreamSha256": "7bbb1b694c613be66a6f6f419419e08db789a996f816bce3e1c40eb279ca23ab",
+      "plan": "016",
+      "state": "in-product"
+    },
+    {
+      "id": "ui-moments-gallery-loaders-originals-mjs",
+      "productPath": "packages/ui/vendor/ui-moments/gallery/loaders/originals.mjs",
+      "repository": "guanmo-ai/ui-moments",
+      "version": "0.1.0",
+      "revision": "c9eece0fe425ee7dfe97d162d39d1665c3bf9368",
+      "sourcePath": "gallery/loaders/originals.mjs",
+      "license": "MIT",
+      "licenseSha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "reuse": "compiled into the official shell",
+      "modifications": "none",
+      "sha256": "f48cf7a012041f445a25846f410f857a3ebf87e60ddefbee2adcc9977406d29c",
+      "upstreamSha256": "f48cf7a012041f445a25846f410f857a3ebf87e60ddefbee2adcc9977406d29c",
+      "plan": "016",
+      "state": "in-product"
+    },
+    {
+      "id": "ui-moments-gallery-loaders-motifs-mjs",
+      "productPath": "packages/ui/vendor/ui-moments/gallery/loaders/motifs.mjs",
+      "repository": "guanmo-ai/ui-moments",
+      "version": "0.1.0",
+      "revision": "c9eece0fe425ee7dfe97d162d39d1665c3bf9368",
+      "sourcePath": "gallery/loaders/motifs.mjs",
+      "license": "MIT",
+      "licenseSha256": "107769b1b4c64fa831d4e1d9f602044501b5f8da29a51c2de6a55f2ccdd1f299",
+      "reuse": "vendored with the loader source, mounted through originals.mjs",
+      "modifications": "none",
+      "sha256": "013b74576fd8040c3ed66840151a2add452ff5413c57fa1289d71c4c03c8937a",
+      "upstreamSha256": "013b74576fd8040c3ed66840151a2add452ff5413c57fa1289d71c4c03c8937a",
       "plan": "016",
       "state": "in-product"
     }

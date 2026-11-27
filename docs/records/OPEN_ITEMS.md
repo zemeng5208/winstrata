@@ -172,7 +172,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - Source PR: owner designation on 2026-11-27, recorded by plan 051. Plan 004 measured Amicro, Glasswork, and shadcn-admin only. Upstream commit read for the designation: `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`.
 - Current state: untested
-- Reason it is incomplete: Plan 016 does not add a UI Moments product file. The designated revision still has not had the plan 004 revision, license-closure, WebView2, or performance measurement. Fluent UI and Astryx are not product dependencies.
+- Reason it is incomplete: Plan 016 mounts the original Ink Switch and Signal Return from revision `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`. Fluent UI, Astryx, and the Geist font file are not product files. This revision still has not had the plan 004 WebView2 or performance measurement.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the same class of offline WebView2 measurement used for the three measured sources, plus the selected revision's license and version review
@@ -774,7 +774,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md) and [REQ-19.15](../roadmap/REQUIREMENTS.md)
 - Source PR: unmerged GitHub PR #21, `pr/016-desktop-gui`, head `64bd627c362ad025869905441bee7802dda19ac1`. Main `0accacb` has no GUI file.
 - Current state: register matches this commit; E2E-19 still open
-- Reason it is incomplete: This commit's source register matches the vendored files. Closed PR #21's `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are not in this commit. UI Moments remains [OI-009](#oi-009). E2E-19 has no implementation plan ID and is not plan 016 acceptance.
+- Reason it is incomplete: This commit's source register matches the vendored files, including the UI Moments originals. Closed PR #21's `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are not in this commit. WebView2 measurement remains [OI-009](#oi-009). E2E-19 has no implementation plan ID and is not plan 016 acceptance.
 - Responsible PR: plan 016, on its existing row. Plan 053 does not add itself to that dependency cell and does not edit the branch.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the plan 016 change that merges official GUI files, compared with the upstream revisions

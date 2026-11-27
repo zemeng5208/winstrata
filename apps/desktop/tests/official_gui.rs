@@ -102,6 +102,8 @@ fn vendored_shell_is_built_from_the_approved_sources() {
         "AuthenticatedLayout",
         "liquidGlass",
         "FadeIn",
+        "InkSwitch",
+        "SignalReturn",
     ] {
         assert!(source.contains(required), "{required}");
     }
@@ -145,6 +147,32 @@ fn vendored_shell_is_built_from_the_approved_sources() {
     let workspace = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Cargo.toml")).unwrap();
     assert!(!workspace.to_ascii_lowercase().contains("fluent"));
     assert!(!workspace.to_ascii_lowercase().contains("astryx"));
+    let moments = root.join("vendor/ui-moments");
+    let moments_text = std::fs::read_to_string(moments.join("gallery/originals/index.html")).unwrap()
+        + &std::fs::read_to_string(moments.join("gallery/loaders/originals.mjs")).unwrap()
+        + &std::fs::read_to_string(moments.join("gallery/loaders/motifs.mjs")).unwrap();
+    let lowered = moments_text.to_ascii_lowercase();
+    assert!(!lowered.contains("fluentui"));
+    assert!(!lowered.contains("astryx"));
+    assert!(moments_text.contains("standalone:ink-switch"));
+    assert!(moments_text.contains("signal-return"));
+    let html = std::fs::read_to_string(moments.join("gallery/originals/index.html")).unwrap();
+    let script = section(&html, "/* standalone:ink-switch-script */", "/* /standalone:ink-switch-script */");
+    let mounted = std::fs::read_to_string(root.join("compose/ink-switch.js")).unwrap();
+    assert!(
+        normalize(&mounted).contains(&normalize(script.trim())),
+        "ink switch script drifted"
+    );
+}
+
+fn normalize(text: &str) -> String {
+    text.lines().map(str::trim_end).collect::<Vec<_>>().join("\n")
+}
+
+fn section(source: &str, start: &str, end: &str) -> String {
+    let from = source.find(start).expect(start) + start.len();
+    let to = source[from..].find(end).expect(end) + from;
+    source[from..to].to_owned()
 }
 
 fn sha256(bytes: &[u8]) -> String {

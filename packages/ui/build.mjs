@@ -242,6 +242,14 @@ try {
     nodePaths: [modules],
     logLevel: 'warning',
     plugins: [{
+      name: 'ui-moments-text',
+      setup(build) {
+        build.onLoad({ filter: /ui-moments\/gallery\/originals\/index\.html$/ }, async (args) => ({
+          contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`,
+          loader: 'js',
+        }))
+      },
+    }, {
       name: 'shadcn-alias',
       setup(build) {
         build.onResolve({ filter: /^@\// }, async (args) => {
@@ -290,6 +298,7 @@ try {
     'vendor/glasswork/LICENSE',
     'vendor/glasswork/NOTICE',
     'vendor/shadcn-admin/LICENSE',
+    'vendor/ui-moments/LICENSE',
   ]) {
     notices.push(await readFile(path.join(here, file), 'utf8'))
   }
