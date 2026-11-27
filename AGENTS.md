@@ -1,0 +1,101 @@
+# WinStrata Agent Instructions
+
+[简体中文](docs/zh-CN/AGENTS.md) · [Documentation index](docs/INDEX.md)
+
+These rules take effect when the owner approves and merges PR 000. Before work, read all applicable standards and the governing product, architecture, interface, and acceptance documents.
+
+- Follow the owner-approved architecture, scope, dependencies, and merge ordering.
+- Use development branches and pull requests. Direct pushes to main, force pushes, protection bypass, and agent merges are prohibited.
+- Verify real environments and full workflows on the actual merge candidate. Fix confirmed defects and rerun checks. Record incomplete verification.
+- Preserve least privilege and local data boundaries. Follow the [specified component sources, three themes, and layout rules](docs/architecture/FRONTEND.md) under [AG-30](docs/standards/ARCHITECTURE.md#ag-30).
+- Follow the [preflight, documentation, PR, self-review, and handover checklist](docs/standards/AGENT_WORKFLOW.md#execution-checklist).
+
+<a id="ag-24"></a>
+
+## AG-24 Governance precedence and integrity
+
+Project rules rank in order from P0, the owner's latest explicit approved decision, through P1, this file, P2, project architecture and technical standards, P3, module instructions and designs, P4, approved PR scope and acceptance, and P5, existing code. Report conflicts and apply the higher-level rule. Changing a rule, test, or acceptance condition to pass faulty code is prohibited. Record the basis, impact, and approval for changes under AG-60.
+
+<a id="ag-58"></a>
+
+## AG-58 Layered standards
+
+Keep project red lines and the index at the root. Maintain detailed rules for development, architecture, Git and PRs, testing, security, documentation, dependencies, and agent workflow. Module instructions add specific requirements. Read every applicable layer. Preserve all 61 rules, each with one authoritative definition and links from related documents. Audit direct and indirect references when changing a rule.
+
+<a id="ag-59"></a>
+
+## AG-59 PR 000
+
+After repository initialization, submit the standards, architecture, complete roadmap and ordering, directory and dependency plans, configuration, documentation and error governance, requirement tracking, quality and acceptance plans, and license for owner review and merge. Keep the PR limited to the project foundation. Formal feature development starts only after this PR merges.
+
+<a id="ag-60"></a>
+
+## AG-60 Approval for standards changes
+
+Request substantive mandatory-rule changes in their own PR. Include the current rule, proposed wording, reason, supporting evidence, necessity, and impact. The change takes effect after owner approval and merge. Keep rule changes out of ordinary feature PRs and preserve prior decisions. Recheck linked documents, automated gates, and open PRs after merge.
+
+## Complete rule index
+
+| ID | Authoritative rule |
+|---|---|
+| AG-01 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-01) |
+| AG-02 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-02) |
+| AG-03 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-03) |
+| AG-04 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-04) |
+| AG-05 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-05) |
+| AG-06 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-06) |
+| AG-07 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-07) |
+| AG-08 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-08) |
+| AG-09 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-09) |
+| AG-10 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-10) |
+| AG-11 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-11) |
+| AG-12 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-12) |
+| AG-13 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-13) |
+| AG-14 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-14) |
+| AG-15 | [standards/TESTING.md](docs/standards/TESTING.md#ag-15) |
+| AG-16 | [standards/TESTING.md](docs/standards/TESTING.md#ag-16) |
+| AG-17 | [standards/TESTING.md](docs/standards/TESTING.md#ag-17) |
+| AG-18 | [standards/TESTING.md](docs/standards/TESTING.md#ag-18) |
+| AG-19 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-19) |
+| AG-20 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-20) |
+| AG-21 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-21) |
+| AG-22 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-22) |
+| AG-23 | [standards/SECURITY.md](docs/standards/SECURITY.md#ag-23) |
+| AG-24 | [AGENTS.md](#ag-24) |
+| AG-25 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-25) |
+| AG-26 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-26) |
+| AG-27 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-27) |
+| AG-28 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-28) |
+| AG-29 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-29) |
+| AG-30 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-30) |
+| AG-31 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-31) |
+| AG-32 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-32) |
+| AG-33 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-33) |
+| AG-34 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-34) |
+| AG-35 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-35) |
+| AG-36 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-36) |
+| AG-37 | [standards/TESTING.md](docs/standards/TESTING.md#ag-37) |
+| AG-38 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-38) |
+| AG-39 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-39) |
+| AG-40 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-40) |
+| AG-41 | [standards/DEVELOPMENT.md](docs/standards/DEVELOPMENT.md#ag-41) |
+| AG-42 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-42) |
+| AG-43 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-43) |
+| AG-44 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-44) |
+| AG-45 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-45) |
+| AG-46 | [standards/ARCHITECTURE.md](docs/standards/ARCHITECTURE.md#ag-46) |
+| AG-47 | [standards/SECURITY.md](docs/standards/SECURITY.md#ag-47) |
+| AG-48 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-48) |
+| AG-49 | [standards/GIT_AND_PR.md](docs/standards/GIT_AND_PR.md#ag-49) |
+| AG-50 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-50) |
+| AG-51 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-51) |
+| AG-52 | [standards/TESTING.md](docs/standards/TESTING.md#ag-52) |
+| AG-53 | [standards/TESTING.md](docs/standards/TESTING.md#ag-53) |
+| AG-54 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-54) |
+| AG-55 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-55) |
+| AG-56 | [standards/DEPENDENCIES.md](docs/standards/DEPENDENCIES.md#ag-56) |
+| AG-57 | [standards/AGENT_WORKFLOW.md](docs/standards/AGENT_WORKFLOW.md#ag-57) |
+| AG-58 | [AGENTS.md](#ag-58) |
+| AG-59 | [AGENTS.md](#ag-59) |
+| AG-60 | [AGENTS.md](#ag-60) |
+| AG-61 | [standards/DOCUMENTATION.md](docs/standards/DOCUMENTATION.md#ag-61) |
