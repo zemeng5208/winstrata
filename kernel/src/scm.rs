@@ -227,18 +227,19 @@ fn service_control_manager_refuses_to_start_a_missing_kernel_image_and_the_entry
     assert_ne!(deleted, 0, "DeleteService failed: {}", unsafe {
         GetLastError()
     });
-    // 并发的驱动枚举会占着服务控制管理器。DeleteService 成功后，条目要等那些调用结束才消失。
+    // DeleteService 只标记删除。句柄关闭后，SCM 还要等失败的启动和并发枚举结束才去掉条目。
+    // 等待期间如果还能打开，必须立刻关掉，不能把句柄留住。最多等 2 秒，消失后的错误仍必须是不存在。
     assert_probe_removed(manager.0, &name);
 }
 
 fn assert_probe_removed(manager: windows_sys::Win32::System::Services::SC_HANDLE, name: &[u16]) {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
+    let mut gone_error = 0;
+    for attempt in 0..40 {
         let gone = unsafe { OpenServiceW(manager, name.as_ptr(), SERVICE_START) };
         if gone.is_null() {
-            let gone_error = unsafe { GetLastError() };
+            gone_error = unsafe { GetLastError() };
             if gone_error == ERROR_SERVICE_DOES_NOT_EXIST {
-                return;
+                break;
             }
             if gone_error != ERROR_SERVICE_MARKED_FOR_DELETE {
                 panic!("OpenServiceW failed with Win32 error {gone_error}");
@@ -246,11 +247,12 @@ fn assert_probe_removed(manager: windows_sys::Win32::System::Services::SC_HANDLE
         } else {
             unsafe { CloseServiceHandle(gone) };
         }
-        if std::time::Instant::now() >= deadline {
+        if attempt == 39 {
             panic!("probe service still exists");
         }
         thread::sleep(std::time::Duration::from_millis(50));
     }
+    assert_eq!(gone_error, ERROR_SERVICE_DOES_NOT_EXIST);
 }
 
 #[test]
