@@ -67,7 +67,7 @@
 | REQ-19.03 | 完整双语与 Windows WebView2 可读的真实交互 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.04 | 持久化单首页布局并接入动态插件界面 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.05 | 提供托盘继续、完整退出和真实界面状态 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [11](ACCEPTANCE.md#e2e-11) | 规划中 |
-| REQ-19.06 | 官方默认 GUI 完整内置、不可卸载，并作为默认界面和恢复界面 | [AG-64](../AGENTS.md#ag-64) | [016](PLAN.md#pr-016) 只负责内置默认界面。替换之后的恢复没有路线图行 | [11](ACCEPTANCE.md#e2e-11), [17](ACCEPTANCE.md#e2e-17) | 未验收。main `0accacb` 没有 GUI。E2E-11 未改。E2E-17 没有合并位置，也不阻断计划 015 或 016。 |
+| REQ-19.06 | 官方默认 GUI 完整内置、不可卸载，并作为默认界面和恢复界面 | [AG-64](../AGENTS.md#ag-64) | [053](PLAN.md#pr-053) 记录规则。[016](PLAN.md#pr-016) 只负责内置默认界面。替换之后的恢复没有实现计划编号 | [11](ACCEPTANCE.md#e2e-11), [17](ACCEPTANCE.md#e2e-17) | 未验收。main `0accacb` 没有 GUI。E2E-11 未改。E2E-17 没有实现计划编号。 |
 | REQ-19.07 | 插件可以修改全局主题、颜色、材质、字体、动效和交互方式 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
 | REQ-19.08 | 插件可以修改全局布局、导航栏、侧边栏、顶部区域和仪表盘 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
 | REQ-19.09 | 插件可以替换共享 UI 组件及其他插件的界面呈现 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
@@ -108,7 +108,7 @@
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-30.02 | 逐项追踪需求、25 个插件和 64 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。AG-64 由本次规范变更提出，尚未验收，也没有新的路线图行。 |
+| REQ-30.02 | 逐项追踪需求、25 个插件和 64 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051), [053](PLAN.md#pr-053) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。AG-64 是计划 053，紧接 014 之后，尚未验收。 |
 
 ## 原生插件
 
@@ -144,4 +144,4 @@
 
 ## 64 项 Agent 规范
 
-每条独立编号和权威位置见 [AG-01 至 AG-64 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。AG-64 由本次规范变更提出，不是新的计划行。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。
+每条独立编号和权威位置见 [AG-01 至 AG-64 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。计划 [053](PLAN.md#pr-053) 增加 AG-64，并紧接在 014 之后。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。

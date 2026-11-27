@@ -6,7 +6,7 @@ This register is required by [AG-62](../../AGENTS.md#ag-62). Every still-open it
 
 The handoff owner for every row is repository owner zemeng5208. The developer of the responsible plan runs the named environment and records the result. The owner accepts the close. “Awaiting verification” is not a close condition.
 
-Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is merged as `0accacbaa2dac43db3845cc8c08f23b4e831c413`. The AG-64 standards change does not close these items and does not insert a plan before 015 or 016.
+Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is merged as `0accacbaa2dac43db3845cc8c08f23b4e831c413`. Plan 053 records AG-64 immediately after 014 and does not close these items.
 
 ## Summary
 
@@ -775,7 +775,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Source PR: unmerged GitHub PR #21, `pr/016-desktop-gui`, head `64bd627c362ad025869905441bee7802dda19ac1`. Main `0accacb` has no GUI file.
 - Current state: gap on an unmerged branch
 - Reason it is incomplete: five vendored files match the named upstream bytes. `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are host-authored and are not the shadcn-admin shell or the approved materials. UI Moments is not included. This is not a product row.
-- Responsible PR: plan 016, on its existing row. This item does not add a predecessor before plan 015 or plan 016.
+- Responsible PR: plan 016, on its existing row. Plan 053 does not add itself to that dependency cell and does not edit the branch.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the plan 016 change that merges official GUI files, compared with the upstream revisions
 - Acceptance criteria: [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) for files in that commit. The host-authored layout and paint are either replaced by the approved sources or recorded as an owner-approved gap.
@@ -803,7 +803,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Source PR: the 2026-11-28 owner decision
 - Current state: pending decision
 - Reason it is incomplete: the owner required the technical approach to be researched and verified later. This change does not select Tauri, React, Vite, or any other stack.
-- Responsible PR: no roadmap row. The owner decides whether to add one after plan 016, not between 014 and 015.
+- Responsible PR: no implementation plan ID. Plan 053 is the standards row immediately after 014. An implementation plan, if the owner adds one, is not another ID in this change.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the proposal's own measured evidence, recorded before implementation
 - Acceptance criteria: [the proposal section](../roadmap/ACCEPTANCE.md#gui-proposal)

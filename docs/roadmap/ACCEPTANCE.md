@@ -53,13 +53,13 @@ Use real Windows, software and scoped data. Prioritize integrated user flows, cr
 | <a id="e2e-18"></a>E2E-18 | From that third-party GUI, attempt to bypass permission, isolation, rescue authorization, and deletion confirmation. The trusted host performs those interactions. A forged authorization is rejected. |
 | <a id="e2e-19"></a>E2E-19 | Every official GUI and official plugin component or layout file in the commit has a source-register row. The upstream repository, revision, source path, license, reuse method, and modifications match the file. A missing upstream component is an owner-approved gap. A visual rewrite without that approval fails. |
 
-E2E-11 is unchanged and remains the official-default-GUI scenario. E2E-17, E2E-18, and E2E-19 have no roadmap row. This change does not make plan 015 or plan 016 wait for them.
+E2E-11 is unchanged and remains the official-default-GUI scenario. E2E-17, E2E-18, and E2E-19 have no implementation plan ID. Plan 053 records the rule and sits immediately after 014. Table order makes plan 015 wait for 053, and plan 016 waits behind 015. The dependency cells of 015 and 016 do not list 053.
 
 <a id="gui-proposal"></a>
 
 ## Replaceable-GUI proposal
 
-Before implementation of E2E-17 or E2E-18, a development agent researches and verifies a technical approach and the owner approves it. This acceptance plan does not select that approach. The candidates already named in the system architecture remain unapproved. No roadmap row is added for the proposal or the implementation.
+Before implementation of E2E-17 or E2E-18, a development agent researches and verifies a technical approach and the owner approves it. This acceptance plan does not select that approach. The candidates already named in the system architecture remain unapproved. Plan 053 does not add an implementation plan ID for the proposal or the GUI.
 
 Each record identifies commit, OS and Windows version, hardware, driver and tools, actual command and steps, expected and observed outcome, error, rerun, and evidence. Test changes and existing behavior in the available environment. Required Windows driver and GUI checks stay pending without a Windows environment. Record unrun platforms explicitly. Verify actual main and finish phase acceptance after merges.
 

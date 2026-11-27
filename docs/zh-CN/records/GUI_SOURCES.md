@@ -2,7 +2,7 @@
 
 [English](../../records/GUI_SOURCES.md) · [AG-64](../AGENTS.md#ag-64) · [前端规范](../architecture/FRONTEND.md#section-9) · [索引](../INDEX.md)
 
-本登记由 [AG-64](../AGENTS.md#ag-64) 要求，适用于官方 GUI 和官方插件。[STATUS.md](STATUS.md) 不能代替本登记。一行记录表示该产品文件与这一行处于同一提交。第三方 GUI 插件可以使用自己的设计体系，不为它们补写“来自四个指定来源”的行。它们的安全、兼容性和性能证据在本次变更中没有路线图行。由所有者指定后续计划。本文件不在 015 或 016 之前插入计划。
+本登记由 [AG-64](../AGENTS.md#ag-64) 要求，适用于官方 GUI 和官方插件。[STATUS.md](STATUS.md) 不能代替本登记。一行记录表示该产品文件与这一行处于同一提交。第三方 GUI 插件可以使用自己的设计体系，不为它们补写“来自四个指定来源”的行。它们的安全、兼容性和性能证据没有实现计划编号。计划 053 记录本登记，并紧接在 014 之后。它不修改计划 016。
 
 ## 必要字段
 
@@ -55,4 +55,4 @@ main `0accacbaa2dac43db3845cc8c08f23b4e831c413` 是计划 014、GitHub PR #20 �
 | host-acrylic-paint | `packages/ui/static/themes.css` | 文件写明这是暂停的手写绘制，不是 Amicro、Glasswork、shadcn-admin 或 UI Moments。SHA-256 `8ddf4f054baa696bbb02769ce66151573b3386043824b2d1a27d0410c5d8850c` | 缺口。不作为三套官方材质验收 |
 | ui-moments | 无 | 该头上没有 UI Moments 文件。已指定修订仍是 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | 未纳入。[OI-009](OPEN_ITEMS.md#oi-009) 仍开放 |
 
-`packages/ui/static/page.html` 链接 `layout.css`、`amicro.js`、`shadcn.js` 和 `glass.js`。这四个路径不是该提交中的文件。本次变更没有运行 GUI，没有把该页面当作验收，也没有把文件复制到 main。缺口留在那个未合并分支上。本次变更不修改它，也不在计划 015 或计划 016 之前增加合并前驱。见 [OI-036](OPEN_ITEMS.md#oi-036)。
+`packages/ui/static/page.html` 链接 `layout.css`、`amicro.js`、`shadcn.js` 和 `glass.js`。这四个路径不是该提交中的文件。本次变更没有运行 GUI，没有把该页面当作验收，也没有把文件复制到 main。缺口留在那个未合并分支上。本次变更不修改它。计划 053 是紧接 014 之后的规范行；它不写入 015 或 016 的直接依赖格。见 [OI-036](OPEN_ITEMS.md#oi-036)。

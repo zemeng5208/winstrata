@@ -77,7 +77,7 @@ Fluent UI 与 Astryx 的名称仅用于署名。UI Moments 与 Microsoft、Meta 
 
 ### 9.5 可替换 GUI
 
-[AG-64](../AGENTS.md#ag-64) 是规则。本节写前端后果。它不选定技术栈，也不新增路线图行。
+[AG-64](../AGENTS.md#ag-64) 是规则。计划 053 记录它，不选定技术栈，也不实现 GUI。
 
 官方及第三方插件可以扩展、修改或替换 GUI。插件可以修改全局主题、颜色、材质、字体、动效和交互方式；修改布局、导航栏、侧边栏、顶部区域和仪表盘；替换共享组件及其他插件的界面呈现；并提供完整界面。安装、启用、禁用、更新、卸载和恢复默认界面都走现有市场。同一时间只运行一套完整 GUI 和渲染环境。
 
@@ -85,4 +85,4 @@ Fluent UI 与 Astryx 的名称仅用于署名。UI Moments 与 Microsoft、Meta 
 
 GUI 与 Core、业务插件、存储、采集服务及内核驱动解耦。更换它不中断后台监视、不重启无关服务、不丢失数据。权限、隔离、救援授权和删除确认留在可信宿主。第三方 GUI 不伪造这些授权。经过授权的能力、数据和事件通过统一前端 SDK/API 获取。
 
-具体方案须先调研、验证并提交所有者批准，然后才能实现。[E2E-11](../roadmap/ACCEPTANCE.md#e2e-11) 仍是官方默认 GUI 场景。[E2E-17](../roadmap/ACCEPTANCE.md#e2e-17)、[E2E-18](../roadmap/ACCEPTANCE.md#e2e-18) 和 [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) 是新增场景。本次变更不给它们路线图位置。空壳接口、假插件、假主题切换或静态页面都不算完成。
+具体方案须先调研、验证并提交所有者批准，然后才能实现。[E2E-11](../roadmap/ACCEPTANCE.md#e2e-11) 仍是官方默认 GUI 场景。[E2E-17](../roadmap/ACCEPTANCE.md#e2e-17)、[E2E-18](../roadmap/ACCEPTANCE.md#e2e-18) 和 [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) 是新增场景。它们没有实现计划编号。空壳接口、假插件、假主题切换或静态页面都不算完成。

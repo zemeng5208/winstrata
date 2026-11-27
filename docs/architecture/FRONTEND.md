@@ -59,7 +59,7 @@ Validate glass blur, refraction and transitions on real Windows WebView2. Bound 
 
 ## Replaceable GUI
 
-[AG-64](../../AGENTS.md#ag-64) is the rule. This section states the frontend consequences. It does not select a stack, and it does not add a roadmap row.
+[AG-64](../../AGENTS.md#ag-64) is the rule. Plan 053 records it and does not select a stack or implement the GUI.
 
 Official and third-party plugins may extend, modify, or replace the GUI. A plugin may change global theme, color, material, fonts, motion, and interaction; change layout, navigation, sidebar, header, and dashboard; replace shared components and another plugin's presentation; and supply a complete interface. Install, enable, disable, update, uninstall, and restore the default interface through the existing market. One complete GUI and renderer runs at a time.
 
@@ -67,7 +67,7 @@ The official default GUI is built in, cannot be uninstalled, and is the default 
 
 The GUI stays decoupled from Core, business plugins, storage, collection services, and kernel drivers. Replacing it does not stop background monitoring, restart unrelated services, or lose data. Permission, isolation, rescue authorization, and deletion confirmation stay on the trusted host. A third-party GUI does not forge those authorizations. Authorized capabilities, data, and events come through one frontend SDK and API.
 
-The concrete approach is researched, verified, and proposed for owner approval before implementation. [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11) remains the official-default-GUI scenario. [E2E-17](../roadmap/ACCEPTANCE.md#e2e-17), [E2E-18](../roadmap/ACCEPTANCE.md#e2e-18), and [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) are the new scenarios. They have no roadmap slot in this change. An empty interface, a fake plugin, a fake theme switch, or a static page is not completion.
+The concrete approach is researched, verified, and proposed for owner approval before implementation. [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11) remains the official-default-GUI scenario. [E2E-17](../roadmap/ACCEPTANCE.md#e2e-17), [E2E-18](../roadmap/ACCEPTANCE.md#e2e-18), and [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) are the new scenarios. They have no implementation plan ID. An empty interface, a fake plugin, a fake theme switch, or a static page is not completion.
 
 ## User flows
 

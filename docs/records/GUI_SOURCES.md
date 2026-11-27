@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/records/GUI_SOURCES.md) · [AG-64](../../AGENTS.md#ag-64) · [Frontend standard](../architecture/FRONTEND.md#section-9) · [Index](../INDEX.md)
 
-This register is required by [AG-64](../../AGENTS.md#ag-64) for the official GUI and for official plugins. [STATUS.md](STATUS.md) is not a substitute. A row is a claim that the named product file is in the same commit as the row. Third-party GUI plugins may use their own design system; they do not receive a row that pretends they came from the four approved sources. Their security, compatibility, and performance evidence has no roadmap row in this change. The owner assigns that follow-up. This file does not insert a plan before 015 or 016.
+This register is required by [AG-64](../../AGENTS.md#ag-64) for the official GUI and for official plugins. [STATUS.md](STATUS.md) is not a substitute. A row is a claim that the named product file is in the same commit as the row. Third-party GUI plugins may use their own design system; they do not receive a row that pretends they came from the four approved sources. Their security, compatibility, and performance evidence has no implementation plan ID. Plan 053 records this register and sits immediately after 014. It does not edit plan 016.
 
 ## Required fields
 
@@ -55,4 +55,4 @@ The same head also contains files that are not those upstream sources:
 | host-acrylic-paint | `packages/ui/static/themes.css` | The file says it is paused host-authored paint and not Amicro, Glasswork, shadcn-admin, or UI Moments. SHA-256 `8ddf4f054baa696bbb02769ce66151573b3386043824b2d1a27d0410c5d8850c` | Gap. Not accepted as the three official materials |
 | ui-moments | none | No UI Moments file is on that head. The designated revision remains `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` | Not included. [OI-009](OPEN_ITEMS.md#oi-009) stays open |
 
-`packages/ui/static/page.html` links `layout.css`, `amicro.js`, `shadcn.js`, and `glass.js`. Those four paths are not files in that commit. This change did not run the GUI, did not treat the page as acceptance, and did not copy the files onto main. The gap stays on that unmerged branch. This change does not edit it and does not add a merge predecessor before plan 015 or plan 016. See [OI-036](OPEN_ITEMS.md#oi-036).
+`packages/ui/static/page.html` links `layout.css`, `amicro.js`, `shadcn.js`, and `glass.js`. Those four paths are not files in that commit. This change did not run the GUI, did not treat the page as acceptance, and did not copy the files onto main. The gap stays on that unmerged branch. This change does not edit it. Plan 053 is the standards row immediately after 014; it is not added to the dependency cells of 015 or 016. See [OI-036](OPEN_ITEMS.md#oi-036).
