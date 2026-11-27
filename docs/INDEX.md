@@ -19,6 +19,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Environment plugin](architecture/ENV.md)
 - [Trace plugin](architecture/TRACE.md)
 - [Process, thread and module sources](architecture/PROCESS.md)
+- [Services plugin](architecture/SERVICES.md)
 - [Network sources, interfaces and attribution](architecture/NETWORK-SOURCES.md)
 - [Extensions, MCP and rescue](architecture/EXTENSIONS.md)
 - [Native plugin contracts and lifecycle](architecture/PLUGINS.md)

@@ -30,6 +30,8 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-017 | Resolved | [Services](modules/services.md#err-017) |
 | ERR-018 | Resolved | [Core](modules/core.md#err-018) |
 | ERR-019 | Resolved | This file |
+| ERR-020 | Resolved | [Services plugin](modules/strata-services.md#err-020) |
+| ERR-021 | Open | [Services plugin](modules/strata-services.md#err-021) |
 
 ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c454aea4537809`. ERR-013 names the same defect. Plan 052 is the designated fix and is merged as `004974215e239f96160b47d3eef40a84c316e802`. Windows workspace checks on that commit passed. Plan 051 does not implement the fix.
 
@@ -110,5 +112,5 @@ ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c
 - Root cause: `ReadDirectoryChangesW` was issued while `OVERLAPPED` still lived in a stack value. Pushing that value into the watch vector moved the structure. The kernel wrote the completion into the old address, and `GetOverlappedResult` read the empty copy.
 - Impact: a real file create was reported as `source_failure`. The watch thread then stopped. Windows workspace checks failed.
 - Fix plan: park the directory in the vector first, then issue the read in place. Keep the completion byte count in that same structure. The production buffer stays 16 KiB. Implemented in `dc9d9e378f9f585929f6acfc18944411f1bbcc75`.
-- Retest result: the pass on `dc9d9e378f9f585929f6acfc18944411f1bbcc75` does not close this defect for the restack. On restacked head `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386`, Windows Server 2022 `cargo test --locked --workspace` passed. `windows_trace_records_metadata_without_content` passed with the other 7 trace tests. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200). `windows_file_watch_overflow_records_a_lost_gap` also passed in that job and does not reopen OI-018. This ERR-019 is the plan 021 `OVERLAPPED` defect in this file. Plan 022's open branch uses the same ID for a different services-plugin defect in its own module register. This record does not replace that defect and does not renumber either one.
+- Retest result: the pass on `dc9d9e378f9f585929f6acfc18944411f1bbcc75` does not close this defect for the restack. On restacked head `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386`, Windows Server 2022 `cargo test --locked --workspace` passed. `windows_trace_records_metadata_without_content` passed with the other 7 trace tests. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200). `windows_file_watch_overflow_records_a_lost_gap` also passed in that job and does not reopen OI-018. This ERR-019 is the plan 021 `OVERLAPPED` defect in this file. Plan 022 records its separate Service Control Manager identity-denied defect as [ERR-020](modules/strata-services.md#err-020). This record does not replace that defect.
 - Current state: resolved

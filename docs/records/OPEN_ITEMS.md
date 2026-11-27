@@ -51,6 +51,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
+| [OI-043](#oi-043) | Untested | 022 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -257,8 +258,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-007](STATUS.md) and [REQ-06.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 010. Sampling does not emit an event for a process that starts and exits between samples. Exit time is the sample time. ETW, kernel callbacks, command lines, and service stop records are not part of plan 010.
 - Current state: known limitation
-- Reason it is incomplete: Plan 018 presents the plan 010 sample through `strata.process`, including real process, thread, module, tree, and provenance events, and it joins the sampler on disable. ETW, kernel callbacks, command lines, and processes that exist only between samples were not implemented. Service stop records remain plan 022.
-- Responsible PR: 022 for service stop records. ETW, command lines, and kernel callbacks stay open until the owner confirms they remain outside plan 018 or a later plan tests them.
+- Reason it is incomplete: Plan 018 presents the plan 010 sample through `strata.process`, including real process, thread, module, tree, and provenance events, and it joins the sampler on disable. The service stop record is now `service.stopped` in plan 022 and is covered by the tracker test. A live Service Control Manager transition into stopped was not observed on this Linux host. ETW, kernel callbacks, command lines, and processes that exist only between samples stay open and are not plan 022.
+- Responsible PR: Plan 022 records `service.stopped`, and the tracker test covers that record. A live Service Control Manager transition into stopped was not observed on this Linux host ([OI-043](#oi-043)). ETW, command lines, kernel callbacks, and processes that exist only between samples stay open and are not plan 022. They stay open until the owner confirms they remain outside plan 018 or a later plan tests them.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with the source that plan 018 or 022 actually implements
 - Acceptance criteria: the deferred source is tested, or the owner confirms it stays out of those plans
@@ -823,6 +824,20 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
 - Acceptance criteria: that test passes on the review head. It must show user and system before/after values for the probe, a PATH event whose evidence contains the appended segment, a paused gap that does not publish the hidden value, and no replay of a change made while stopped. The previous PATH bytes are restored.
 - Close conditions: the Windows workspace log for this plan's review head shows that test passed, and this row is updated with that result. A Linux run does not close it. Passing it does not close E2E-02.
+
+<a id="oi-043"></a>
+
+## OI-043
+
+- Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
+- Source PR: plan 022
+- Current state: untested
+- Reason it is incomplete: This Linux host has no Service Control Manager. Pid 1 is tini. `/proc/modules` was empty and no cgroup `.service` unit was running, so no live driver load or live service stop was observed here. On head `1987f4826f92aaf5794d4678d3d4b43872932a97`, Windows Server 2022 passed the restricted-token enumeration. That closed [ERR-020](modules/strata-services.md#err-020). The same job failed `missing_image_probe_records_creation_start_type_and_deletion`: `service.start-type` for `WinStrata022Probe` was 0. That defect is [ERR-021](modules/strata-services.md#err-021). `OpenServiceW` received a service name without a terminating NUL, so the config read could fail and both samples stayed `Unknown`. Creation's later failed start and deletion were not reached. The acceptance below is not met. This item is OI-043 because plan 025 holds OI-040, OI-041, and OI-042. Plan 020's environment-store limit remains OI-039.
+- Responsible PR: 022 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows Server 2022 Service Control Manager running the plan 022 plugin tests
+- Acceptance criteria: the Windows job observes at least one driver, an access-denied enumeration, creation, a start-type change, a failed start of the missing-image probe, and deletion of `WinStrata022Probe`, and records `service.stopped` only when a non-stopped state actually becomes stopped
+- Close conditions: that job's log is written into [STATUS.md](STATUS.md). Not closed by the Linux tracker test. Not closed by marking E2E-03 or E2E-14 passed. Not a substitute for Windows 10/11.
 
 <a id="e2e-17"></a>
 
