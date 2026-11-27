@@ -2,6 +2,7 @@
 //!
 //! 未选中的路径、类型、进程、软件、注册表和接口不进入记录。
 //! 其他用户的私有配置目录即使落在较宽的根目录下也排除。
+//! 当前用户自己的配置目录仍纳入范围，包括 Windows 用 8.3 短路径写出的同一目录。
 //! 判断结果不回显被拒绝的路径。
 
 use std::ffi::OsStr;
@@ -166,10 +167,29 @@ pub fn foreign_private(path: &Path, profile: Option<&Path>) -> bool {
     if is_public_profile(&owner) {
         return false;
     }
-    match profile.and_then(profile_owner) {
-        Some(ours) => !owner.eq_ignore_ascii_case(&ours),
-        None => true,
+    let Some(profile) = profile else {
+        return true;
+    };
+    if profile_owner_names(profile)
+        .iter()
+        .any(|name| name.eq_ignore_ascii_case(&owner))
+    {
+        return false;
     }
+    // 路径字符串可能是当前用户的 8.3 短名，而 USERPROFILE 是长名。
+    #[cfg(windows)]
+    if let Some(expanded) = expanded_owner(path) {
+        if is_public_profile(&expanded) {
+            return false;
+        }
+        if profile_owner_names(profile)
+            .iter()
+            .any(|name| name.eq_ignore_ascii_case(&expanded))
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn current_profile() -> Option<PathBuf> {
@@ -177,6 +197,117 @@ fn current_profile() -> Option<PathBuf> {
     let value = std::env::var_os(key)?;
     let path = PathBuf::from(value);
     path.is_absolute().then_some(path)
+}
+
+fn profile_owner_names(profile: &Path) -> Vec<String> {
+    if let Some(current) = current_profile()
+        && paths_equal(profile, &current)
+    {
+        return cached_profile_names().to_vec();
+    }
+    collect_profile_names(profile)
+}
+
+fn cached_profile_names() -> &'static [String] {
+    use std::sync::OnceLock;
+    static NAMES: OnceLock<Vec<String>> = OnceLock::new();
+    NAMES.get_or_init(|| {
+        current_profile()
+            .map(|profile| collect_profile_names(&profile))
+            .unwrap_or_default()
+    })
+}
+
+fn collect_profile_names(profile: &Path) -> Vec<String> {
+    let mut names = Vec::new();
+    push_name(&mut names, profile_owner(profile));
+    #[cfg(windows)]
+    {
+        if let Some(alias) = windows_alias(profile, true) {
+            push_name(&mut names, profile_owner(&alias));
+        }
+        if let Some(alias) = windows_alias(profile, false) {
+            push_name(&mut names, profile_owner(&alias));
+        }
+    }
+    names
+}
+
+fn push_name(names: &mut Vec<String>, owner: Option<String>) {
+    let Some(owner) = owner else {
+        return;
+    };
+    if names
+        .iter()
+        .any(|item| item.eq_ignore_ascii_case(&owner))
+    {
+        return;
+    }
+    names.push(owner);
+}
+
+fn paths_equal(left: &Path, right: &Path) -> bool {
+    if left == right {
+        return true;
+    }
+    #[cfg(windows)]
+    {
+        left.to_string_lossy()
+            .eq_ignore_ascii_case(&right.to_string_lossy())
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
+#[cfg(windows)]
+fn expanded_owner(path: &Path) -> Option<String> {
+    let ancestor = existing_ancestor(path)?;
+    let alias = windows_alias(&ancestor, false)?;
+    let rest = path.strip_prefix(&ancestor).unwrap_or(Path::new(""));
+    profile_owner(&alias.join(rest))
+}
+
+#[cfg(windows)]
+fn existing_ancestor(path: &Path) -> Option<PathBuf> {
+    let mut current = path.to_path_buf();
+    loop {
+        if current.exists() {
+            return Some(current);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
+#[cfg(windows)]
+fn windows_alias(path: &Path, short: bool) -> Option<PathBuf> {
+    use std::os::windows::ffi::{OsStrExt, OsStringExt};
+    let input: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    let mut output = vec![0u16; 32_768];
+    let length = unsafe {
+        if short {
+            windows_sys::Win32::Storage::FileSystem::GetShortPathNameW(
+                input.as_ptr(),
+                output.as_mut_ptr(),
+                output.len() as u32,
+            )
+        } else {
+            windows_sys::Win32::Storage::FileSystem::GetLongPathNameW(
+                input.as_ptr(),
+                output.as_mut_ptr(),
+                output.len() as u32,
+            )
+        }
+    };
+    if length == 0 || length as usize >= output.len() {
+        return None;
+    }
+    Some(PathBuf::from(std::ffi::OsString::from_wide(
+        &output[..length as usize],
+    )))
 }
 
 fn profile_owner(path: &Path) -> Option<String> {
@@ -335,6 +466,7 @@ mod tests {
 
         let root = std::env::temp_dir().join("winstrata-scope-chosen");
         let selected = scope(&root);
+        // 临时目录在 Windows 上常位于当前用户的 8.3 短路径下，仍应纳入范围。
         assert!(selected.admits_file(&root.join("keep.txt")));
         assert!(!selected.admits_file(&root.join("skip.exe")));
         assert!(!selected.admits_file(&std::env::temp_dir().join("winstrata-scope-other").join("keep.txt")));

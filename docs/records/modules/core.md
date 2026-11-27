@@ -116,3 +116,19 @@ Authoritative error records for `core`. [AG-63](../../../AGENTS.md#ag-63) requir
 - Fix plan: implemented in plan 006 before merge
 - Retest result: candidate `b3f56ab` passed 20 Core tests on Windows Server 2022. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/45976058358/job/140427947209). A native NTFS regression confirmed that a private directory stays pinned while an ordinary sibling can be renamed.
 - Current state: resolved
+
+<a id="err-018"></a>
+
+## ERR-018
+
+- Error ID: ERR-018
+- Discovery time: 2026-11-27, Windows workspace job on `df34c741e80d02e711dc97b8b8eeec34eae05f24` during plan 017
+- Related PR: GitHub PR #28, plan 017, before merge
+- Environment: GitHub Actions `windows-2022`. The runner label is Windows Server 2022. It is not a Windows 10 or Windows 11 client.
+- Reproduction method: `cargo test --locked --workspace` reached `scope::tests::foreign_profiles_and_unselected_types_stay_out`, `scope::tests::registry_process_and_interface_choices_are_explicit`, and `onboarding::tests::baseline_scope_pause_history_and_loss_stay_distinct`
+- Evidence: [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46058310468/job/140706127654). `admits_file` and `admits_process` rejected a path under `std::env::temp_dir()`. `build_baseline` then returned `a full snapshot needs at least one entry`. Linux workspace checks on the same commit passed. [Linux job](https://github.com/zemeng5208/winstrata/actions/runs/46058310468/job/140706126963).
+- Root cause: the runner temporary directory is inside the current user's profile, and Windows spelled that profile with an 8.3 short name that did not match the owner parsed from `USERPROFILE`. The scope filter treated the current user's own directory as another user's private profile.
+- Impact: Windows workspace checks failed, so Workspace checks failed. The selected baseline could not be stored for a directory under that profile.
+- Fix plan: compare the current profile's long name and 8.3 short name, and expand an existing ancestor of the candidate path. A different user's private profile stays excluded. A selected scope with no matching files stores the baseline object and does not write an empty snapshot. The tests are unchanged.
+- Retest result: pending the next Windows workspace job on the correction
+- Current state: open

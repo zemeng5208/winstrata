@@ -312,11 +312,14 @@ impl Core {
             kind: Id::new("baseline").map_err(|_| invalid_input("baseline kind is invalid"))?,
             body,
         })?;
-        batch.put_snapshot(Snapshot {
-            id: id.clone(),
-            base: None,
-            entries,
-        })?;
+        // 完整快照至少要有一项。范围内没有匹配文件时只保留对象，并在 files 中记 0。
+        if !entries.is_empty() {
+            batch.put_snapshot(Snapshot {
+                id: id.clone(),
+                base: None,
+                entries,
+            })?;
+        }
         let mut store = self.open_hybrid()?;
         self.commit_hybrid(&mut store, batch)?;
         record.baseline_id = Some(id.as_str().to_owned());
