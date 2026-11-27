@@ -1,6 +1,6 @@
 # Per-user Core configuration and hybrid storage
 
-[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012)
+[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012) · [Plan 013](../roadmap/PLAN.md#pr-013)
 
 PR 006 provides the local Core session, its settings and the storage needed to reopen them. The caller gets the identity of the running OS account. Windows uses the process token's user SID and Linux uses the effective UID.
 
@@ -33,8 +33,20 @@ Each payload is written once, into `s{id}.wsg` in its own directory. `indexes/jo
 
 `set_retention` stores a day count for one `DataClass`. `None` keeps the class indefinitely. `Some(0)` is rejected. The call does not delete data. Cleanup and quota enforcement belong to plan 030. `capacity` sums regular-file bytes in each of the six directories and counts captures separately. `reserve` uses the existing `storage::capacity`. Calling it with `u64::MAX` reports insufficient space. The test does not fill a physical disk to produce that result. A volume error suspends the Core session and stops live mode. `InvalidInput` and `InvalidData` do not suspend the session.
 
-Plan 006 migration copies regular private files in the user directory. Hybrid files move with that directory when their mode is `0600` and they have no extra hard link.
+Plan 006 migration copies regular private files in the user directory. Hybrid files move with that directory when their mode is `0600` and they have no extra hard link. An encrypted workspace moves `vault.wsv` with those files. After the copy, the source remains and the destination opens with the same key.
+
+## Encryption, backup and restore
+
+Encryption is optional and off until `enable_encryption`. That call is refused while monitoring is live, when a vault already exists, or when the hybrid store already has a commit. The password is 8 to 1024 bytes. Auto-lock is 0 seconds through 7 days. `vault.wsv` sits beside `core.json`, mode `0600`, and is capped at 64 KiB. It stores PBKDF2-HMAC-SHA256 parameters, a password verifier, the wrapped data key and a 16-byte device id. The iteration count must be 600,000. When encryption is off, the same device id is stored in `device.wsd`.
+
+Linux seals records with the system OpenSSL 3 `libcrypto.so.3`. Windows uses CNG `BCrypt`. Both use AES-256-GCM. No cipher is implemented in this repository, and no cryptographic crate was added. AF_ALG is not used. DPAPI is not used for the portable vault, because it binds ciphertext to one Windows profile and blocks restore on another machine. That choice is AS-009.
+
+A sealed record is `WSE1`, a 12-byte nonce, the ciphertext and a 16-byte tag. The associated data binds the user, workspace, category, segment and offset, so a moved or swapped blob fails authentication. The journal CRC covers the stored ciphertext. The capture preamble stays readable without the key. Packet bytes are inside the sealed record. Queries while locked fail with `PermissionDenied` and the text `storage is locked`. A commit still encrypts, does not refresh the idle timer, and does not stop `RunState::Live`. Auto-lock is checked on a user read. A restarted process has no data key, so `open_hybrid` stays locked until `unlock`. A lock error does not suspend the session. A wrong password is `password is not valid` and is not reported as a damaged vault.
+
+`change_password` rewraps the current data key. `rotate_keys` creates a new data key, rewrites each referenced record at the same length, then rewraps the vault. A crash between the rewrite and the rewrap can leave new ciphertext under the old wrap. If rewrap fails in-process, Core tries to write the previous key back. This is not a crash-safe rotation.
+
+`backup_full` and `backup_incremental` write one `WSB1` package outside the user directory. The package copies regular files and a CRC of each file. An incremental package stores files whose length or CRC changed since a full package of the same user and workspace, plus paths removed since that package. Backup and restore are refused while monitoring is live. Backup is allowed while locked, and the package keeps ciphertext. Restore checks the user, workspace, configuration and every file CRC, and rejects `..` before writing. The recorded device id does not have to match the destination. There is no plaintext export, plugin export, time-range split, or deletion quota here. Those remain plans 038, 042 and 030.
 
 ## Verification scope
 
-Use `cargo test --locked -p winstrata-core` on Linux and Windows. Check startup, individual settings, restart, storage loss and recovery, private filesystem access and migration of the Core configuration. The workspace CI runs the tests on Linux and Windows Server 2022. Plan 012 additionally covers the writes, queries, segments, index, capacity and corruption rollback in the previous section on Linux. Windows tests on this host, Windows 10/11 client acceptance, ReFS, encrypted backup and restore, and end-to-end monitoring remain open. See the [engineering record](../records/STATUS.md) and [data architecture](DATA.md#section-8).
+Use `cargo test --locked -p winstrata-core` on Linux and Windows. Check startup, individual settings, restart, storage loss and recovery, private filesystem access and migration of the Core configuration. The workspace CI runs the tests on Linux and Windows Server 2022. Plan 012 covers hybrid writes, queries, segments, the index, capacity and corruption rollback. Plan 013 covers passwords, locking, encryption and decryption, backup, restore and cross-location migration on Linux. Windows execution of those new tests, Windows 10/11 client acceptance, ReFS, a second physical device, a second OS account, the GUI lock, and E2E-10 remain open. See the [engineering record](../records/STATUS.md) and [data architecture](DATA.md#section-8).

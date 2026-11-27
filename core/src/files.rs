@@ -237,7 +237,7 @@ pub(crate) fn write_json<T: Serialize + ?Sized>(
 }
 
 #[cfg(windows)]
-fn replace(source: &Path, destination: &Path) -> io::Result<()> {
+pub(crate) fn replace_file(source: &Path, destination: &Path) -> io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::Storage::FileSystem::{
         MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW,
@@ -257,7 +257,7 @@ fn replace(source: &Path, destination: &Path) -> io::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-use fs::rename as replace;
+pub(crate) use fs::rename as replace_file;
 
 pub(crate) fn write_encoded(dir: &Anchor, name: &str, bytes: &[u8]) -> io::Result<()> {
     if bytes.len() > MAX_JSON_BYTES {
@@ -276,7 +276,7 @@ pub(crate) fn write_encoded(dir: &Anchor, name: &str, bytes: &[u8]) -> io::Resul
     let mut temp = Temporary::create(dir)?;
     temp.file.write_all(bytes)?;
     temp.file.sync_all()?;
-    replace(&temp.path, &dest)?;
+    replace_file(&temp.path, &dest)?;
     temp.cleanup = false;
     #[cfg(target_os = "linux")]
     File::open(dir.io_path())?.sync_all()?;

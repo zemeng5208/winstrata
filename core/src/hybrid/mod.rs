@@ -18,14 +18,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use winstrata_protocols::{Event, Id, ObjectRef, Record, Source, Version};
 
-use crate::files::{create_private, open_existing};
+use crate::crypto::wipe as crypto_wipe;
+use crate::files::{self, create_private, open_existing};
 use crate::platform::Anchor;
 use crate::storage;
+use crate::vault::{self, Seal};
 use format::{
     HEADER_LEN, JOURNAL_MAGIC, JOURNAL_VERSION, MAX_RECORD, MAX_SEGMENT_BYTES, MIN_SEGMENT_BYTES,
     Reader, commit_frame, crc32, frame, input, invalid, journal_header, put_str, put_u32, put_u64,
     read_frames, segment_header,
 };
+
+pub(crate) use format::MAX_RECORD as RECORD_LIMIT;
 
 const STRUCTURED: u8 = 0;
 const EVENTS: u8 = 1;
@@ -420,11 +424,17 @@ pub struct Hybrid {
     segment_bytes: u32,
     index: Index,
     recovery: Recovery,
+    seal: Option<Seal>,
+    maintaining: bool,
 }
 
 impl Hybrid {
     pub(crate) fn open(user: &Anchor) -> io::Result<Self> {
-        Self::open_with(user, None)
+        Self::open_with(user, None, None)
+    }
+
+    pub(crate) fn open_sealed(user: &Anchor, seal: Seal) -> io::Result<Self> {
+        Self::open_with(user, None, Some(seal))
     }
 
     #[cfg(test)]
@@ -432,7 +442,7 @@ impl Hybrid {
         if journal_exists(user)? {
             return Err(input("hybrid store already exists"));
         }
-        Self::open_with(user, Some(segment_bytes))
+        Self::open_with(user, Some(segment_bytes), None)
     }
 
     pub fn segment_bytes(&self) -> u32 {
@@ -455,7 +465,56 @@ impl Hybrid {
         self.index.retention[class.code() as usize]
     }
 
+    pub(crate) fn same_seal(&self, seal: &Seal) -> bool {
+        self.seal
+            .as_ref()
+            .is_some_and(|current| current.same_as(seal))
+    }
+
+    pub(crate) fn rotate_dek(&mut self, mut next: [u8; 32]) -> io::Result<()> {
+        let Some(seal) = self.seal.clone() else {
+            crypto_wipe(&mut next);
+            return Err(input("encryption is not enabled"));
+        };
+        let mut previous = match seal.export_dek() {
+            Ok(key) => key,
+            Err(error) => {
+                crypto_wipe(&mut next);
+                return Err(error);
+            }
+        };
+        let user = seal.user();
+        let workspace = seal.workspace();
+        if let Err(error) = rewrite_sealed(&self.dirs, &user, &workspace, &previous, &next) {
+            crypto_wipe(&mut previous);
+            crypto_wipe(&mut next);
+            return Err(error);
+        }
+        crypto_wipe(&mut previous);
+        seal.replace_dek(next);
+        crypto_wipe(&mut next);
+        let path = self.dirs[INDEXES as usize].io_path().join(JOURNAL);
+        let file = open_existing(&path, true)?;
+        let (segment_bytes, recovery, index) =
+            recover(&self.dirs, file, Some(self.segment_bytes), Some(&seal))?;
+        if segment_bytes != self.segment_bytes {
+            return Err(invalid("segment size changed while rotating keys"));
+        }
+        self.segment_bytes = segment_bytes;
+        self.recovery = recovery;
+        self.index = index;
+        Ok(())
+    }
+
     pub fn commit(&mut self, batch: Batch) -> io::Result<u64> {
+        // 锁定只挡住读取。监视写入仍使用进程内的数据密钥，并且不刷新自动锁定计时。
+        self.maintaining = true;
+        let result = self.commit_while_maintaining(batch);
+        self.maintaining = false;
+        result
+    }
+
+    fn commit_while_maintaining(&mut self, batch: Batch) -> io::Result<u64> {
         let pending = self.prepare(batch)?;
         if pending.is_empty() {
             return Ok(self.index.commit);
@@ -464,21 +523,24 @@ impl Hybrid {
         let mut bufs = Vec::new();
         let mut refs = Vec::new();
         let mut payloads = Vec::new();
+        let mut stored_payloads = Vec::new();
         for item in pending {
-            let offset = stage(
+            let (offset, stored) = stage(
                 &mut bufs,
                 &mut tails,
                 &self.index.water,
                 &item,
                 self.segment_bytes as u64,
+                self.seal.as_ref(),
             )?;
             refs.push(RefRec {
                 category: item.category,
                 segment: tails[item.category as usize].segment,
                 offset,
-                len: item.payload.len() as u32,
-                crc: crc32(&item.payload),
+                len: stored.len() as u32,
+                crc: crc32(&stored),
             });
+            stored_payloads.push(stored);
             payloads.push(item.payload);
         }
         let waters: Vec<_> = bufs
@@ -505,7 +567,7 @@ impl Hybrid {
         }
         self.reserve(bytes)?;
         let mut updated = self.index.clone();
-        updated.accept(&record, &payloads)?;
+        updated.accept(&record, &stored_payloads, &payloads)?;
         updated.tail = tails;
 
         let mut written = Vec::new();
@@ -530,6 +592,7 @@ impl Hybrid {
     }
 
     pub fn get_object(&self, id: &Id) -> io::Result<Option<ObjectRecord>> {
+        self.user_gate()?;
         let Some((_, loc)) = self.index.objects.get(id.as_str()) else {
             return Ok(None);
         };
@@ -538,6 +601,7 @@ impl Hybrid {
     }
 
     pub fn relations_from(&self, id: &Id) -> io::Result<Vec<Relation>> {
+        self.user_gate()?;
         let mut found = Vec::new();
         for ((from, kind, to), loc) in &self.index.relations {
             if from == id.as_str() {
@@ -556,6 +620,7 @@ impl Hybrid {
     }
 
     pub fn event(&self, source: &Source, sequence: u64) -> io::Result<Option<Event>> {
+        self.user_gate()?;
         let Some(loc) = self
             .index
             .events
@@ -577,6 +642,7 @@ impl Hybrid {
         start_ns: i64,
         end_ns: i64,
     ) -> io::Result<Vec<Event>> {
+        self.user_gate()?;
         if start_ns > end_ns {
             return Err(input("event time range is reversed"));
         }
@@ -596,6 +662,7 @@ impl Hybrid {
     }
 
     pub fn metrics(&self, series: &Id, start_ns: i64, end_ns: i64) -> io::Result<Vec<Point>> {
+        self.user_gate()?;
         if start_ns > end_ns {
             return Err(input("metric time range is reversed"));
         }
@@ -626,6 +693,7 @@ impl Hybrid {
     }
 
     pub fn capture(&self, id: &Id) -> io::Result<Option<StoredCapture>> {
+        self.user_gate()?;
         let Some(loc) = self.index.captures.get(id.as_str()) else {
             return Ok(None);
         };
@@ -646,6 +714,7 @@ impl Hybrid {
     }
 
     pub fn snapshot(&self, id: &Id) -> io::Result<Option<Snapshot>> {
+        self.user_gate()?;
         let Some(meta) = self.index.snapshots.get(id.as_str()) else {
             return Ok(None);
         };
@@ -658,6 +727,7 @@ impl Hybrid {
     }
 
     pub fn materialize_snapshot(&self, id: &Id) -> io::Result<BTreeMap<String, Id>> {
+        self.user_gate()?;
         let mut chain = Vec::new();
         let mut seen = BTreeSet::new();
         let mut cursor = Some(id.clone());
@@ -687,6 +757,7 @@ impl Hybrid {
     }
 
     pub fn lookup(&self, id: &Id) -> io::Result<Vec<RecordRef>> {
+        self.user_gate()?;
         let key = id.as_str();
         let mut hits = Vec::new();
         if let Some((kind, _)) = self.index.objects.get(key) {
@@ -743,7 +814,7 @@ impl Hybrid {
         self.dirs[category as usize].io_path()
     }
 
-    fn open_with(user: &Anchor, requested: Option<u32>) -> io::Result<Self> {
+    fn open_with(user: &Anchor, requested: Option<u32>, seal: Option<Seal>) -> io::Result<Self> {
         let data = user.child(std::ffi::OsStr::new("data"), true, true)?;
         let dirs = [
             data.child(std::ffi::OsStr::new(DIRS[0]), true, true)?,
@@ -755,7 +826,7 @@ impl Hybrid {
         ];
         let path = dirs[INDEXES as usize].io_path().join(JOURNAL);
         let (segment_bytes, recovery, index) = match open_existing(&path, true) {
-            Ok(file) => recover(&dirs, file, requested)?,
+            Ok(file) => recover(&dirs, file, requested, seal.as_ref())?,
             Err(error) if error.kind() == ErrorKind::NotFound => {
                 let segment_bytes = requested.unwrap_or(format::DEFAULT_SEGMENT_BYTES);
                 check_segment_bytes(segment_bytes)?;
@@ -772,6 +843,8 @@ impl Hybrid {
             segment_bytes,
             index,
             recovery,
+            seal,
+            maintaining: false,
         })
     }
 
@@ -920,7 +993,7 @@ impl Hybrid {
         if crc32(&payload) != loc.crc {
             return Err(invalid("record checksum does not match"));
         }
-        Ok(payload)
+        self.reveal(category, loc.segment, loc.offset, &payload)
     }
 
     fn read_range(
@@ -935,7 +1008,7 @@ impl Hybrid {
         if crc32(&payload) != crc {
             return Err(invalid("record checksum does not match"));
         }
-        Ok(payload)
+        self.reveal(category, segment, offset, &payload)
     }
 
     fn read_exact(&self, category: u8, segment: u32, offset: u64, len: u32) -> io::Result<Vec<u8>> {
@@ -946,6 +1019,34 @@ impl Hybrid {
         Ok(buf)
     }
 
+    fn user_gate(&self) -> io::Result<()> {
+        if self.maintaining {
+            return Ok(());
+        }
+        if let Some(seal) = &self.seal {
+            seal.authorize_read()?;
+        }
+        Ok(())
+    }
+
+    fn reveal(
+        &self,
+        category: u8,
+        segment: u32,
+        offset: u64,
+        stored: &[u8],
+    ) -> io::Result<Vec<u8>> {
+        // 维护写入可以在锁定期间解密，用来判断对象是否已经存在。
+        vault::decode_record(
+            self.seal.as_ref(),
+            category,
+            segment,
+            offset,
+            stored,
+            !self.maintaining,
+        )
+    }
+
     fn capture_link(&self, segment: u32) -> io::Result<u16> {
         let prefix = self.read_exact(CAPTURES, segment, 0, capture_header_len() as u32)?;
         pcap::link_type(&prefix)
@@ -953,10 +1054,149 @@ impl Hybrid {
 }
 
 pub(crate) fn suspends(error: &io::Error) -> bool {
+    if vault::is_locked(error) {
+        return false;
+    }
     !matches!(
         error.kind(),
         ErrorKind::InvalidInput | ErrorKind::InvalidData
     )
+}
+
+fn rewrite_sealed(
+    dirs: &[Anchor; 6],
+    user: &str,
+    workspace: &str,
+    previous: &[u8; 32],
+    next: &[u8; 32],
+) -> io::Result<()> {
+    let journal_path = dirs[INDEXES as usize].io_path().join(JOURNAL);
+    let bytes = fs::read(&journal_path)?;
+    if bytes.len() < HEADER_LEN || bytes.get(..4) != Some(JOURNAL_MAGIC) {
+        return Err(invalid("hybrid journal header is not supported"));
+    }
+    let (frames, end) = read_frames(&bytes, HEADER_LEN);
+    if end != bytes.len() {
+        return Err(invalid("journal tail is incomplete"));
+    }
+    let mut files: BTreeMap<(u8, u32), Vec<u8>> = BTreeMap::new();
+    let mut body = Vec::with_capacity(bytes.len());
+    body.extend_from_slice(&bytes[..HEADER_LEN]);
+    for (_, payload) in &frames {
+        let mut record = decode_commit(payload)?;
+        for ref_ in &mut record.refs {
+            let key = (ref_.category, ref_.segment);
+            if !files.contains_key(&key) {
+                files.insert(
+                    key,
+                    fs::read(segment_path(&dirs[ref_.category as usize], ref_.segment))?,
+                );
+            }
+            let file = files.get_mut(&key).expect("segment was loaded");
+            let start =
+                usize::try_from(ref_.offset).map_err(|_| invalid("record offset overflows"))?;
+            let stop = start
+                .checked_add(ref_.len as usize)
+                .ok_or_else(|| invalid("record offset overflows"))?;
+            if stop > file.len() {
+                return Err(invalid("record extends past the segment"));
+            }
+            let stored = file[start..stop].to_vec();
+            if crc32(&stored) != ref_.crc {
+                return Err(invalid("record checksum does not match"));
+            }
+            let plain = vault::unpack_with(
+                previous,
+                user,
+                workspace,
+                ref_.category,
+                ref_.segment,
+                ref_.offset,
+                &stored,
+            )?;
+            let sealed = vault::pack_with(
+                next,
+                user,
+                workspace,
+                ref_.category,
+                ref_.segment,
+                ref_.offset,
+                &plain,
+            )?;
+            if sealed.len() != stored.len() {
+                return Err(invalid("rotated record changed size"));
+            }
+            file[start..stop].copy_from_slice(&sealed);
+            if ref_.category != CAPTURES {
+                let crc_at = start
+                    .checked_sub(4)
+                    .ok_or_else(|| invalid("record frame is outside the segment"))?;
+                file[crc_at..start].copy_from_slice(&crc32(&sealed).to_le_bytes());
+            }
+            ref_.crc = crc32(&sealed);
+        }
+        body.extend_from_slice(&commit_frame(&encode_commit(&record)?)?);
+    }
+    let mut temps = Vec::new();
+    let publish = (|| {
+        for ((category, segment), data) in &files {
+            let path = segment_path(&dirs[*category as usize], *segment);
+            let temp = path.with_file_name(format!("s{segment:08}.wsg.rekey"));
+            write_private(&temp, data)?;
+            temps.push((temp, path));
+        }
+        let journal_temp = journal_path.with_file_name("journal.wsj.rekey");
+        write_private(&journal_temp, &body)?;
+        temps.push((journal_temp, journal_path));
+        for (temp, target) in &temps {
+            files::replace_file(temp, target)?;
+        }
+        Ok(())
+    })();
+    if publish.is_err() {
+        for (temp, _) in &temps {
+            let _ = fs::remove_file(temp);
+        }
+    }
+    publish
+}
+
+fn write_private(path: &std::path::Path, bytes: &[u8]) -> io::Result<()> {
+    let mut file = create_private(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    Ok(())
+}
+
+pub(crate) fn content_crc(data: &[u8]) -> u32 {
+    crc32(data)
+}
+
+pub(crate) fn journal_commit(user: &Anchor) -> io::Result<u64> {
+    let path = user
+        .io_path()
+        .join("data")
+        .join(DIRS[INDEXES as usize])
+        .join(JOURNAL);
+    if !path.exists() {
+        return Ok(0);
+    }
+    let bytes = fs::read(&path)?;
+    if bytes.len() < HEADER_LEN
+        || bytes.get(..4) != Some(JOURNAL_MAGIC)
+        || u32::from_le_bytes(bytes[4..8].try_into().expect("4 bytes")) != JOURNAL_VERSION
+    {
+        return Err(invalid("hybrid journal header is not supported"));
+    }
+    let (frames, _) = read_frames(&bytes, HEADER_LEN);
+    let mut seq = 0u64;
+    for (_, payload) in frames {
+        match decode_commit(&payload) {
+            Ok(record) => seq = record.seq,
+            Err(_) => break,
+        }
+    }
+    Ok(seq)
 }
 
 fn check_segment_bytes(value: u32) -> io::Result<()> {
@@ -1031,6 +1271,7 @@ fn recover(
     dirs: &[Anchor; 6],
     mut journal: File,
     requested: Option<u32>,
+    seal: Option<&Seal>,
 ) -> io::Result<(u32, Recovery, Index)> {
     let mut bytes = Vec::new();
     journal.read_to_end(&mut bytes)?;
@@ -1059,7 +1300,8 @@ fn recover(
                 break;
             }
         };
-        let mut payloads = Vec::new();
+        let mut stored_payloads = Vec::new();
+        let mut logical = Vec::new();
         let mut readable = true;
         for ref_ in &record.refs {
             if ref_.category >= 6 {
@@ -1067,14 +1309,30 @@ fn recover(
                 break;
             }
             match read_ref(&dirs[ref_.category as usize], ref_) {
-                Ok(payload) => payloads.push(payload),
+                Ok(stored) => match vault::decode_record(
+                    seal,
+                    ref_.category,
+                    ref_.segment,
+                    ref_.offset,
+                    &stored,
+                    true,
+                ) {
+                    Ok(plain) => {
+                        stored_payloads.push(stored);
+                        logical.push(plain);
+                    }
+                    Err(_) => {
+                        readable = false;
+                        break;
+                    }
+                },
                 Err(_) => {
                     readable = false;
                     break;
                 }
             }
         }
-        if !readable || index.accept(&record, &payloads).is_err() {
+        if !readable || index.accept(&record, &stored_payloads, &logical).is_err() {
             rolled_back = (frames.len() - applied) as u64;
             break;
         }
@@ -1110,7 +1368,6 @@ fn read_ref(dir: &Anchor, ref_: &RefRec) -> io::Result<Vec<u8>> {
         if crc32(&block) != ref_.crc {
             return Err(invalid("record checksum does not match"));
         }
-        let _ = pcap::parse_packet(&block)?;
         return Ok(block);
     }
     if ref_.offset < HEADER_LEN as u64 {
@@ -1197,8 +1454,16 @@ fn enforce_water(dirs: &[Anchor; 6], index: &Index) -> io::Result<u64> {
 }
 
 impl Index {
-    fn accept(&mut self, record: &CommitRec, payloads: &[Vec<u8>]) -> io::Result<()> {
-        if record.seq != self.commit + 1 || payloads.len() != record.refs.len() {
+    fn accept(
+        &mut self,
+        record: &CommitRec,
+        stored: &[Vec<u8>],
+        logical: &[Vec<u8>],
+    ) -> io::Result<()> {
+        if record.seq != self.commit + 1
+            || stored.len() != record.refs.len()
+            || logical.len() != stored.len()
+        {
             return Err(invalid("commit sequence is not contiguous"));
         }
         let mut updated = self.clone();
@@ -1215,7 +1480,7 @@ impl Index {
                 return Err(invalid("commit shortens a segment"));
             }
         }
-        for (ref_, payload) in record.refs.iter().zip(payloads) {
+        for (ref_, (stored_bytes, plain)) in record.refs.iter().zip(stored.iter().zip(logical)) {
             let water = record
                 .waters
                 .iter()
@@ -1226,10 +1491,13 @@ impl Index {
                 .offset
                 .checked_add(u64::from(ref_.len))
                 .ok_or_else(|| invalid("record offset overflows"))?;
-            if payload.len() != ref_.len as usize || crc32(payload) != ref_.crc || end > water {
+            if stored_bytes.len() != ref_.len as usize
+                || crc32(stored_bytes) != ref_.crc
+                || end > water
+            {
                 return Err(invalid("commit reference does not match its payload"));
             }
-            updated.apply(ref_, payload)?;
+            updated.apply(ref_, plain)?;
         }
         for &(category, segment, len) in &record.waters {
             updated.water.insert((category, segment), len);
@@ -1360,17 +1628,26 @@ fn stage(
     water: &BTreeMap<(u8, u32), u64>,
     item: &Pending,
     limit: u64,
-) -> io::Result<u64> {
+    seal: Option<&Seal>,
+) -> io::Result<(u64, Vec<u8>)> {
     let category = item.category as usize;
+    let stored_len = if seal.is_some() {
+        item.payload.len().saturating_add(vault::SEAL_OVERHEAD)
+    } else {
+        item.payload.len()
+    };
+    if stored_len > MAX_RECORD {
+        return Err(input("sealed record exceeds the 1 MiB storage limit"));
+    }
     let header_len = if item.capture_link.is_some() {
         capture_header_len() as u64
     } else {
         HEADER_LEN as u64
     };
     let addition = if item.capture_link.is_some() {
-        item.payload.len() as u64
+        stored_len as u64
     } else {
-        (HEADER_LEN + item.payload.len()) as u64
+        (HEADER_LEN + stored_len) as u64
     };
     if let Some(link) = item.capture_link
         && tails[category]
@@ -1423,10 +1700,18 @@ fn stage(
     } else {
         tails[category].len + HEADER_LEN as u64
     };
-    let bytes = if item.capture_link.is_some() {
-        item.payload.clone()
+    let stored = if let Some(seal) = seal {
+        seal.pack(item.category, segment, offset, &item.payload, false)?
     } else {
-        frame(&item.payload)?
+        item.payload.clone()
+    };
+    if stored.len() != stored_len {
+        return Err(invalid("sealed record length changed"));
+    }
+    let bytes = if item.capture_link.is_some() {
+        stored.clone()
+    } else {
+        frame(&stored)?
     };
     let buf = bufs
         .iter_mut()
@@ -1437,7 +1722,7 @@ fn stage(
     if let Some(link) = item.capture_link {
         tails[category].link_type = Some(link);
     }
-    Ok(offset)
+    Ok((offset, stored))
 }
 
 fn next_segment(water: &BTreeMap<(u8, u32), u64>, bufs: &[Buf], category: u8) -> io::Result<u32> {

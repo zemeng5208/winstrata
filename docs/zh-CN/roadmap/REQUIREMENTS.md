@@ -50,8 +50,8 @@
 | REQ-13.01 | 避免自监视递归，保留相关外部修改 | [DATA](../architecture/DATA.md#section-8) | [028](PLAN.md#pr-028) | [05](ACCEPTANCE.md#e2e-05), [08](ACCEPTANCE.md#e2e-08) | 规划中 |
 | REQ-13.02 | GUI 与批处理脚本过滤，失败安全回退 | [DATA](../architecture/DATA.md#section-8) | [027](PLAN.md#pr-027), [028](PLAN.md#pr-028) | [04](ACCEPTANCE.md#e2e-04), [07](ACCEPTANCE.md#e2e-07) | 规划中 |
 | REQ-13.03 | 减少无效 I/O 和写入放大，验证完整性 | [DATA](../architecture/DATA.md#section-8) | [032](PLAN.md#pr-032), [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
-| REQ-14.01 | 可选本地加密及锁定，锁定时保持监视 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [042](PLAN.md#pr-042) | [10](ACCEPTANCE.md#e2e-10) | 规划中 |
-| REQ-14.02 | 验证备份、恢复、完整性、迁移及设备标识 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [038](PLAN.md#pr-038) | [10](ACCEPTANCE.md#e2e-10) | 规划中 |
+| REQ-14.01 | 可选本地加密及锁定，锁定时保持监视 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [042](PLAN.md#pr-042) | [10](ACCEPTANCE.md#e2e-10) | 加密在启用前保持关闭。锁定挡住读取，实时提交可以继续。界面锁定显示仍属于 PR 042。E2E-10 未完成。 |
+| REQ-14.02 | 验证备份、恢复、完整性、迁移及设备标识 | [DATA](../architecture/DATA.md#section-8) | [013](PLAN.md#pr-013), [038](PLAN.md#pr-038) | [10](ACCEPTANCE.md#e2e-10) | Linux 测试覆盖完整包和增量包、校验、路径穿越、用户不匹配、恢复、设备标识，以及保留源目录的迁移。没有运行第二台设备。插件导出和按时间范围导出仍属于 PR 038。E2E-10 未完成。 |
 | REQ-14.03 | 授权并验证导入导出，明文转换须确认 | [DATA](../architecture/DATA.md#section-8) | [038](PLAN.md#pr-038), [042](PLAN.md#pr-042) | [09](ACCEPTANCE.md#e2e-09), [10](ACCEPTANCE.md#e2e-10) | 规划中 |
 | REQ-15.01 | 手动自选范围的完整及增量快照与差异视图 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [038](PLAN.md#pr-038) | [07](ACCEPTANCE.md#e2e-07) | 规划中 |
 | REQ-15.02 | 自动快照默认关闭，支持用户定义自动化 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [027](PLAN.md#pr-027), [038](PLAN.md#pr-038) | [07](ACCEPTANCE.md#e2e-07) | 规划中 |
@@ -84,14 +84,14 @@
 | REQ-25.01 | 救援默认关闭并排除批量启用 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-6) | [047](PLAN.md#pr-047) | [13](ACCEPTANCE.md#e2e-13) | 规划中 |
 | REQ-25.02 | 仅许可列明的本机救援动作，校验目标并审计 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-6) | [047](PLAN.md#pr-047) | [13](ACCEPTANCE.md#e2e-13) | 规划中 |
 | REQ-25.03 | 拒绝任意命令、越权目标及撤销后操作 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-6) | [047](PLAN.md#pr-047) | [13](ACCEPTANCE.md#e2e-13) | 规划中 |
-| REQ-26.01 | 监视数据、遥测、文件和哈希留在本机 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [013](PLAN.md#pr-013), [044](PLAN.md#pr-044), [045](PLAN.md#pr-045), [046](PLAN.md#pr-046) | [04](ACCEPTANCE.md#e2e-04), [06](ACCEPTANCE.md#e2e-06), [10](ACCEPTANCE.md#e2e-10), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
+| REQ-26.01 | 监视数据、遥测、文件和哈希留在本机 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [013](PLAN.md#pr-013), [044](PLAN.md#pr-044), [045](PLAN.md#pr-045), [046](PLAN.md#pr-046) | [04](ACCEPTANCE.md#e2e-04), [06](ACCEPTANCE.md#e2e-06), [10](ACCEPTANCE.md#e2e-10), [12](ACCEPTANCE.md#e2e-12) | 计划 013 把保险库、数据密钥和备份包留在本机。没有增加网络导出。计划 044、045 和 046 仍待完成。E2E-10 未完成。 |
 | REQ-26.02 | 展示真实来源、不确定性、缺失及不支持状态 | [DEVELOPMENT](../standards/DEVELOPMENT.md#ag-34) | [014](PLAN.md#pr-014), [040](PLAN.md#pr-040), [045](PLAN.md#pr-045) | [06](ACCEPTANCE.md#e2e-06), [09](ACCEPTANCE.md#e2e-09), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
 | REQ-26.03 | 外部 Agent 的决策、模型和凭据边界 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-6) | [043](PLAN.md#pr-043), [045](PLAN.md#pr-045), [046](PLAN.md#pr-046) | [06](ACCEPTANCE.md#e2e-06), [12](ACCEPTANCE.md#e2e-12) | 规划中 |
 | REQ-27.01 | 实测后台 150 MB 内存及 1% CPU 目标 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048) | [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-27.02 | 实测 GUI 350 MB 内存、产物 250 MB 及冷启动 3 秒目标 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [048](PLAN.md#pr-048), [050](PLAN.md#pr-050) | [08](ACCEPTANCE.md#e2e-08), [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-27.03 | 验证未标记包零写入、禁用插件近零专属资源及 I/O 开销 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-10) | [031](PLAN.md#pr-031), [048](PLAN.md#pr-048) | [04](ACCEPTANCE.md#e2e-04), [08](ACCEPTANCE.md#e2e-08), [15](ACCEPTANCE.md#e2e-15) | 规划中 |
 | REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
-| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 已实现工具链配置与[按用户隔离的版本化运行配置](../architecture/CORE-STORAGE.md)。密钥管理和加密迁移留待 PR 013。 |
+| REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 已实现工具链配置、[按用户隔离的版本化运行配置](../architecture/CORE-STORAGE.md)，以及计划 013 的本地密钥封装和加密迁移。其他敏感项界面仍属于后续计划。 |
 | REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口、忽略规则、本地及托管工作区检查已验证。 |
 | REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验所有者合并 PR 004。两项 GitHub Actions 检查和分支保持最新均已强制，绕过名单为空。[工程记录](../records/STATUS.md) |
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
