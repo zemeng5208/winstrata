@@ -6,6 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { ScriptPage } from './script-page'
 import { OverviewPage, PluginsPage, ServicePage, SettingsPage, Shell } from './shell'
 
 const rootRoute = createRootRoute({ component: Shell })
@@ -29,7 +30,18 @@ const settingsRoute = createRoute({
   path: '/settings',
   component: SettingsPage,
 })
-const routeTree = rootRoute.addChildren([overviewRoute, pluginsRoute, serviceRoute, settingsRoute])
+const scriptsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/scripts',
+  component: ScriptPage,
+})
+const routeTree = rootRoute.addChildren([
+  overviewRoute,
+  pluginsRoute,
+  serviceRoute,
+  settingsRoute,
+  scriptsRoute,
+])
 const router = createRouter({
   routeTree,
   history: createMemoryHistory({ initialEntries: ['/'] }),

@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/architecture/RUNTIMES.md) · [Index](../INDEX.md) · [Plugins](PLUGINS.md) · [SDK](../../sdk) · [Plan 015](../roadmap/PLAN.md#pr-015)
 
-Plan 015 adds the three language runtimes, their SDKs, project dependency checks, and OS containment. The native contract and process lifecycle stay in [Plugins](PLUGINS.md). The editor, triggers, and presets stay on plan 027. The market stays on plan 043.
+Plan 015 adds the three language runtimes, their SDKs, project dependency checks, and OS containment. The native contract and process lifecycle stay in [Plugins](PLUGINS.md). The editor, triggers, and presets are [plan 027](SCRIPT.md). The market stays on plan 043.
 
 ## Runtimes
 
@@ -30,4 +30,4 @@ The Windows host creates an AppContainer profile with no extra capabilities and 
 
 ## What remains later
 
-The script editor, debugging, triggers, and empty preset rule are plan 027. The shared market is plan 043. Signed updates are plan 044. E2E-06, E2E-07, and E2E-12 are not complete. An already-open handle inside an allowed directory is not revoked mid-process. Windows 10 and 11 client runs of this containment were not made on the authoring host. The evidence is in the [engineering record](../records/STATUS.md).
+Plan 027 supplies the script editor, debugging, triggers, logs, permissions, and the empty preset check. The Windows workbench session and a Windows AppContainer for those children stay open. The shared market is plan 043. Signed updates are plan 044. E2E-06, E2E-07, and E2E-12 are not complete. An already-open handle inside an allowed directory is not revoked mid-process. Windows 10 and 11 client runs of this containment were not made on the authoring host. The evidence is in the [engineering record](../records/STATUS.md).

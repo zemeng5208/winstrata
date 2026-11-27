@@ -39,6 +39,7 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 017 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-01 和 E2E-11 没有关闭。 |
 | PR 018 | 已合并，验收仍有待项 | 所有者于 2026-11-27T20:02:11Z 将 [GitHub PR #26](https://github.com/zemeng5208/winstrata/pull/26) 合并为 `857115ebbdc364358e6487609b59c56be80b2e3c`。父提交是 `88249119943516437819d93eb7f7bcd50c3b45b8` 和 `cf8fe8fd213c14c45eddfabeb6400e5e211f47f3`。文件树 `e3504f162f67459ddfed19ffa0e17ed71186f551`。签名验证为 GitHub。这份记录不为该合并提交附加 CI 地址。E2E-02 和 E2E-03 没有关闭。 |
 | PR 019 | 待审查 | 进程内 `strata.registry`，分支 `pr/019-strata-registry`，已换基到 `857115ebbdc364358e6487609b59c56be80b2e3c`。请求的合并位置是紧接计划 018 之后、计划 020 之前。本次变更不开始计划 020。E2E-02 未完成。 |
+| PR 027 | 待审查 | 脚本插件 `strata.script`，分支 `pr/027-strata-script`，基于 main `2b4912a715a957b48e5451514a3a6d8393203545`（GitHub PR #27，计划 019 的合并）。请求的合并位置是紧接计划 026 之后、计划 028 之前。计划 026 不在 main 上，因此在它进入 main 之前，前驱顺序会失败。本次变更不开始计划 026 或 028。E2E-07 和 E2E-12 未完成。Windows 工作台和 Windows AppContainer 仍是 [OI-039](OPEN_ITEMS.md#oi-039) 和 [OI-040](OPEN_ITEMS.md#oi-040)。 |
 | PR 020–050 | 规划中 | 本次变更不开始它们。 |
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。计划 017 记录启用选择，不启动采集器。计划 018 运行进程采集，并在启用前保持禁用。计划 019 在进程内运行 `strata.registry`。其余采集实现仍属于计划 020–047。 |
 
@@ -337,3 +338,13 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 在这台 Linux x86_64 主机上，Rust 1.100.0、Python 3.12.3，以及 `/tmp/winstrata-node/bin/node` 的 Node.js 24.22.3（`PATH` 上原有的 `node` 是 22.23.4）。换基到 `88249119943516437819d93eb7f7bcd50c3b45b8` 后的树通过 `RUSTFLAGS="-Dwarnings" cargo build --locked --workspace` 和 `RUSTFLAGS="-Dwarnings" cargo test --locked --workspace`：66 项 Core 测试、23 项内核测试、14 项协议库测试、2 项协议集成测试、3 项语言测试、5 项运行时生命周期测试、7 项服务测试、5 项桌面测试和 1 项进程插件测试。进程测试启动了 `/bin/sleep 120`。它为该子进程记录了一次带有 `procfs` 观察归属和完整时间的 `process.started`，同一身份至少各有一次 `process.thread.started` 和 `process.module.loaded`，并且 `tree.json` 将该子进程的父节点连到测试进程。随后一次采样没有重复这条启动。暂停期间采样计数保持不变。子进程被回收后出现一次完整性为部分的 `process.exited`，下一次采样没有重复它。禁用向 `released` 写入 `joined`，采集进程已经退出，采样计数不再变化。`Cargo.lock` 增加路径包 `winstrata-strata-process`，没有新增外部 crate 版本。
 
 这台主机没有运行 Windows 测试、普通 Windows GUI 会话或已签名驱动。E2E-02 和 E2E-03 没有完成。本计划没有改动官方壳，[GUI_SOURCES.md](GUI_SOURCES.md) 没有变化。ETW、内核回调、命令行，以及只存在于两次采样之间的进程仍开放在 [OI-015](OPEN_ITEMS.md#oi-015)。
+
+## PR 027 验证
+
+计划 027 基于 main `2b4912a715a957b48e5451514a3a6d8393203545`，即 GitHub PR #27（计划 019）的合并。分支是 `pr/027-strata-script`。`PLAN.md` 没有改动。请求的合并位置是紧接计划 026 之后、计划 028 之前。计划 026 不在这份 main 上。在它进入 main 之前，前驱顺序检查会失败。本计划不实现 026 或 028。
+
+在这台 Linux x86_64 主机上，Rust 1.100.0、Python 3.12.3，以及 `/tmp/winstrata-toolchain/node/bin/node` 的 Node.js 24.22.3（`PATH` 上原有的 `node` 是 22.23.4）。`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过：67 项 Core 测试、23 项内核测试、14 项协议库测试、2 项协议集成测试、3 项语言测试、5 项运行时生命周期测试、7 项服务测试、6 项桌面测试、1 项进程插件测试、3 项注册表测试、3 项脚本单元测试和 1 项脚本工作台测试。工作台测试创建、编辑、着色、补全并诊断了脚本，运行了 Python、JavaScript 和 TypeScript，暂停并继续了调试器，触发了手动、事件、定时和条件，执行了发布、订阅和私有存储权限，拒绝了缺失模块，让死循环超时，拒绝读取 `/etc/passwd` 和写入 `presets/`，并且该目录保持为空。禁用写入了 `joined`。进程采集测试仍然记录了一个真实子进程，采样行为没有改变。`Cargo.lock` 增加路径包 `winstrata-strata-script`，没有新增外部 crate 版本。
+
+无头 Chrome 加载了官方壳，打开脚本页，并点击了检查预设。唯一发出的命令是带 `{"op":"empty"}` 的 `script-workbench`。页面显示预设为 0，并且工作台没有在运行。选择存储位置之前的桥接测试返回同样的空闲结果，也没有创建插件目录。桥接上的 `enable` 仍然返回 403。
+
+这台主机没有运行 Windows 测试、Windows AppContainer 或 Windows 工作台会话。它们仍是 [OI-039](OPEN_ITEMS.md#oi-039) 和 [OI-040](OPEN_ITEMS.md#oi-040)。E2E-07 和 E2E-12 未完成。这个 head 的四项门禁在拉取请求打开后记录。所有者合并。本 Agent 不合并。

@@ -30,6 +30,8 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-017 | Resolved | [Services](modules/services.md#err-017) |
 | ERR-018 | Resolved | [Core](modules/core.md#err-018) |
 
+`plugins/strata-script` has no open error. Its register is [StrataScript](modules/strata-script.md). The Windows AppContainer gap is [OI-040](OPEN_ITEMS.md#oi-040), not an error.
+
 ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c454aea4537809`. ERR-013 names the same defect. Plan 052 is the designated fix and is merged as `004974215e239f96160b47d3eef40a84c316e802`. Windows workspace checks on that commit passed. Plan 051 does not implement the fix.
 
 <a id="err-000"></a>

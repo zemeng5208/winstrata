@@ -72,6 +72,40 @@ fn bridge_persists_theme_and_rejects_driver_commands() {
 }
 
 #[test]
+fn script_page_stays_idle_and_does_not_create_plugins_before_a_location() {
+    let root = scratch("script");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("state");
+    std::fs::create_dir_all(&locator).unwrap();
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator.clone(), None).unwrap();
+    let idle = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"script-workbench","payload":"{\"op\":\"empty\"}"}"#),
+        true,
+    );
+    assert!(idle.contains("200"), "{idle}");
+    assert!(idle.contains("\"enabled\":false"), "{idle}");
+    assert!(idle.contains("\"presets\":0"), "{idle}");
+    assert!(!locator.join("WinStrata").join("plugins").exists());
+    let broken = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some("{\"command\":\"script-workbench\",\"payload\":\"{\\\"op\\\":\\\"empty\\\"}\\n\"}"),
+        true,
+    );
+    assert!(broken.contains("400"), "{broken}");
+    let denied = http(&bridge, "POST", "/command", Some(r#"{"command":"enable"}"#), true);
+    assert!(denied.contains("403"), "{denied}");
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
 fn gui_client_reads_status_without_taking_the_service() {
     let parent = scratch("observe");
     let _ = std::fs::remove_dir_all(&parent);

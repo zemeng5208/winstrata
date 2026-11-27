@@ -50,6 +50,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
+| [OI-039](#oi-039) | Untested | 027 |
+| [OI-040](#oi-040) | Known limitation | 027 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -634,8 +636,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07)
 - Source PR: the acceptance plan
 - Current state: not done
-- Reason it is incomplete: scripts and manual snapshot comparison are later plans
-- Responsible PR: 027
+- Reason it is incomplete: plan 027 runs the editor, three languages, debugging, triggers, logs, disablement, permissions, and the empty-preset check on Linux. Manual snapshot comparison is plan 038. Filter fallback is plan 028. The Windows workbench session was not run. See [OI-039](#oi-039) and [OI-040](#oi-040).
+- Responsible PR: 027 for the workbench. Snapshots stay 038. Filter fallback stays 028.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the script workbench on Windows
 - Acceptance criteria: the scenario text
@@ -808,6 +810,34 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the proposal's own measured evidence, recorded before implementation
 - Acceptance criteria: [the proposal section](../roadmap/ACCEPTANCE.md#gui-proposal)
 - Close conditions: the owner approves a verified proposal, or records that the capability is withdrawn. Not closed by naming a candidate.
+
+<a id="oi-039"></a>
+
+## OI-039
+
+- Related requirement: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) and [REQ-16.03](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 027
+- Current state: untested
+- Reason it is incomplete: this authoring host is Linux. The script workbench was exercised here with Python 3.12 and Node.js 24.22.3. No Windows session opened the scripts page, saved a script, or ran the three languages.
+- Responsible PR: 027
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, with storage selected, `winstrata-strata-script` beside the runtime, the project Python and Node.js pins, and the official scripts page
+- Acceptance criteria: create, edit, run, debug, trigger, and disable a script in each of Python, JavaScript, and TypeScript. Confirm the presets directory stays empty and the page does not enable the plugin by itself.
+- Close conditions: that Windows run is recorded. A Linux test is not this close. Not closed by the idle bridge response.
+
+<a id="oi-040"></a>
+
+## OI-040
+
+- Related requirement: [REQ-16.03](../roadmap/REQUIREMENTS.md) and [plan 015 containment](../architecture/RUNTIMES.md)
+- Source PR: plan 027
+- Current state: known limitation
+- Reason it is incomplete: Linux user-script children use Landlock and `libwinstrata_shim.so`. The Windows AppContainer and Job Object stay private to the host language-plugin path. This plan does not copy that code and does not add a public host API. On Windows the script child starts without an AppContainer.
+- Responsible PR: 027
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, after the owner approves either a shared containment entry or a script-plugin AppContainer that matches plan 015
+- Acceptance criteria: a user script cannot read a path outside the granted prefix and plugin state, and cannot write the presets directory. The child is not started when containment cannot be installed.
+- Close conditions: that Windows containment run is recorded. Linux Landlock evidence does not close it. Not closed by marking the Windows path as passed.
 
 <a id="e2e-17"></a>
 

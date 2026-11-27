@@ -30,6 +30,8 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-017 | 已解决 | [服务](modules/services.md#err-017) |
 | ERR-018 | 已解决 | [Core](modules/core.md#err-018) |
 
+`plugins/strata-script` 没有未解决错误。它的登记是 [StrataScript](modules/strata-script.md)。Windows AppContainer 缺口是 [OI-040](OPEN_ITEMS.md#oi-040)，不是错误。
+
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
 
 <a id="err-000"></a>
