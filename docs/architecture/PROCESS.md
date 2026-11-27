@@ -30,7 +30,25 @@ A parent link is kept when the parent is in the same sample and its start time i
 
 ## Coverage
 
-This is a sample, not a continuous trace. A process that starts and exits between samples produces no event, and the tracker does not invent a sequence hole for it. ETW and kernel process callbacks are not implemented. Service stop and restart records remain plan 022. File, registry and network collection remain plans 009 and 011. The plugin presentation remains plan 018.
+This is a sample, not a continuous trace. A process that starts and exits between samples produces no event, and the tracker does not invent a sequence hole for it. ETW and kernel process callbacks are not implemented. Service stop and restart records remain plan 022. File, registry and network collection remain plans 009 and 011. The plugin that runs this sampler is [plan 018](#plugin).
+
+## Plugin
+
+<a id="plugin"></a>
+
+Plan 018 runs the sampler in `plugins/strata-process`. The program is `winstrata-strata-process`. It uses the existing native frame protocol: absolute `--manifest` and `--state` paths, and one JSON frame at a time. It does not add a frame operation or a dependency.
+
+`PluginHost::open` registers `strata.process` only when that program is a regular file in the same directory as the runtime given to the host. The entry is builtin, version 1.0.0, and disabled. Its grants are `event.publish` and `storage.private`. Third-party `install` still returns `builtin_closed`. `uninstall` still returns `builtin_retained`. The other 24 official identities stay `implementation_absent` until their own plans.
+
+Enable starts the collector. The process samples about every 200 ms through `capture` and `ProcessTracker`. A successful sample appends that tracker's protocol events to `events.jsonl` in the private state directory and replaces `tree.json`. The tree carries parent links, images, service names, threads, and modules. Start times and module bases are decimal strings because they do not fit a JSON number exactly. At 16 MiB the log is renamed to `events.prev.jsonl` before the next append, and one previous generation is kept. Tracker state stays in the process, so rotation does not emit a second start.
+
+`process.started`, thread events, and module events keep observed attribution. The evidence is `procfs` or `toolhelp`. `process.service` keeps inferred attribution. The provider remains `winstrata.process`. These observations are not published with `emit`. A frame text field holds at most 1,024 bytes, and `emit` would record the collector process instead of the sampled process. `invoke` of `process.observe` returns the sample count and the event count.
+
+Pause stops new samples and leaves the process running. Resume continues the same tracker. Disable and stop ask the sampler to exit, send the existing reply frame, join the `ws-process` thread, write the bytes `joined` to `released`, and exit 0. A panicked sampler does not write that marker, and the process exits 1. The host still deletes only a language `env` directory. The event log and the tree remain.
+
+The official shell already lists this plugin. This plan does not add a page, a theme, or a visual system. First-launch enablement remains plan 017.
+
+Command lines, ETW, kernel process callbacks, and a process that starts and exits between samples are not implemented. Service stop records remain plan 022. No signed `strata-proc` image is loaded. E2E-02 and E2E-03 are not complete.
 
 ## Verification
 
@@ -39,3 +57,5 @@ On Linux x86_64 with Rust 1.100.0, `RUSTFLAGS="-Dwarnings" cargo test --workspac
 The reuse test closed one real start time and opened another real start time under the same PID. That combination was arranged in the tracker input. The operating system did not recycle a PID during the test. `cargo check --target x86_64-pc-windows-msvc --tests` type-checked the Toolhelp, registry and Service Control Manager code with warnings denied. Those Windows tests were not executed on that host. Later Windows Server 2022 jobs did run `real_process_tree_pid_lifecycle_and_dedup`. It passed on the plan 010 evidence and on the plan 013 review head. Main `a2471d5fc13f0a307ee39d2629c454aea4537809` failed it. See [ERR-005](../records/modules/core.md#err-005). Plan 052 merged as `004974215e239f96160b47d3eef40a84c316e802`, and Windows workspace checks on that commit passed. The root cause of the earlier failure remains unknown. No signed `strata-proc` image was loaded. E2E-02 and E2E-03 remain open. Counts and the Windows run belong in the [engineering record](../records/STATUS.md).
 
 Plan 052 does not change that exit rule. `real_process_tree_pid_lifecycle_and_dedup` still requires one `process.exited` event after the child is reaped. The test waits for a complete sample that omits the instance or replaces its start time. A sample that still lists the PID without a positive start time is not that event, and a truncated sample is not that event either. The main failure log did not include the sample, so the record does not claim which of those two conditions occurred on that run. Plan 051 does not change this test.
+
+Plan 018 ran that sampler from `plugins/strata-process` on this Linux x86_64 host with Rust 1.100.0. After the restack onto `88249119943516437819d93eb7f7bcd50c3b45b8`, `RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` passed 66 Core tests, 23 kernel tests, 14 protocol library tests, 2 protocol integration tests, 3 language tests, 5 runtime lifecycle tests, 7 service tests, 5 desktop tests, and 1 process-plugin test. The plugin test spawned `/bin/sleep 120` and observed one start, one thread event, one module event, a parent link in `tree.json`, one exit, and `joined` in `released` after disable. This host did not run the Windows tests. E2E-02 and E2E-03 remain open.

@@ -256,8 +256,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-007](STATUS.md) and [REQ-06.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 010. Sampling does not emit an event for a process that starts and exits between samples. Exit time is the sample time. ETW, kernel callbacks, command lines, and service stop records are not part of plan 010.
 - Current state: known limitation
-- Reason it is incomplete: those sources were deferred, not verified
-- Responsible PR: 018 for process presentation, 022 for service stop records
+- Reason it is incomplete: Plan 018 presents the plan 010 sample through `strata.process`, including real process, thread, module, tree, and provenance events, and it joins the sampler on disable. ETW, kernel callbacks, command lines, and processes that exist only between samples were not implemented. Service stop records remain plan 022.
+- Responsible PR: 022 for service stop records. ETW, command lines, and kernel callbacks stay open until the owner confirms they remain outside plan 018 or a later plan tests them.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with the source that plan 018 or 022 actually implements
 - Acceptance criteria: the deferred source is tested, or the owner confirms it stays out of those plans

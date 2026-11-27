@@ -36,9 +36,10 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
 | PR 015 | 已合并，验收仍有待项 | 所有者于 2026-11-27T18:50:26Z 将 [GitHub PR #22](https://github.com/zemeng5208/winstrata/pull/22) 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。审查头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。E2E-06、E2E-07 和 E2E-12 仍开放。 |
 | PR 016 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。已关闭的 PR #21 和 `pr/016-desktop-gui` 不是那个分支。E2E-11、E2E-17、E2E-18 和 E2E-19 没有关闭。 |
-| PR 017 | 待审查 | 官方外壳上的引导、模式和范围。分支 `pr/017-onboarding-modes`。它从上面的计划 016 合并提交开始。E2E-01 和 E2E-11 没有关闭。 |
-| PR 018–050 | 规划中 | 本次变更不开始它们。 |
-| Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
+| PR 017 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。E2E-01 和 E2E-11 没有关闭。 |
+| PR 018 | 待审查 | `plugins/strata-process`，分支 `pr/018-strata-process`。请求的合并位置是紧接计划 017 之后、计划 019 之前。已换基到 `88249119943516437819d93eb7f7bcd50c3b45b8`。 |
+| PR 019–050 | 规划中 | 未改。路线图顺序中计划 019 在 018 之后。 |
+| Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。计划 017 记录启用选择，不启动采集器。计划 018 运行进程采集，并在启用前保持禁用。计划 019–047 的采集实现仍待完成。 |
 
 ## PR 000 验证
 
@@ -314,4 +315,12 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者将计划 016 作为 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。该 main 是计划 017 的基线。路线图顺序仍是 016，然后 017，然后 018。
 
-当前交接点是计划 017，分支 `pr/017-onboarding-modes`。它在计划 016 的官方外壳上增加引导、范围、标记为重建的基线，以及实时、历史、暂停和继续。它不开始计划 018。E2E-01 和 E2E-11 没有在 Windows 上运行。E2E-17、E2E-18 和 E2E-19 仍开放。所有者审查本计划。不要合并。
+所有者将计划 017 作为 [GitHub PR #28](https://github.com/zemeng5208/winstrata/pull/28) 合并为 `88249119943516437819d93eb7f7bcd50c3b45b8`。父提交是 `ad10523d81870d106eeef553a426beeb250e94ff` 和 `cf7e7067ebcb248de3b1191852c84ace1236a36d`。E2E-01 和 E2E-11 仍开放。
+
+当前交接点是计划 018，分支 `pr/018-strata-process`，已换基到该 main。它增加 `plugins/strata-process`，并且只在 `winstrata-strata-process` 位于 `winstrata-runtime` 旁边时登记 `strata.process`。请求的合并位置是紧接计划 017 之后、计划 019 之前。由所有者合并。不要绕过 Protect main。
+
+## PR 018 验证
+
+在这台 Linux x86_64 主机上，Rust 1.100.0、Python 3.12.3，以及 `/tmp/winstrata-node/bin/node` 的 Node.js 24.22.3（`PATH` 上原有的 `node` 是 22.23.4）。换基到 `88249119943516437819d93eb7f7bcd50c3b45b8` 后的树通过 `RUSTFLAGS="-Dwarnings" cargo build --locked --workspace` 和 `RUSTFLAGS="-Dwarnings" cargo test --locked --workspace`：66 项 Core 测试、23 项内核测试、14 项协议库测试、2 项协议集成测试、3 项语言测试、5 项运行时生命周期测试、7 项服务测试、5 项桌面测试和 1 项进程插件测试。进程测试启动了 `/bin/sleep 120`。它为该子进程记录了一次带有 `procfs` 观察归属和完整时间的 `process.started`，同一身份至少各有一次 `process.thread.started` 和 `process.module.loaded`，并且 `tree.json` 将该子进程的父节点连到测试进程。随后一次采样没有重复这条启动。暂停期间采样计数保持不变。子进程被回收后出现一次完整性为部分的 `process.exited`，下一次采样没有重复它。禁用向 `released` 写入 `joined`，采集进程已经退出，采样计数不再变化。`Cargo.lock` 增加路径包 `winstrata-strata-process`，没有新增外部 crate 版本。
+
+这台主机没有运行 Windows 测试、普通 Windows GUI 会话或已签名驱动。E2E-02 和 E2E-03 没有完成。本计划没有改动官方壳，[GUI_SOURCES.md](GUI_SOURCES.md) 没有变化。ETW、内核回调、命令行，以及只存在于两次采样之间的进程仍开放在 [OI-015](OPEN_ITEMS.md#oi-015)。

@@ -1,6 +1,7 @@
 //! 插件清单、权限、依赖和进程生命周期。
 //!
-//! 官方 25 个身份保留在目录中。本计划不装入它们的采集实现。
+//! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
+//! `strata.process` 只在同目录存在采集程序时登记为已安装且默认禁用。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
 mod language;
@@ -32,6 +33,17 @@ const MAX_RUNNING: usize = 64;
 const MAX_PACKAGE_FILES: usize = 16;
 const MAX_PACKAGE_FILE: u64 = 64 * 1024;
 const MAX_HISTORY_LINES: usize = 1024;
+const PROCESS_PLUGIN: &str = "strata.process";
+
+// 清单与采集程序共同描述计划 018。宿主不通过第三方安装写入这个身份。
+const PROCESS_MANIFEST: &str = concat!(
+    r#"{"version":{"major":1,"minor":0},"id":"strata.process","name":"StrataProcess","#,
+    r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
+    r#""capabilities":["process.observe"],"permissions":["event.publish","storage.private"],"#,
+    r#""dependencies":[],"events":["process.started","process.exited","process.thread.started","#,
+    r#""process.thread.exited","process.module.loaded","process.module.unloaded","#,
+    r#""process.service","process.unresolved"],"rescue":false}"#,
+);
 
 #[derive(Debug)]
 pub struct PluginError {
@@ -347,6 +359,7 @@ impl PluginHost {
             languages: None,
         };
         host.read_entries()?;
+        host.seed_process_collector()?;
         Ok(host)
     }
 
@@ -1125,8 +1138,18 @@ impl PluginHost {
         state: &Path,
     ) -> Result<Live, PluginError> {
         if manifest.runtime.as_str() == "native" {
+            let program = if manifest.id.as_str() == PROCESS_PLUGIN {
+                collector_beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "process collector is not beside the plugin runtime",
+                    )
+                })?
+            } else {
+                self.runtime.clone()
+            };
             return Live::spawn(
-                native_command(&self.runtime, manifest_path, state),
+                native_command(&program, manifest_path, state),
                 manifest.plugin_version,
             );
         }
@@ -1552,6 +1575,41 @@ impl PluginHost {
         Ok(())
     }
 
+    fn seed_process_collector(&mut self) -> Result<(), PluginError> {
+        if collector_beside(&self.runtime).is_none() || self.entry(PROCESS_PLUGIN).is_ok() {
+            return Ok(());
+        }
+        let manifest = Manifest::from_json(PROCESS_MANIFEST).map_err(manifest_error)?;
+        if manifest.id.as_str() != PROCESS_PLUGIN || manifest.kind != PluginKind::Builtin {
+            return Err(PluginError::new(
+                "invalid_manifest",
+                "process collector manifest is not the official plugin",
+            ));
+        }
+        let files = vec![(
+            "manifest.json".to_owned(),
+            PROCESS_MANIFEST.as_bytes().to_vec(),
+        )];
+        self.write_tree("packages", PROCESS_PLUGIN, &files)?;
+        self.write_tree("recovery", PROCESS_PLUGIN, &files)?;
+        self.ensure_dir("state", PROCESS_PLUGIN)?;
+        self.entries.push(Installed {
+            id: PROCESS_PLUGIN.to_owned(),
+            name: manifest.name.as_str().to_owned(),
+            kind: PluginKind::Builtin,
+            version: manifest.plugin_version,
+            enabled: false,
+            pin: None,
+            grants: manifest.permissions.clone(),
+            pending: Vec::new(),
+            loaded: false,
+            availability: "ready".to_owned(),
+        });
+        self.save()?;
+        self.audit(PROCESS_PLUGIN, "seed", "ok", "present")?;
+        Ok(())
+    }
+
     fn save(&self) -> Result<(), PluginError> {
         let stored = StoredHost {
             version: Version::CURRENT,
@@ -1696,6 +1754,16 @@ fn static_code(code: Option<&str>) -> &'static str {
         Some("faulted") => "faulted",
         _ => "rejected",
     }
+}
+
+fn collector_beside(runtime: &Path) -> Option<PathBuf> {
+    let name = if cfg!(windows) {
+        "winstrata-strata-process.exe"
+    } else {
+        "winstrata-strata-process"
+    };
+    let path = runtime.parent()?.join(name);
+    path.is_file().then_some(path)
 }
 
 fn official(id: &str) -> Option<&'static OfficialPlugin> {

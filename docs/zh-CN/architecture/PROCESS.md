@@ -30,7 +30,25 @@ Windows 的设备标识是 `MachineGuid`，启动标识是注册表 `BootId`，�
 
 ## 覆盖范围
 
-这是采样，不是连续跟踪。只在两次采样之间出现并退出的进程没有事件，跟踪器也不为它编造序号缺口。没有实现 ETW 或内核进程回调。服务停止和重启记录仍属于计划 022。文件、注册表和网络采集仍属于计划 009 和 011。插件展示仍属于计划 018。
+这是采样，不是连续跟踪。只在两次采样之间出现并退出的进程没有事件，跟踪器也不为它编造序号缺口。没有实现 ETW 或内核进程回调。服务停止和重启记录仍属于计划 022。文件、注册表和网络采集仍属于计划 009 和 011。运行这个采样器的插件是[计划 018](#plugin)。
+
+## 插件
+
+<a id="plugin"></a>
+
+计划 018 在 `plugins/strata-process` 中运行该采样器。程序名是 `winstrata-strata-process`。它使用现有的原生帧协议：绝对路径 `--manifest` 和 `--state`，一次一帧 JSON。它不新增帧操作，也不新增依赖。
+
+只有当该程序是宿主收到的运行时同目录下的普通文件时，`PluginHost::open` 才登记 `strata.process`。这条记录是内置插件，版本 1.0.0，默认禁用。授予的权限是 `event.publish` 和 `storage.private`。第三方 `install` 仍返回 `builtin_closed`。`uninstall` 仍返回 `builtin_retained`。其余 24 个官方身份在各自的计划之前仍是 `implementation_absent`。
+
+启用后启动采集进程。进程大约每 200 毫秒通过 `capture` 和 `ProcessTracker` 采样一次。成功的采样把跟踪器的协议事件追加到私有状态目录的 `events.jsonl`，并替换 `tree.json`。树里包含父子链接、映像、服务名、线程和模块。启动时间和模块基址写成十进制字符串，因为它们不能精确放进 JSON 数字。日志达到 16 MiB 时，下一次追加前改名为 `events.prev.jsonl`，只保留上一份。跟踪状态留在进程内，因此轮转不会再次发出启动。
+
+`process.started`、线程事件和模块事件保持已观察归因。证据是 `procfs` 或 `toolhelp`。`process.service` 保持推断归因。来源提供者仍是 `winstrata.process`。这些观察不通过 `emit` 发布。帧里的文本字段最多 1,024 字节，而 `emit` 记录的是采集进程，不是被采样的进程。对 `process.observe` 的 `invoke` 返回采样次数和事件条数。
+
+暂停停止新的采样，进程继续存在。恢复后沿用同一个跟踪器。禁用和停止要求采样线程退出，先发送现有的应答帧，再等待名为 `ws-process` 的线程结束，把字节 `joined` 写入 `released`，然后以 0 退出。采样线程恐慌时不写这个标记，进程以 1 退出。宿主仍然只删除语言运行时的 `env` 目录。事件日志和进程树保留。
+
+官方外壳已经列出这个插件。本计划不新增页面、主题或视觉体系。首次启动时的启用选择仍属于计划 017。
+
+没有实现命令行、ETW、内核进程回调，也没有实现只在两次采样之间出现并退出的进程。服务停止记录仍属于计划 022。没有加载已签名的 `strata-proc` 映像。E2E-02 和 E2E-03 未完成。
 
 ## 验证
 
@@ -39,3 +57,5 @@ Windows 的设备标识是 `MachineGuid`，启动标识是注册表 `BootId`，�
 复用测试把两个真实启动时间先后放到同一个 PID 上，关闭前者并打开后者。这个组合是跟踪器的输入安排。测试期间操作系统没有回收 PID。`cargo check --target x86_64-pc-windows-msvc --tests` 在拒绝警告的条件下对 Toolhelp、注册表和服务控制管理器代码做了类型检查。这些 Windows 测试没有在那台主机上执行。后来的 Windows Server 2022 作业运行了 `real_process_tree_pid_lifecycle_and_dedup`。它在计划 010 的证据和计划 013 的送审头上通过。main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上失败。见 [ERR-005](../records/modules/core.md#err-005)。计划 052 已合并为 `004974215e239f96160b47d3eef40a84c316e802`，该提交的 Windows 工作区检查通过。先前失败的根因仍然未知。没有加载已签名的 `strata-proc` 映像。E2E-02 和 E2E-03 仍待完成。计数和 Windows 运行结果记入[工程记录](../records/STATUS.md)。
 
 计划 052 不改变这条退出规则。`real_process_tree_pid_lifecycle_and_dedup` 仍然要求子进程被回收后只有一条 `process.exited`。测试会等到完整采样不再包含该实例，或该实例被另一个启动时间替换。仍列出该 PID 但没有正的启动时间的采样不是这条退出，被截断的采样也不是。主分支失败日志没有包含那次采样，因此记录不声称当时是这两种条件中的哪一种。计划 051 不修改这个测试。
+
+计划 018 在这台 Linux x86_64 主机上用 Rust 1.100.0 从 `plugins/strata-process` 运行该采样器。换基到 `88249119943516437819d93eb7f7bcd50c3b45b8` 之后，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过 66 项 Core 测试、23 项内核测试、14 项协议库测试、2 项协议集成测试、3 项语言测试、5 项运行时生命周期测试、7 项服务测试、5 项桌面测试和 1 项进程插件测试。插件测试启动 `/bin/sleep 120`，观察到一次启动、一次线程事件、一次模块事件、`tree.json` 中的父链接、一次退出，以及禁用后 `released` 中的 `joined`。这台主机没有运行 Windows 测试。E2E-02 和 E2E-03 仍待完成。

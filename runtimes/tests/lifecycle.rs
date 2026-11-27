@@ -111,6 +111,17 @@ fn storage_must_be_selected_before_plugins_open() {
     }
 }
 
+fn process_collector_present() -> bool {
+    let name = if cfg!(windows) {
+        "winstrata-strata-process.exe"
+    } else {
+        "winstrata-strata-process"
+    };
+    runtime()
+        .parent()
+        .is_some_and(|dir| dir.join(name).is_file())
+}
+
 #[test]
 fn official_plugins_stay_installed_and_absent_until_their_own_plans() {
     let scratch = Scratch::new();
@@ -122,11 +133,20 @@ fn official_plugins_stay_installed_and_absent_until_their_own_plans() {
         .filter(|report| report.kind == "builtin")
         .collect();
     assert_eq!(builtins.len(), 25);
-    assert!(
-        builtins
-            .iter()
-            .all(|report| report.phase == "implementation_absent")
-    );
+    let seeded = process_collector_present();
+    assert!(builtins.iter().all(|report| {
+        if report.id == "strata.process" && seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else {
+            report.phase == "implementation_absent"
+        }
+    }));
+    if seeded {
+        assert_eq!(
+            host.uninstall("strata.process").unwrap_err().code(),
+            "builtin_retained"
+        );
+    }
     assert_eq!(
         builtins
             .iter()
