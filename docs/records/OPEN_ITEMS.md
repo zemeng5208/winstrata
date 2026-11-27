@@ -47,7 +47,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-033](#oi-033) | Open process item | Owner closes GitHub PR #11 |
 | [OI-034](#oi-034) | Known limitation | 031 |
 | [OI-035](#oi-035) | Known limitation | 016 |
-| [OI-036](#oi-036) | Gap on an unmerged branch | 016, without a new predecessor |
+| [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
@@ -172,7 +172,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - Source PR: owner designation on 2026-11-27, recorded by plan 051. Plan 004 measured Amicro, Glasswork, and shadcn-admin only. Upstream commit read for the designation: `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`.
 - Current state: untested
-- Reason it is incomplete: UI Moments has not had the plan 004 revision, license-closure, WebView2, or performance measurement. Fluent UI and Astryx are attribution, not approved product dependencies. This is not a fourth theme and not an early start of plan 016.
+- Reason it is incomplete: Plan 016 mounts the original Ink Switch and Signal Return from revision `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`. Fluent UI, Astryx, and the Geist font file are not product files. This revision still has not had the plan 004 WebView2 or performance measurement.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the same class of offline WebView2 measurement used for the three measured sources, plus the selected revision's license and version review
@@ -228,7 +228,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-002](STATUS.md) and [E2E-11](#e2e-11)
 - Source PR: plan 008. The Windows job is not an interactive unelevated GUI.
 - Current state: untested
-- Reason it is incomplete: no GUI session was run
+- Reason it is incomplete: Plan 016 type-checks the Windows window, tray, and WebView2 loader path. This Linux host did not run an ordinary Windows GUI session. E2E-11 is not complete.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: an ordinary-user Windows GUI session
@@ -368,7 +368,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-003](STATUS.md) and [REQ-19.02](../roadmap/REQUIREMENTS.md)
 - Source PR: the open-decision list. The initial theme is not selected.
 - Current state: pending decision
-- Reason it is incomplete: three themes are specified. The first selected theme is not.
+- Reason it is incomplete: Plan 016 stores no theme until the user chooses one. The owner has not confirmed an initial theme, so none is presented as the product default.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the plan 016 GUI
@@ -536,7 +536,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: the plan 004 toolchain note in the [platform report](../architecture/PLATFORM_FEASIBILITY.md)
 - Source PR: plan 004. Known Vite advisory [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm) affects upstream-locked development tooling.
 - Current state: known limitation
-- Reason it is incomplete: a production toolchain has not been selected, so the advisory has not been re-reviewed for one
+- Reason it is incomplete: Plan 016 does not adopt Vite. The official shell is built with the plan 004 integrity-checked esbuild unpack from the approved sources' lockfiles. A production toolchain is still not selected, so the advisory has not been re-reviewed for one.
 - Responsible PR: 016, before a production toolchain is selected
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the advisory and the selected toolchain's lockfile
@@ -690,7 +690,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11)
 - Source PR: plan 004 measured three components. UI Moments is [OI-009](#oi-009).
 - Current state: not done
-- Reason it is incomplete: the product GUI has not been run
+- Reason it is incomplete: Linux tests persist a theme and reject driver commands through the official page bridge. No real Windows WebView2 session was run. Dashboard drag remains plan 042. Live and history control remains plan 017.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: real Windows WebView2
@@ -773,8 +773,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md) and [REQ-19.15](../roadmap/REQUIREMENTS.md)
 - Source PR: unmerged GitHub PR #21, `pr/016-desktop-gui`, head `64bd627c362ad025869905441bee7802dda19ac1`. Main `0accacb` has no GUI file.
-- Current state: gap on an unmerged branch
-- Reason it is incomplete: five vendored files match the named upstream bytes. `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are host-authored and are not the shadcn-admin shell or the approved materials. UI Moments is not included. This is not a product row.
+- Current state: register matches this commit; E2E-19 still open
+- Reason it is incomplete: This commit's source register matches the vendored files, including the UI Moments originals. Closed PR #21's `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are not in this commit. WebView2 measurement remains [OI-009](#oi-009). E2E-19 has no implementation plan ID and is not plan 016 acceptance.
 - Responsible PR: plan 016, on its existing row. Plan 053 does not add itself to that dependency cell and does not edit the branch.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the plan 016 change that merges official GUI files, compared with the upstream revisions

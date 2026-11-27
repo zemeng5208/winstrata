@@ -34,8 +34,9 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 051 | 已合并，验收仍有待项 | 所有者于 2026-11-27T17:19:35Z 将 [GitHub PR #18](https://github.com/zemeng5208/winstrata/pull/18) 合并为 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637`。被合并的头是 `b855c188c85bb9916bc388232f1469e9b849fcad`。只包含标准和记录。UI Moments 已指定且未验证。这一行不是对 UI Moments 的验收。这份记录不为该合并提交附加 CI 地址。 |
 | PR 014 | 已合并，验收仍有待项 | 所有者将 GitHub PR #20 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。父提交是 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637` 和 `6744e0e0fbdc222fbea19851db5f5e2ed5e8cf25`。这份规范记录不附加 CI 地址，也不关闭 E2E-06。较早的审查头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的 `winstrata/merge-policy` 状态，随后 Windows 插件生命周期测试因共享冲突失败。合并后的树保留已经固定的插件目录。 |
 | PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
-| PR 015 | 待审查 | 在计划 014 和 053 之后实现了 [Python、TypeScript 和 JavaScript 运行时](../architecture/RUNTIMES.md)。Linux 在 Landlock 和 seccomp 中运行了真实脚本。头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。 |
-| PR 016–050 | 规划中 | 计划 015 仍先于计划 016。未合并的 GitHub PR #21 是计划 016，头为 `64bd627c362ad025869905441bee7802dda19ac1`，这里不验收它。本次规范变更不修改那个分支，也不把 053 写入它的直接依赖格。计划 016、017 及更晚的计划不属于计划 015。
+| PR 015 | 已合并，验收仍有待项 | 所有者于 2026-11-27T18:50:26Z 将 [GitHub PR #22](https://github.com/zemeng5208/winstrata/pull/22) 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。审查头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。E2E-06、E2E-07 和 E2E-12 仍开放。 |
+| PR 016 | 待审查 | `apps/desktop` 和 `packages/ui` 上的官方默认 GUI。已关闭的 PR #21 和 `pr/016-desktop-gui` 不是这个分支。计划 017 没有开始。E2E-11、E2E-17、E2E-18 和 E2E-19 没有关闭。 |
+| PR 017–050 | 规划中 | 计划 017 等待 016。本次变更不开始它。 |
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
 
 ## PR 000 验证
@@ -163,7 +164,7 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 | ADR-004 | 所有者已确认 | 以初版事件、对象、错误及版本契约启动 Phase 1。使用启用 `derive` 的 `serde` 1.0.229、`serde_json` 1.0.154 及其锁定的间接依赖进行 JSON 编解码。[协议契约](../architecture/PROTOCOLS.md) |
 | ADR-005 | 所有者已确认 | Windows 以当前令牌 SID 隔离数据，默认使用 D 盘。Local AppData 保存位置指针和会话锁。固定 windows-sys 0.61.2、windows-link 0.2.1 与 Linux 开发依赖 libc 0.2.191。三者均为 MIT OR Apache-2.0；2026-11-27 的 OSV 查询未返回已知公告。[存储接口](../architecture/CORE-STORAGE.md) |
 | ADR-006 | 所有者已确认 | 2026-11-27，所有者把 UI Moments（`guanmo-ai/ui-moments`）指定为额外的指定 UI 来源。三个内置主题保持不变。这次指定复用已有的交互组件和动效。它不批准 Fluent UI 或 Astryx 作为产品依赖，不启动计划 016，也不取代计划 004 对 Amicro、Glasswork 和 shadcn-admin 的测量。UI Moments 在集成前仍需要同样的来源、许可证、WebView2 和性能审查。[前端标准](../architecture/FRONTEND.md#section-9)。[OI-009](OPEN_ITEMS.md#oi-009) |
-| ADR-007 | 提案，尚未生效 | 2026-11-28，所有者决定 GUI 必须可替换，并且官方 GUI 必须保留四个来源、三套主题和来源追踪。提案规则是 [AG-64](../AGENTS.md#ag-64)，指定为计划 053，紧接 014 之后。直接前置是 014。它只在所有者合并后生效。它不选定技术栈，也不实现 GUI。表的顺序使 015 等待；015 和 016 的直接依赖格不写 053。`0accacb` 的产品树没有 GUI 文件。未合并的 PR #21 已检查，未被修改。[来源登记](GUI_SOURCES.md)。[OI-036](OPEN_ITEMS.md#oi-036)。 |
+| ADR-007 | 已生效 | 2026-11-28，所有者决定 GUI 必须可替换，并且官方 GUI 必须保留四个来源、三套主题和来源追踪。规则是 [AG-64](../AGENTS.md#ag-64)，指定为计划 053，紧接 014 之后。所有者将它合并为 `90601459c3662a586cc335c234315d54b20422be`。它不选定技术栈。015 和 016 的直接依赖格不写 053。[来源登记](GUI_SOURCES.md)。[OI-036](OPEN_ITEMS.md#oi-036)。 |
 | AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。计划 008 和 011 都没有增加 INF/CAT 包，也没有加载已签名驱动。在启用 Secure Boot 与 HVCI 的 Windows 上做代表性加载和卸载仍待完成。PR 050 需验证完整 Linux 交叉构建。 |
 | AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。后来的 Windows Server 2022 作业已经执行计划 008 的令牌、管道和 SCM 拒绝检查。计划 015 已在 Linux 运行语言隔离。它的 Windows 容器测试尚未运行。普通用户 GUI 仍属于 PR 016，持续性能属于 PR 048，Windows 10/11 客户端属于 PR 049。 |
 | AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。计划 011 不持久化未标记连接元数据。 |
@@ -279,6 +280,14 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 没有运行 Windows 10/11 客户端、脚本编辑器，以及 E2E-06、E2E-07 和 E2E-12，也不把它们标成通过。
 
+## PR 016 验证
+
+计划 016 从 main `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 开始，即 2026-11-27T18:50:26Z 合并的 GitHub PR #22。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。分支是 `pr/016-official-default-gui`。它不复用已关闭的 PR #21 或 `pr/016-desktop-gui`。路线图顺序仍是 015，然后 016，然后 017。`PLAN.md` 未改。
+
+在 Linux x86_64、Rust 1.100.0、Node.js 24.22.3 和 Python 3.12.3 上，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 61 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试和 4 个桌面测试。桌面测试通过 `gui.json` 保存主题，拒绝 subscribe 命令，用 `GuiClient` 读取服务状态，并核对入库文件的 SHA-256 登记。`cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-desktop` 对窗口、托盘和 WebView2 加载器路径做了类型检查。这些 Windows 测试没有执行。没有运行普通用户的 Windows GUI 会话。E2E-11 未完成。`Cargo.lock` 增加路径包 `winstrata-desktop`。没有新增外部 crate 版本。官方外壳用 esbuild 从已批准来源自己的锁文件打包。它挂载 UI Moments 修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 的 Ink Switch 和 Signal Return。没有采用 Vite。
+
+这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。
+
 ## 交接
 
 所有者于 2026-11-27T15:48:53Z 将计划 013 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树为 `68a5db4598a9659a437368289d368ce60dd5b7d2`。当时的 main Windows 工作区检查失败。见 [ERR-005](modules/core.md#err-005)。
@@ -289,4 +298,6 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T17:41:19Z 将计划 014 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。所有者随后将计划 053 合并为 `90601459c3662a586cc335c234315d54b20422be`。该 main 是计划 015 的基线。路线图顺序是 014、053、015、016。
 
-当前交接点是计划 015，分支 `pr/015-language-runtimes-5b20`。它增加 Python、JavaScript 和 TypeScript SDK、项目解释器版本声明，以及这些语言进程的操作系统隔离。计划 016 由另一个改动进行。计划 017 没有开始。撰写主机运行了 Linux 语言测试。Windows Server 2022 在 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 上运行了容器测试，该头的四项门禁通过。没有运行 Windows 10/11，以及 E2E-06、E2E-07 和 E2E-12。所有者审查本计划。不要合并。
+所有者于 2026-11-27T18:50:26Z 将计划 015 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。该 main 是计划 016 的基线。路线图顺序仍是 015，然后 016，然后 017。
+
+当前交接点是计划 016，分支 `pr/016-official-default-gui`。它增加内置官方 GUI、Windows 宿主和来源登记。它不复用已关闭的 PR #21 或 `pr/016-desktop-gui`。计划 017 没有开始。E2E-11 没有在 Windows WebView2 上运行。E2E-17、E2E-18 和 E2E-19 仍开放。所有者审查本计划。不要合并。
