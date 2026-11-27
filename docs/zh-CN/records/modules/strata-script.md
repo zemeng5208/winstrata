@@ -4,7 +4,7 @@
 
 `plugins/strata-script` 的权威错误记录。
 
-[ERR-020](#err-020) 未解决。[隔离](../../architecture/SCRIPT.md#containment)中的 Windows AppContainer 缺口是 [OI-041](../OPEN_ITEMS.md#oi-041)，不是本登记中的错误。Windows 工作台会话是 [OI-040](../OPEN_ITEMS.md#oi-040)。
+[ERR-020](#err-020) 已解决，并留在这份历史里。[隔离](../../architecture/SCRIPT.md#containment)中的 Windows AppContainer 缺口是 [OI-041](../OPEN_ITEMS.md#oi-041)，不是本登记中的错误。Windows 脚本页是 [OI-040](../OPEN_ITEMS.md#oi-040)。
 
 <a id="err-020"></a>
 
@@ -19,5 +19,5 @@
 - 根因: 测试要求 `winstrata_shim.dll` 位于脚本程序旁边。`cargo test` 不编译只有 cdylib 的垫片包。Windows 作业不会先做 Linux 那次会把 `libwinstrata_shim.so` 放到程序旁边的工作区构建。Windows 隔离不加载这个文件。
 - 影响: Windows 工作区检查在脚本运行前失败。随后 Workspace 检查因 Windows 失败而失败。
 - 修复计划: 只在 Unix 上要求垫片文件，因为 Landlock 使用它。保留 Windows 上的工作台断言。不把 [OI-041](../OPEN_ITEMS.md#oi-041) 标成已通过。
-- 复测结果: 未运行。修复提交上的下一次 Windows 工作区作业是这次复测。
-- 当前状态: 未解决
+- 复测结果: 头 `a66da7b749ef5657d55f72cccd2d699783dd4a6f` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`editor_languages_debug_triggers_logs_permissions_and_empty_presets` 通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46069484949/job/140742722189)。这次运行不关闭 [OI-040](../OPEN_ITEMS.md#oi-040) 或 [OI-041](../OPEN_ITEMS.md#oi-041)。
+- 当前状态: 已解决

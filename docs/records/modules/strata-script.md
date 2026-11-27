@@ -4,7 +4,7 @@
 
 Authoritative error records for `plugins/strata-script`.
 
-[ERR-020](#err-020) is open. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is [OI-041](../OPEN_ITEMS.md#oi-041), not an error recorded here. The Windows workbench session is [OI-040](../OPEN_ITEMS.md#oi-040).
+[ERR-020](#err-020) is resolved and stays in this history. The Windows AppContainer gap in [Containment](../../architecture/SCRIPT.md#containment) is [OI-041](../OPEN_ITEMS.md#oi-041), not an error recorded here. The Windows scripts page is [OI-040](../OPEN_ITEMS.md#oi-040).
 
 <a id="err-020"></a>
 
@@ -19,5 +19,5 @@ Authoritative error records for `plugins/strata-script`.
 - Root cause: the test required `winstrata_shim.dll` beside the script program. `cargo test` does not build the cdylib-only shim package. The Windows job does not run the workspace build that places `libwinstrata_shim.so` beside the program on Linux. Windows containment does not load this file.
 - Impact: Windows workspace checks failed before a script ran. Workspace checks then failed because Windows failed.
 - Fix plan: require the shim file only on Unix, where Landlock uses it. Keep the Windows workbench assertions. Do not mark [OI-041](../OPEN_ITEMS.md#oi-041) passed.
-- Retest result: not run. The next Windows workspace job on the fix commit is the retest.
-- Current state: open
+- Retest result: on head `a66da7b749ef5657d55f72cccd2d699783dd4a6f`, Windows Server 2022 `cargo test --locked --workspace` passed. `editor_languages_debug_triggers_logs_permissions_and_empty_presets` passed. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46069484949/job/140742722189). That run does not close [OI-040](../OPEN_ITEMS.md#oi-040) or [OI-041](../OPEN_ITEMS.md#oi-041).
+- Current state: resolved
