@@ -57,6 +57,7 @@ The [index](../INDEX.md) points to parallel Simplified Chinese and English docum
 | Progress | Plan ID, state, owner, prerequisites, acceptance, open issues, next action |
 | Error | Error ID, discovery time, related PR, environment, reproduction method, evidence, root cause, impact, fix plan, retest result, current state, links. Mark unknown fields as unknown. |
 | Open item | ID, related requirement, source PR, current state, reason it is incomplete, responsible PR, handoff owner, verification environment, acceptance criteria, close conditions |
+| GUI source | ID, product path, upstream repository, version, source path, license, reuse method, modifications, introducing plan, state. The register is [GUI_SOURCES.md](../records/GUI_SOURCES.md). [AG-64](../../AGENTS.md#ag-64) is the rule |
 | Assumption | ID, hypothesis, impact, method, environment, evidence, state, conclusion and approval |
 | Verification | Base, environment, scenario, actual steps, expected and observed results, metrics, errors, evidence, verification state |
 | Handover | Branch and commit, worktree, completed and pending work, blockers, docs and next responsibility |

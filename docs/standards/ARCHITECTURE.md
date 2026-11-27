@@ -6,7 +6,7 @@
 
 ## AG-30 Frontend design
 
-Use [the frontend standard](../architecture/FRONTEND.md#section-9). Reuse Amicro, Glasswork, shadcn-admin, and UI Moments, and ship White Acrylic, Black Acrylic, and Liquid Glass with Glasswork buttons and frosted panels. Reuse upstream primitives and preserve the design system. UI Moments supplies existing interactive components and motion; its component examples need license and version review, and Fluent UI and Astryx are not approved product dependencies. Business adaptations and minor shadcn-admin layout changes are allowed. Document gaps and get approval before using alternatives. Verify plugin UI, resizing, real data and errors, theme switching, persistence, interaction, and performance. Root AGENTS links this rule and the frontend standard.
+Use [the frontend standard](../architecture/FRONTEND.md#section-9). Reuse Amicro, Glasswork, shadcn-admin, and UI Moments, and ship White Acrylic, Black Acrylic, and Liquid Glass with Glasswork buttons and frosted panels. Reuse upstream primitives and preserve the design system. UI Moments supplies existing interactive components and motion; its component examples need license and version review, and Fluent UI and Astryx are not approved product dependencies. Business adaptations and minor shadcn-admin layout changes are allowed. Document gaps and get approval before using alternatives. Verify plugin UI, resizing, real data and errors, theme switching, persistence, interaction, and performance. Replaceability, the built-in recovery GUI, decoupling, the trusted host, the single market, and source tracking are [AG-64](../../AGENTS.md#ag-64). This rule does not restate them. Root AGENTS links this rule and the frontend standard.
 
 <a id="ag-32"></a>
 
@@ -24,7 +24,7 @@ Core owns common infrastructure and plugins own business functionality. Use stan
 
 ## AG-43 Independent and replaceable plugins
 
-Support independent loading, start, pause, stop, update, and recovery. Disable releases dedicated resources and subscriptions. Persist state across restart and preserve history. Use capabilities, services, and events without hardcoded identities, paths, or access to private implementation. Built-ins can be disabled or replaced through compatible contracts without editing Core or unrelated plugins, while remaining installed. Verify hot replacements and keep special rescue authorizations isolated.
+Support independent loading, start, pause, stop, update, and recovery. Disable releases dedicated resources and subscriptions. Persist state across restart and preserve history. Use capabilities, services, and events without hardcoded identities, paths, or access to private implementation. Built-ins can be disabled or replaced through compatible contracts without editing Core or unrelated plugins, while remaining installed. The official default GUI stays installed and is the recovery interface under [AG-64](../../AGENTS.md#ag-64). Disabling a third-party GUI does not uninstall that official GUI. Verify hot replacements and keep special rescue authorizations isolated.
 
 <a id="ag-44"></a>
 

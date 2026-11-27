@@ -16,7 +16,7 @@ WinStrata observes Windows system state, traces changes, analyzes software lifec
 | Scope | The user selects disks, partitions, directories, and devices. New devices are excluded until selected. |
 | Limits | Monitoring, recording, analysis, and querying are read-only. Only the [restricted StrataRescue channel](EXTENSIONS.md#section-6) may execute explicitly authorized system changes. |
 | Network | Allow update and market-index requests. Operate without proprietary cloud dependencies. Keep telemetry, logs, files, hashes, and all observed data local. |
-| Interfaces | A desktop GUI and explicitly authorized local MCP, with no general end-user CLI. |
+| Interfaces | A built-in desktop GUI and explicitly authorized local MCP, with no general end-user CLI. The official GUI cannot be uninstalled and is the recovery interface. A frontend plugin may replace the active GUI under [AG-64](../../AGENTS.md#ag-64). That replacement is not one of the 25 plugins below. |
 | AI | External platforms own agent operation, inference, scheduling, and API keys. |
 | Versioning | System state, metadata, and provenance are tracked. File content versions and diffs remain the responsibility of version control. |
 | Languages | Complete Simplified Chinese and English, runtime switching, and English fallback. |

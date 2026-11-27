@@ -62,11 +62,22 @@
 | REQ-17.02 | 只读展示可观测安全与证书状态 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [037](PLAN.md#pr-037) | [14](ACCEPTANCE.md#e2e-14) | 规划中 |
 | REQ-18.01 | 检索和关联授权来源，并追溯对象证据 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [040](PLAN.md#pr-040) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
 | REQ-18.02 | 多轨时间线、仅供分析的回放及区间导出 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [041](PLAN.md#pr-041) | [09](ACCEPTANCE.md#e2e-09) | 规划中 |
-| REQ-19.01 | 验证指定 UI 来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查 Amicro、Glasswork、shadcn-admin 三个修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。UI Moments 已于 2026-11-27 指定，尚未做同等实测。产品布局仍待验收。 |
+| REQ-19.01 | 验证指定 UI 来源，按许可小幅适配 shadcn-admin | [FRONTEND](../architecture/FRONTEND.md#section-9) | [004](PLAN.md#pr-004), [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 已核查 Amicro、Glasswork、shadcn-admin 三个修订，组件实测见[平台报告](../architecture/PLATFORM_FEASIBILITY.md)。UI Moments 已于 2026-11-27 指定，尚未做同等实测。产品布局仍待验收。未合并的计划 016 头 `64bd627c362ad025869905441bee7802dda19ac1` 有五个源文件，其 SHA-256 与这些上游修订一致。那个分支不是本提交，也不是验收。其中的 `shell.js` 和 `themes.css` 不是这些来源。见[来源登记](../records/GUI_SOURCES.md)。 |
 | REQ-19.02 | 三套共享主题可运行时切换并持久保存 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.03 | 完整双语与 Windows WebView2 可读的真实交互 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.04 | 持久化单首页布局并接入动态插件界面 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [042](PLAN.md#pr-042) | [11](ACCEPTANCE.md#e2e-11) | 规划中 |
 | REQ-19.05 | 提供托盘继续、完整退出和真实界面状态 | [FRONTEND](../architecture/FRONTEND.md#section-9) | [016](PLAN.md#pr-016), [017](PLAN.md#pr-017) | [01](ACCEPTANCE.md#e2e-01), [11](ACCEPTANCE.md#e2e-11) | 规划中 |
+| REQ-19.06 | 官方默认 GUI 完整内置、不可卸载，并作为默认界面和恢复界面 | [AG-64](../AGENTS.md#ag-64) | [016](PLAN.md#pr-016) 只负责内置默认界面。替换之后的恢复没有路线图行 | [11](ACCEPTANCE.md#e2e-11), [17](ACCEPTANCE.md#e2e-17) | 未验收。main `0accacb` 没有 GUI。E2E-11 未改。E2E-17 没有合并位置，也不阻断计划 015 或 016。 |
+| REQ-19.07 | 插件可以修改全局主题、颜色、材质、字体、动效和交互方式 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
+| REQ-19.08 | 插件可以修改全局布局、导航栏、侧边栏、顶部区域和仪表盘 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
+| REQ-19.09 | 插件可以替换共享 UI 组件及其他插件的界面呈现 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
+| REQ-19.10 | 第三方插件可以替换整个 GUI，并支持安装、启用、禁用、更新、卸载和恢复 | [AG-64](../AGENTS.md#ag-64) | 无路线图行。现有市场仍是 [043](PLAN.md#pr-043)，它本身不验收这项能力 | [17](ACCEPTANCE.md#e2e-17) | 未实现。不是计划 016 的验收。 |
+| REQ-19.11 | 经过授权的能力、数据和事件只通过统一前端 SDK/API 获取 | [AG-64](../AGENTS.md#ag-64) | 无路线图行。这不是 [015](PLAN.md#pr-015) 的语言 SDK | [17](ACCEPTANCE.md#e2e-17) | 未实现。没有选定技术栈。 |
+| REQ-19.12 | GUI 解耦，更换它不中断监视、不重启无关服务、不丢失数据 | [AG-64](../AGENTS.md#ag-64) | [016](PLAN.md#pr-016) 不得把官方外壳绑死。替换证明没有路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未验收。关闭官方窗口仍属于 E2E-11。没有运行第二套 GUI。 |
+| REQ-19.13 | 权限、隔离、救援授权和删除确认由可信宿主执行 | [AG-64](../AGENTS.md#ag-64) | 无路线图行。救援仍是 [047](PLAN.md#pr-047)，删除确认仍是 [030](PLAN.md#pr-030) | [18](ACCEPTANCE.md#e2e-18) | 未实现。第三方 GUI 不得伪造这些授权。 |
+| REQ-19.14 | 前端插件只由现有市场管理，同一时间只运行一套完整 GUI 渲染环境 | [AG-64](../AGENTS.md#ag-64) | 市场仍是 [043](PLAN.md#pr-043)。单一渲染环境的证明没有路线图行 | [17](ACCEPTANCE.md#e2e-17) | 未实现。 |
+| REQ-19.15 | 官方 GUI 和官方插件的每个组件和布局都写入来源登记 | [AG-64](../AGENTS.md#ag-64) | 不新增路线图行。本变更建立登记。产品行随文件一起进入 | [19](ACCEPTANCE.md#e2e-19) | 登记已建立，在 `0accacb` 上产品表为空。见 [GUI_SOURCES.md](../records/GUI_SOURCES.md)。 |
+| REQ-19.16 | 实现可替换 GUI 之前，先调研、验证并取得所有者对技术路线的批准 | [AG-64](../AGENTS.md#ag-64) | 无路线图行 | [方案](ACCEPTANCE.md#gui-proposal) | 未开始。本次变更不选定技术栈。 |
 | REQ-20.01 | 随附 25 个插件，用户选择启用，内置项不可卸载 | [PRODUCT](../architecture/PRODUCT.md#section-4) | [014](PLAN.md#pr-014), [017](PLAN.md#pr-017) | [06](ACCEPTANCE.md#e2e-06), [11](ACCEPTANCE.md#e2e-11) | [插件宿主](../architecture/PLUGINS.md)保留 25 个官方身份。实现缺席时拒绝卸载和启动。用户选择启用和采集实现仍属于计划 017 与计划 018–047。E2E-06 和 E2E-11 未完成。 |
 | REQ-20.02 | 独立生命周期、资源释放与兼容替换 | [ARCHITECTURE](../standards/ARCHITECTURE.md#ag-43) | [014](PLAN.md#pr-014) | [06](ACCEPTANCE.md#e2e-06) | 原生第三方插件在 Linux 上可以加载、启用、暂停、恢复、停止、禁用和卸载。历史保留，该插件的总线订阅被移除。没有运行界面和 Windows 重启行为。E2E-06 未完成。 |
 | REQ-20.03 | 验证动态升级、依赖状态与故障隔离 | [EXTENSIONS](../architecture/EXTENSIONS.md#section-5) | [014](PLAN.md#pr-014), [044](PLAN.md#pr-044) | [06](ACCEPTANCE.md#e2e-06), [15](ACCEPTANCE.md#e2e-15) | 拒绝启动或无效的更新会留下正在运行的包。依赖故障不会停止另一个插件进程。恢复使用最后一份健康的包副本。签名和事务回退仍属于计划 044。E2E-06 和 E2E-15 未完成。 |
@@ -97,7 +108,7 @@
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-30.02 | 逐项追踪需求、25 个插件和 63 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。 |
+| REQ-30.02 | 逐项追踪需求、25 个插件和 64 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。AG-64 由本次规范变更提出，尚未验收，也没有新的路线图行。 |
 
 ## 原生插件
 
@@ -131,6 +142,6 @@
 | PL-24 | StrataTag | [029](PLAN.md#pr-029) | [04](ACCEPTANCE.md#e2e-04), [05](ACCEPTANCE.md#e2e-05) |
 | PL-25 | StrataStorage | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05) |
 
-## 63 项 Agent 规范
+## 64 项 Agent 规范
 
-每条独立编号和权威位置见 [AG-01 至 AG-63 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。
+每条独立编号和权威位置见 [AG-01 至 AG-64 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。AG-64 由本次规范变更提出，不是新的计划行。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。

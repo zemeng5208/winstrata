@@ -49,6 +49,17 @@ Use real Windows, software and scoped data. Prioritize integrated user flows, cr
 | <a id="e2e-14"></a>E2E-14 | Observe real update, service, driver, security and certificate changes in an authorized Windows environment. Keep the observer read-only and report gaps, faults and unsupported sources. |
 | <a id="e2e-15"></a>E2E-15 | Run sustained, burst, driver and plugin failure, disk-full, disconnected storage, resource scarcity and unexpected-exit scenarios. Check stable recovery, loss markers, resource leaks and recursion. |
 | <a id="e2e-16"></a>E2E-16 | Exercise the exact merge candidate and actual main. Check old behavior, prior fixes, tree, references, dependency resolution, config, permissions, versions, artifacts and applicable enforced gates. |
+| <a id="e2e-17"></a>E2E-17 | With the official GUI still installed, install, enable, disable, update, and uninstall a real third-party GUI plugin, then restore the default interface. Change theme, color, material, fonts, motion, interaction, layout, navigation, sidebar, header, and dashboard. Replace a shared component and another plugin's presentation, then replace the whole interface. Background monitoring continues, unrelated services stay up, and stored data remains. One complete GUI renderer runs. The plugin is managed in the existing market. |
+| <a id="e2e-18"></a>E2E-18 | From that third-party GUI, attempt to bypass permission, isolation, rescue authorization, and deletion confirmation. The trusted host performs those interactions. A forged authorization is rejected. |
+| <a id="e2e-19"></a>E2E-19 | Every official GUI and official plugin component or layout file in the commit has a source-register row. The upstream repository, revision, source path, license, reuse method, and modifications match the file. A missing upstream component is an owner-approved gap. A visual rewrite without that approval fails. |
+
+E2E-11 is unchanged and remains the official-default-GUI scenario. E2E-17, E2E-18, and E2E-19 have no roadmap row. This change does not make plan 015 or plan 016 wait for them.
+
+<a id="gui-proposal"></a>
+
+## Replaceable-GUI proposal
+
+Before implementation of E2E-17 or E2E-18, a development agent researches and verifies a technical approach and the owner approves it. This acceptance plan does not select that approach. The candidates already named in the system architecture remain unapproved. No roadmap row is added for the proposal or the implementation.
 
 Each record identifies commit, OS and Windows version, hardware, driver and tools, actual command and steps, expected and observed outcome, error, rerun, and evidence. Test changes and existing behavior in the available environment. Required Windows driver and GUI checks stay pending without a Windows environment. Record unrun platforms explicitly. Verify actual main and finish phase acceptance after merges.
 
@@ -57,8 +68,8 @@ Each record identifies commit, OS and Windows version, hardware, driver and tool
 ## Development build completion
 
 1. Verify all 25 approved native capabilities with opt-in enablement, independent lifecycle and default-off temporary rescue.
-2. Verify shared Core, collection, storage, permissions, runtimes, GUI, market, scripts and local MCP with real data and local privacy. Validate the specified frontend sources, three themes, behavior and performance.
+2. Verify shared Core, collection, storage, permissions, runtimes, GUI, market, scripts and local MCP with real data and local privacy. Validate the specified frontend sources, three themes, behavior and performance. E2E-17, E2E-18, and E2E-19 stay open until the owner assigns them a roadmap row.
 3. Establish Windows 10/11 x64 operation and both development/build capabilities with separate evidence. Record visibility limits.
 4. Verify selective raw capture, both warning ladders, authorized cleanup, manual storage fallback, self-filtering, I/O and resource budgets, integrity, encryption, backup and migration.
 5. Pass real usability, integrated regression, sustained stability, security and performance without open confirmed defects. Retain evidence.
-6. Reconcile every atomic requirement, all 63 rules, records, files and documentation. The owner merges in order and reviews the verified release.
+6. Reconcile every atomic requirement, all 64 rules, records, files and documentation. The owner merges in order and reviews the verified release. AG-64 counts only after the owner merges it.
