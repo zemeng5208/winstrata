@@ -34,4 +34,4 @@
 
 ## 仍保留的限制
 
-本变更没有测试 Windows 10 或 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。Linux 编写主机打不开真实的用户环境存储或系统环境存储。E2E-02 仍要求 GUI 查询、文件和其他用户。计划 021 没有开始。Windows 宿主测试在真实的用户和系统存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。插件包里的 Windows 测试使用易失键，不写入这两个存储。
+本变更没有测试 Windows 10 或 Windows 11 客户端。Windows 工作区作业是 Windows Server 2022。在送审头 `579f85d63b338e4502f95abdbd122c3a815e2902` 上，该作业通过了 `environment_is_in_process_and_linux_does_not_publish` 和四项易失键测试。Linux 编写主机打不开真实的用户环境存储或系统环境存储。E2E-02 仍要求 GUI 查询、文件和其他用户。计划 021 没有开始。Windows 宿主测试在真实的用户和系统存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。插件包里的 Windows 测试使用易失键，不写入这两个存储。

@@ -50,7 +50,7 @@
 | [OI-036](#oi-036) | 登记与本提交一致；E2E-19 仍开放 | 016，不新增前驱 |
 | [OI-037](#oi-037) | 未实现 | 无路线图行 |
 | [OI-038](#oi-038) | 待决定 | 所有者 |
-| [OI-039](#oi-039) | 编写主机未测试 | 020 |
+| [OI-039](#oi-039) | 送审头已关闭 | 020 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -816,13 +816,13 @@
 
 - 关联需求: [REQ-06.03](../roadmap/REQUIREMENTS.md) 和 [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - 来源 PR: 计划 020
-- 当前状态: 编写主机未测试
-- 未完成原因: Linux 编写主机打不开 `HKCU\Environment`，也打不开 `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`。Windows 测试 `environment_is_in_process_and_linux_does_not_publish` 在两个真实存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。这里没有运行该测试。
+- 当前状态: 已关闭
+- 未完成原因: 已在送审头关闭。Windows Server 2022 为 [Windows 工作区检查](https://github.com/zemeng5208/winstrata/actions/runs/46065221916/job/140728785356) 运行了 `cargo test --locked --workspace`。该作业检出合并提交 `ddaeea841788125a99b329955a476f3da4bbc5cf`。父提交是 `2b4912a715a957b48e5451514a3a6d8393203545` 和 `579f85d63b338e4502f95abdbd122c3a815e2902`，文件树 `eaf2cb961158b3cf0c76fc7c7685f8339e8817b8` 与该头相同。`environment_is_in_process_and_linux_does_not_publish` 通过。环境包的四项易失键测试也通过，该包报告 6 项通过。Windows 10 和 Windows 11 客户端仍属于 [OI-001](#oi-001)。
 - 负责 PR: 020
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: Windows 工作区作业，Windows Server 2022，运行 `cargo test --locked --workspace`。Windows 10 和 Windows 11 客户端仍属于 [OI-001](#oi-001)。
+- 验证环境: Windows Server 2022，即上面的 Windows 工作区作业。Linux 编写主机仍然打不开真实存储。
 - 验收标准: 该测试在送审头上通过。它必须展示探测变量的用户和系统前后值、证据包含所追加段的 PATH 事件、不发布被隐藏值的暂停缺口，以及停止期间的变化不会被重放。原来的 PATH 字节被恢复。
-- 关闭条件: 本计划送审头的 Windows 工作区日志显示该测试通过，并且本行写上该结果。Linux 运行不关闭它。通过它也不关闭 E2E-02。
+- 关闭条件: 对头 `579f85d63b338e4502f95abdbd122c3a815e2902` 已满足。Linux 运行没有关闭它。这次关闭也不关闭 E2E-02。
 
 <a id="e2e-17"></a>
 

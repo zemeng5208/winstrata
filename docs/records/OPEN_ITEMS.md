@@ -50,7 +50,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-036](#oi-036) | Register matches this commit; E2E-19 still open | 016, without a new predecessor |
 | [OI-037](#oi-037) | Unimplemented | No roadmap row |
 | [OI-038](#oi-038) | Pending decision | Owner |
-| [OI-039](#oi-039) | Untested on the authoring host | 020 |
+| [OI-039](#oi-039) | Closed on the review head | 020 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -816,13 +816,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-06.03](../roadmap/REQUIREMENTS.md) and [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - Source PR: plan 020
-- Current state: untested on the authoring host
-- Reason it is incomplete: the Linux authoring host cannot open `HKCU\Environment` or `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`. The Windows test `environment_is_in_process_and_linux_does_not_publish` writes one probe variable and appends one PATH segment on both real stores, then restores the previous bytes. That test has not run here.
+- Current state: closed
+- Reason it is incomplete: closed on the review head. Windows Server 2022 ran `cargo test --locked --workspace` for [Windows workspace checks](https://github.com/zemeng5208/winstrata/actions/runs/46065221916/job/140728785356). The job checked out merge commit `ddaeea841788125a99b329955a476f3da4bbc5cf`. Its parents are `2b4912a715a957b48e5451514a3a6d8393203545` and `579f85d63b338e4502f95abdbd122c3a815e2902`, and its tree `eaf2cb961158b3cf0c76fc7c7685f8339e8817b8` equals that head. `environment_is_in_process_and_linux_does_not_publish` passed. The environment package also passed the four volatile-key tests and reported 6 passed. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
 - Responsible PR: 020
 - Handoff owner: repository owner zemeng5208
-- Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).
+- Verification environment: Windows Server 2022, the Windows workspace job above. The Linux authoring host still cannot open the real stores.
 - Acceptance criteria: that test passes on the review head. It must show user and system before/after values for the probe, a PATH event whose evidence contains the appended segment, a paused gap that does not publish the hidden value, and no replay of a change made while stopped. The previous PATH bytes are restored.
-- Close conditions: the Windows workspace log for this plan's review head shows that test passed, and this row is updated with that result. A Linux run does not close it. Passing it does not close E2E-02.
+- Close conditions: met for head `579f85d63b338e4502f95abdbd122c3a815e2902`. A Linux run did not close it. This close does not close E2E-02.
 
 <a id="e2e-17"></a>
 
