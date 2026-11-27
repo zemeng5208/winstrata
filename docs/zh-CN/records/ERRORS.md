@@ -33,6 +33,7 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-020 | 已解决 | [服务插件](modules/strata-services.md#err-020) |
 | ERR-021 | 未解决 | [服务插件](modules/strata-services.md#err-021) |
 | ERR-022 | 已解决 | [StrataScript](modules/strata-script.md#err-022) |
+| ERR-023 | 已解决 | [Core](modules/core.md#err-023) |
 
 `plugins/strata-script` 没有未解决错误。[ERR-022](modules/strata-script.md#err-022) 留在它的登记里。Windows AppContainer 缺口是 [OI-045](OPEN_ITEMS.md#oi-045)，不是错误。[ERR-020](modules/strata-services.md#err-020) 和 [ERR-021](modules/strata-services.md#err-021) 属于 `strata.services`。
 

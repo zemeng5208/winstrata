@@ -33,6 +33,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-020 | Resolved | [Services plugin](modules/strata-services.md#err-020) |
 | ERR-021 | Open | [Services plugin](modules/strata-services.md#err-021) |
 | ERR-022 | Resolved | [StrataScript](modules/strata-script.md#err-022) |
+| ERR-023 | Resolved | [Core](modules/core.md#err-023) |
 
 `plugins/strata-script` has no open error. [ERR-022](modules/strata-script.md#err-022) stays in its register. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
 

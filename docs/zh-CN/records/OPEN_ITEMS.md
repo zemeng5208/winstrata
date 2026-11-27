@@ -54,6 +54,7 @@
 | [OI-043](#oi-043) | 未测试 | 022 |
 | [OI-044](#oi-044) | 未测试 | 027 |
 | [OI-045](#oi-045) | 已知限制 | 027 |
+| [OI-046](#oi-046) | 未测试 | 024，负载场景属于 048 |
 | [OI-049](#oi-049) | `01f26d1` 上的 Server 2022 探测已记录；Windows 10/11 仍属于 [OI-001](#oi-001) | 023 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
@@ -653,7 +654,7 @@
 - 关联需求: [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08)
 - 来源 PR: 计划 007
 - 当前状态: 未完成
-- 未完成原因: 没有按本场景运行 CPU、GPU、内存和预算行为
+- 未完成原因: 计划 024 在这台 Linux 主机上记录了 CPU、内存和实际暴露的计数器，并将其余读数标为不支持。本场景仍需要授权负载、StrataHealth、StrataBudget、SSD 计数器和一次 Windows 运行。
 - 负责 PR: 048
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 被授权负载下的 Windows
@@ -869,6 +870,20 @@
 - 验证环境: Windows Server 2022 的服务控制管理器，运行计划 022 的插件测试
 - 验收标准: Windows 作业至少观察到一个驱动、一次拒绝访问的枚举、创建、一次启动类型变更、缺失映像探测的启动失败，以及删除 `WinStrata022Probe`，并且只在非停止状态实际变为停止时记录 `service.stopped`
 - 关闭条件: 该作业的日志写入 [STATUS.md](STATUS.md)。Linux 跟踪测试不能关闭它。把 E2E-03 或 E2E-14 标成通过不能关闭它。它不能代替 Windows 10/11。
+
+<a id="oi-046"></a>
+
+## OI-046
+
+- 关联需求: [REQ-08.01](../roadmap/REQUIREMENTS.md)
+- 来源 PR: 计划 024
+- 当前状态: 未测试
+- 未完成原因: 这个采集器通过 Win32 读取 Windows 的 CPU、内存、处理器频率、电池百分比和进程工作集。Windows 的 GPU 利用率、专用显存、温度区、RAPL 和 perf 计数器仍是 `unsupported`，原因是 `reader_absent`，因为这个采集器没有这些 API 的读取器。这台 Linux 主机没有执行 Windows 测试。它也没有 sysfs 上的 GPU、cpufreq、温度、hwmon、电池或 RAPL 来源，所以这些 Linux 读数是 `unsupported`，原因是 `no_counter` 或对应的缺失原因。这是这台主机上的如实结果，不是一次 Windows 运行。本项是 OI-046，因为计划 025 占用 OI-040、OI-041 和 OI-042，计划 022 占用 OI-043，开放的计划 027 分支占用 OI-044 和 OI-045。计划 023 占用 [OI-049](#oi-049)。本行不替换那一行。
+- 负责 PR: Windows GPU、显存和温度读取器属于 024。磁盘健康仍属于计划 032。授权负载场景仍属于计划 048。
+- 交接负责人: 仓库所有者 zemeng5208
+- 验证环境: 带 GPU 的 Windows 10 或 11 x64，运行 `cargo test --locked --workspace` 和脉冲观测测试
+- 验收标准: 该运行记录测得的 CPU 和内存。GPU 利用率、显存和温度要么来自点名的 API，要么因为该 API 报告计数器不存在而标为 `unsupported`。API 能够读取的计数器不再保留 `reader_absent`。
+- 关闭条件: Windows 运行被记录，并且读取器不再对 API 已读到的计数器返回 `reader_absent`。本行不关闭 E2E-08 或计划 032。
 
 <a id="oi-049"></a>
 

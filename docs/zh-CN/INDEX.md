@@ -21,6 +21,7 @@
 - [进程、线程与模块来源](architecture/PROCESS.md)
 - [服务插件](architecture/SERVICES.md)
 - [启动插件](architecture/STARTUP.md)
+- [脉冲计数器](architecture/PULSE.md)
 - [网络源、接口与归因](architecture/NETWORK-SOURCES.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [原生插件契约与生命周期](architecture/PLUGINS.md)

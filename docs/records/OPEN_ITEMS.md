@@ -54,6 +54,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-043](#oi-043) | Untested | 022 |
 | [OI-044](#oi-044) | Untested | 027 |
 | [OI-045](#oi-045) | Known limitation | 027 |
+| [OI-046](#oi-046) | Untested | 024, then 048 for the load scenario |
 | [OI-049](#oi-049) | Server 2022 probe recorded on `01f26d1`; Windows 10/11 stay [OI-001](#oi-001) | 023 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
@@ -653,7 +654,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-08](../roadmap/ACCEPTANCE.md#e2e-08)
 - Source PR: plan 007
 - Current state: not done
-- Reason it is incomplete: CPU, GPU, memory, and budget behavior were not run as this scenario
+- Reason it is incomplete: Plan 024 records CPU, memory, and the counters this Linux host exposes, and labels the rest unsupported. The scenario still needs an authorized load, StrataHealth, StrataBudget, SSD counters, and a Windows run.
 - Responsible PR: 048
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows under an authorized load
@@ -869,6 +870,20 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: Windows Server 2022 Service Control Manager running the plan 022 plugin tests
 - Acceptance criteria: the Windows job observes at least one driver, an access-denied enumeration, creation, a start-type change, a failed start of the missing-image probe, and deletion of `WinStrata022Probe`, and records `service.stopped` only when a non-stopped state actually becomes stopped
 - Close conditions: that job's log is written into [STATUS.md](STATUS.md). Not closed by the Linux tracker test. Not closed by marking E2E-03 or E2E-14 passed. Not a substitute for Windows 10/11.
+
+<a id="oi-046"></a>
+
+## OI-046
+
+- Related requirement: [REQ-08.01](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 024
+- Current state: untested
+- Reason it is incomplete: this collector reads Windows CPU, memory, processor frequency, battery percent, and process working set through Win32. Windows GPU utilization, dedicated VRAM, thermal zones, RAPL, and perf counters stay `unsupported` with reason `reader_absent` because this collector has no reader for those APIs. This Linux host did not execute the Windows tests. It also has no sysfs GPU, cpufreq, thermal, hwmon, battery, or RAPL source, so those Linux readings are `unsupported` with `no_counter` or the matching absent reason. That is the honest result on this host, not a Windows run. This item is OI-046 because plan 025 holds OI-040, OI-041, and OI-042, plan 022 holds OI-043, and the open plan 027 branch holds OI-044 and OI-045. Plan 023 holds [OI-049](#oi-049). This row does not replace that row.
+- Responsible PR: 024 for the Windows GPU, VRAM, and thermal readers. Plan 032 remains drive health. Plan 048 remains the authorized-load scenario.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows 10 or 11 x64 with a GPU, running `cargo test --locked --workspace` and the pulse observe test
+- Acceptance criteria: that run records measured CPU and memory. GPU utilization, VRAM, and temperature are measured from a named API, or `unsupported` because that API reported the counter absent. `reader_absent` does not remain for a counter the API can read.
+- Close conditions: the Windows run is recorded and the reader no longer returns `reader_absent` for a counter that API read. This row does not close E2E-08 or plan 032.
 
 <a id="oi-049"></a>
 

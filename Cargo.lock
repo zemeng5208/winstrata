@@ -205,6 +205,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "winstrata-strata-pulse"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "serde_json",
+ "windows-sys",
+ "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
 name = "winstrata-strata-registry"
 version = "0.1.0"
 dependencies = [
