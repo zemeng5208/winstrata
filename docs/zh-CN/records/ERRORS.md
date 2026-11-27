@@ -110,5 +110,5 @@ ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进�
 - 根因: `ReadDirectoryChangesW` 发出时，`OVERLAPPED` 还在栈上的值里。把该值推进监视向量会移动这个结构。内核把完成状态写到旧地址，`GetOverlappedResult` 读到的是空副本。
 - 影响: 一次真实的文件创建被报成 `source_failure`。监视线程随后停止。Windows 工作区检查失败。
 - 修复计划: 先把目录放进向量，再在原地址发出读取。完成字节数也留在同一结构里。生产缓冲区仍是 16 KiB。实现于 `dc9d9e378f9f585929f6acfc18944411f1bbcc75`。
-- 重测结果: 在该头上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512)。Linux 工作区检查和 Workspace 检查也通过。已发布的 `winstrata/merge-policy` 状态仍然失败，说明是 “Plan 020 must merge before plan 021”。这个顺序结果不是这项缺陷。
+- 重测结果: `dc9d9e378f9f585929f6acfc18944411f1bbcc75` 上的通过不能关闭换基之后的这项缺陷。换基后的头 `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200)。同一作业里 `windows_file_watch_overflow_records_a_lost_gap` 也通过，这不重新打开 OI-018。本文件的 ERR-019 是计划 021 的 `OVERLAPPED` 缺陷。计划 022 的未合并分支用同一个编号记录另一项服务插件缺陷，权威在它自己的模块登记。本记录不替换那项缺陷，也不给两项重新编号。
 - 当前状态: 已解决
