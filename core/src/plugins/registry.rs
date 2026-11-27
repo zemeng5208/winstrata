@@ -187,6 +187,8 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
 
+    use winstrata_strata_trace::PLUGIN_ID as TRACE_ID;
+
     use super::*;
     use crate::{Core, EventBus, Limits, platform};
 
@@ -255,7 +257,9 @@ mod tests {
         assert!(
             host.list()
                 .iter()
-                .filter(|item| item.id != PLUGIN_ID && item.id != "strata.env")
+                .filter(|item| {
+                    item.id != PLUGIN_ID && item.id != "strata.env" && item.id != TRACE_ID
+                })
                 .all(|item| item.phase == "implementation_absent"
                     && item.availability == "implementation_absent")
         );

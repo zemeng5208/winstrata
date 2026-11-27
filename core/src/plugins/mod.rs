@@ -5,6 +5,7 @@
 //! `strata.health` 只在同目录存在诊断程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
+//! `strata.trace` 由计划 021 在进程内启动，没有包。
 //! 原生包和 Python、TypeScript、JavaScript 包都以独立进程运行。
 
 mod env;
@@ -13,6 +14,7 @@ mod language;
 mod process;
 mod registry;
 mod sandbox;
+mod trace;
 
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
@@ -28,6 +30,7 @@ use winstrata_protocols::{
 
 use winstrata_strata_env::PLUGIN_ID as ENV_PLUGIN_ID;
 use winstrata_strata_registry::PLUGIN_ID as REGISTRY_PLUGIN_ID;
+use winstrata_strata_trace::PLUGIN_ID as TRACE_ID;
 
 use crate::bus::{EventBus, Filter};
 use crate::files;
@@ -324,6 +327,12 @@ struct StoredHost {
     env_availability: String,
     #[serde(default)]
     env_scope: Vec<StoredRegistryKey>,
+    #[serde(default)]
+    trace_enabled: bool,
+    #[serde(default = "ready_availability")]
+    trace_availability: String,
+    #[serde(default)]
+    trace_scope: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -363,6 +372,12 @@ pub struct PluginHost {
     env_availability: String,
     env_epoch: u64,
     env_scope: Vec<(String, String)>,
+    trace: Option<winstrata_strata_trace::Session>,
+    trace_enabled: bool,
+    trace_paused: bool,
+    trace_availability: String,
+    trace_epoch: u64,
+    trace_scope: Vec<String>,
 }
 
 impl Drop for PluginHost {
@@ -415,6 +430,12 @@ impl PluginHost {
             env_availability: ready_availability(),
             env_epoch: 0,
             env_scope: Vec::new(),
+            trace: None,
+            trace_enabled: false,
+            trace_paused: false,
+            trace_availability: ready_availability(),
+            trace_epoch: 0,
+            trace_scope: Vec::new(),
         };
         host.read_entries()?;
         host.seed_process_collector()?;
@@ -517,6 +538,9 @@ impl PluginHost {
         if id == ENV_PLUGIN_ID {
             return self.enable_environment();
         }
+        if id == TRACE_ID {
+            return self.enable_trace();
+        }
         self.absent(id)?;
         {
             let entry = self.entry_mut(id)?;
@@ -541,6 +565,9 @@ impl PluginHost {
         }
         if id == ENV_PLUGIN_ID {
             return self.start_environment();
+        }
+        if id == TRACE_ID {
+            return self.start_trace();
         }
         self.absent(id)?;
         if self.live.contains_key(id) {
@@ -569,6 +596,9 @@ impl PluginHost {
         if id == ENV_PLUGIN_ID {
             return self.pause_environment();
         }
+        if id == TRACE_ID {
+            return self.pause_trace();
+        }
         self.roundtrip(id, "pause")?;
         self.drop_subscriptions(id);
         if let Some(live) = self.live.get_mut(id) {
@@ -584,6 +614,9 @@ impl PluginHost {
         }
         if id == ENV_PLUGIN_ID {
             return self.resume_environment();
+        }
+        if id == TRACE_ID {
+            return self.resume_trace();
         }
         self.roundtrip(id, "resume")?;
         self.subscribe(id)?;
@@ -601,6 +634,9 @@ impl PluginHost {
         if id == ENV_PLUGIN_ID {
             return self.stop_environment();
         }
+        if id == TRACE_ID {
+            return self.stop_trace();
+        }
         self.finish_process(id, "stop", "ready")?;
         self.audit(id, "stop", "ok", "stopped")?;
         self.report(id)
@@ -612,6 +648,9 @@ impl PluginHost {
         }
         if id == ENV_PLUGIN_ID {
             return self.disable_environment();
+        }
+        if id == TRACE_ID {
+            return self.disable_trace();
         }
         self.absent(id)?;
         if self.live.contains_key(id) {
@@ -993,6 +1032,10 @@ impl PluginHost {
         if self.env_enabled && self.environment.is_none() && self.env_availability == "ready" {
             self.start_environment()?;
             started.push(ENV_PLUGIN_ID.to_owned());
+        }
+        if self.trace_enabled && self.trace.is_none() && self.trace_availability == "ready" {
+            self.start_trace()?;
+            started.push(TRACE_ID.to_owned());
         }
         Ok(started)
     }
@@ -1569,6 +1612,12 @@ impl PluginHost {
                 "strata.env runs in process and has no package",
             ));
         }
+        if id == TRACE_ID {
+            return Err(PluginError::new(
+                "builtin_closed",
+                "strata.trace runs in process and has no package",
+            ));
+        }
         if official(id).is_some() && self.entry(id).is_err() {
             return Err(PluginError::new(
                 "implementation_absent",
@@ -1604,6 +1653,9 @@ impl PluginHost {
         }
         if plugin.id == ENV_PLUGIN_ID {
             return self.report_environment();
+        }
+        if plugin.id == TRACE_ID {
+            return self.report_trace();
         }
         if let Ok(entry) = self.entry(plugin.id) {
             let mut report = self.report_entry(entry);
@@ -1751,6 +1803,22 @@ impl PluginHost {
             winstrata_strata_env::Scope::from_pairs(&pairs)
                 .map_err(|error| PluginError::new("invalid_record", error.detail()))?;
             self.env_scope = owned;
+        }
+        self.trace_enabled = stored.trace_enabled;
+        self.trace_availability = if matches!(
+            stored.trace_availability.as_str(),
+            "ready" | "unsupported" | "collector_fault" | "collector_os"
+        ) {
+            stored.trace_availability
+        } else {
+            ready_availability()
+        };
+        if !stored.trace_scope.is_empty() {
+            let paths: Vec<PathBuf> = stored.trace_scope.iter().map(PathBuf::from).collect();
+            // 无效范围只记记录错误。被拒绝的路径不进入错误文本。
+            winstrata_strata_trace::Scope::from_paths(&paths)
+                .map_err(|error| PluginError::new("invalid_record", error.detail()))?;
+            self.trace_scope = stored.trace_scope;
         }
         Ok(())
     }
@@ -1903,6 +1971,9 @@ impl PluginHost {
                     subkey: subkey.clone(),
                 })
                 .collect(),
+            trace_enabled: self.trace_enabled,
+            trace_availability: self.trace_availability.clone(),
+            trace_scope: self.trace_scope.clone(),
         };
         files::write_json(self.anchor(), "host.json", &stored)?;
         Ok(())

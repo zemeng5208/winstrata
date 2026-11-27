@@ -34,4 +34,4 @@
 
 ## 仍保留的限制
 
-本变更没有测试 Windows 10 或 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。Linux 编写主机打不开真实的用户环境存储或系统环境存储。E2E-02 仍要求 GUI 查询、文件和其他用户。计划 021 没有开始。Windows 宿主测试在真实的用户和系统存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。插件包里的 Windows 测试使用易失键，不写入这两个存储。
+本变更没有测试 Windows 10 或 Windows 11 客户端。Windows 测试针对 `x86_64-pc-windows-msvc` 编译，并在 Windows 工作区作业中运行。该作业是 Windows Server 2022。Linux 编写主机打不开真实的用户环境存储或系统环境存储。E2E-02 仍要求 GUI 查询、文件和其他用户。计划 021 是[跟踪插件](TRACE.md)中的文件插件，不替换这个插件。Windows 宿主测试在真实的用户和系统存储上写入一个探测变量并追加一段 PATH，然后恢复原来的字节。插件包里的 Windows 测试使用易失键，不写入这两个存储。

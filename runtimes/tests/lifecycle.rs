@@ -160,8 +160,18 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     assert_eq!(environment.phase, "disabled");
     assert_eq!(environment.availability, "ready");
     assert!(!environment.enabled);
+    let trace = builtins
+        .iter()
+        .find(|report| report.id == "strata.trace")
+        .expect("strata.trace");
+    assert_eq!(trace.phase, "disabled");
+    assert_eq!(trace.availability, "ready");
+    assert!(!trace.enabled);
     assert!(builtins.iter().all(|report| {
-        if report.id == "strata.registry" || report.id == "strata.env" {
+        if report.id == "strata.registry"
+            || report.id == "strata.env"
+            || report.id == "strata.trace"
+        {
             true
         } else if report.id == "strata.process" && seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
@@ -177,6 +187,10 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     );
     assert_eq!(
         host.uninstall("strata.env").unwrap_err().code(),
+        "builtin_retained"
+    );
+    assert_eq!(
+        host.uninstall("strata.trace").unwrap_err().code(),
         "builtin_retained"
     );
     if seeded {

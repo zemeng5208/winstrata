@@ -964,6 +964,67 @@ mod tests {
     }
 
     #[test]
+    fn windows_file_watch_overflow_records_a_lost_gap() {
+        let id = fresh_id().unwrap();
+        let dir = TempDir::new(&format!("winstrata-021-{id}"));
+        let subkey = format!(r"Software\WinStrata021{id}");
+        let mut harness = Harness::open(&dir.0, &subkey);
+        harness.watch.subscribe(Channel::Files).unwrap();
+        // 180 UTF-16 units plus the 12-byte FILE_NOTIFY_INFORMATION header is one
+        // aligned entry. Parallel creates fill the 16 KiB buffer before the watch
+        // thread can drain it. The production buffer size stays 16 KiB.
+        let root = dir.0.clone();
+        let mut writers = Vec::new();
+        for worker in 0..8 {
+            let root = root.clone();
+            writers.push(std::thread::spawn(move || {
+                let pad = "n".repeat(176);
+                for index in 0..80 {
+                    let name = format!("{worker}{index:03}{pad}");
+                    fs::write(root.join(name), "x").unwrap();
+                }
+            }));
+        }
+        for writer in writers {
+            writer.join().unwrap();
+        }
+        let seen = harness.until(|event| {
+            matches!(
+                &event.record,
+                Record::Gap {
+                    reason: GapReason::Lost,
+                    ..
+                }
+            )
+        });
+        assert!(
+            seen.iter().any(|event| matches!(
+                &event.record,
+                Record::Gap {
+                    reason: GapReason::Lost,
+                    range: None,
+                }
+            )),
+            "a 16 KiB buffer overflow was not recorded as a lost gap; saw {}; {}",
+            summarize(&seen),
+            collector_error(&mut harness.watch)
+        );
+        assert!(
+            seen.iter()
+                .filter(|event| matches!(
+                    &event.record,
+                    Record::Gap {
+                        reason: GapReason::Lost,
+                        ..
+                    }
+                ))
+                .all(|event| event_type(event) != Some("file.added")),
+            "lost gap was reported as a successful file.added observation; saw {}",
+            summarize(&seen)
+        );
+    }
+
+    #[test]
     fn windows_registry_watch_reports_exact_values() {
         let id = fresh_id().unwrap();
         let dir = TempDir::new(&format!("winstrata-009-reg-{id}"));

@@ -29,6 +29,7 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-016 | 已解决 | [Core](modules/core.md#err-016) |
 | ERR-017 | 已解决 | [服务](modules/services.md#err-017) |
 | ERR-018 | 已解决 | [Core](modules/core.md#err-018) |
+| ERR-019 | 已解决 | 本文件 |
 
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
 
@@ -94,4 +95,20 @@ ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进�
 - 影响: 那个头不是审查头。Linux、Windows 和 Workspace 检查已经成功。
 - 修复计划: 当拉取请求修改 `docs/roadmap/PLAN.md` 时，从已验证的测试合并提交读取该文件，并且仍然拒绝删除或重排已有编号。实现于 `a6a22c200eca6d67f5cffff6f370d0537567850e`，并合并为 `004974215e239f96160b47d3eef40a84c316e802`。
 - 重测结果: 该合并上的 “Evaluate merge policy from main” 检查成功。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46036724065/job/140633881742)。写这份记录时，该合并提交的提交状态 API 没有返回状态上下文。
+- 当前状态: 已解决
+
+<a id="err-019"></a>
+
+## ERR-019
+
+- Error ID: ERR-019
+- 发现时间: 2026-11-27T20:36:59Z
+- 关联 PR: GitHub PR #29，计划 021，头 `0b46a2edba97a587d774d1b721f714dde840f6a6`
+- 环境: GitHub Actions `windows-2022`，Windows Server 2022
+- 复现方法: `cargo test --locked --workspace` 进入 `windows_trace_records_metadata_without_content`
+- 证据: 测试创建了 `observed.txt`，只看到 `gap:SourceFailure`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687)。该头的 Linux 工作区检查通过。同一个 Windows 进程里 `windows_file_watch_overflow_records_a_lost_gap` 通过。随后 Workspace 检查失败，因为 Windows 失败。已发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 020 must merge before plan 021”。这个顺序结果是预期的，不是这项缺陷。
+- 根因: `ReadDirectoryChangesW` 发出时，`OVERLAPPED` 还在栈上的值里。把该值推进监视向量会移动这个结构。内核把完成状态写到旧地址，`GetOverlappedResult` 读到的是空副本。
+- 影响: 一次真实的文件创建被报成 `source_failure`。监视线程随后停止。Windows 工作区检查失败。
+- 修复计划: 先把目录放进向量，再在原地址发出读取。完成字节数也留在同一结构里。生产缓冲区仍是 16 KiB。实现于 `dc9d9e378f9f585929f6acfc18944411f1bbcc75`。
+- 重测结果: `dc9d9e378f9f585929f6acfc18944411f1bbcc75` 上的通过不能关闭换基之后的这项缺陷。换基后的头 `2b0ad8d871dad905ea7fae551a2f9f69bb3b8386` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46066366972/job/140732532200)。同一作业里 `windows_file_watch_overflow_records_a_lost_gap` 也通过，这不重新打开 OI-018。本文件的 ERR-019 是计划 021 的 `OVERLAPPED` 缺陷。计划 022 的未合并分支用同一个编号记录另一项服务插件缺陷，权威在它自己的模块登记。本记录不替换那项缺陷，也不给两项重新编号。
 - 当前状态: 已解决
