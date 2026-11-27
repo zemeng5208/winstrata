@@ -21,7 +21,7 @@
 | PR 004 | 平台可行性验证已验收 | 所有者将 [GitHub PR #5](https://github.com/zemeng5208/winstrata/pull/5) 合并为 `36c12ddf45b6f2eb3b0f3ec401e0942f3fce14ee`。文件树与送审提交一致，合并后 Linux、Windows 及策略检查均通过。 |
 | PR 005 | 已验收 | 所有者已合并[公共协议 PR #6](https://github.com/zemeng5208/winstrata/pull/6)。主分支提交 `14a8ec6` 与送审提交 `e446453` 的文件树相同。 |
 | PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
-| PR 007 | 待审查 | 已实现 [Core 调度与事件总线](../architecture/CORE-RUNTIME.md)。审查分支为 `pr/007-core-runtime`，这是合并策略接受的分支形式。 |
+| PR 007 | 待审查 | 已实现 [Core 调度与事件总线](../architecture/CORE-RUNTIME.md)。所有者审核 `pr/007-core-runtime` 上的[候选 PR #9](https://github.com/zemeng5208/winstrata/pull/9)。 |
 | PR 008–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。存储、采集、插件及其他指标仍按各自计划推进。 |
 
@@ -94,4 +94,4 @@ Windows 早期候选在替换配置文件时遇到共享冲突，测试也发现
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-当前交接点为计划 007，分支 `pr/007-core-runtime`，基线为合并提交 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并策略要求该分支形式，并因“PR title and branch must identify a plan ID in the roadmap”拒绝了 `cursor/core-runtime-007-1c62`。候选由所有者审核合并。在该合并及其必需检查核实之前，不要开始计划 008。Windows 工作区检查已在 `dfa23cf` 通过；本分支仍需自己的 CI。下一步是所有者合并后的受控服务与驱动管理计划。
+当前交接点为计划 007，分支 `pr/007-core-runtime`，基线为合并提交 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。所有者审核并合并[候选 PR #9](https://github.com/zemeng5208/winstrata/pull/9)。合并策略因“PR title and branch must identify a plan ID in the roadmap”拒绝了 `cursor/core-runtime-007-1c62`。在 PR #9 合并及其必需检查核实之前，不要开始计划 008。Windows 工作区检查已在 `dfa23cf` 通过；PR #9 仍需自己的 CI。下一步是所有者合并后的受控服务与驱动管理计划。
