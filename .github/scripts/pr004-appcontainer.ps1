@@ -70,7 +70,8 @@ public static class WinStrataContainerProbe {
 
     private static void Require(bool success, string step) {
         if (success) return;
-        throw new Win32Exception(Marshal.GetLastWin32Error(), step);
+        int code = Marshal.GetLastWin32Error();
+        throw new Win32Exception(code, step + " (Win32 " + code + "): " + new Win32Exception(code).Message);
     }
 
     public static IntPtr Create(string name) {
