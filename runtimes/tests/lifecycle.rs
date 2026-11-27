@@ -136,6 +136,7 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     let process_seeded = collector_present("winstrata-strata-process");
     let services_seeded = collector_present("winstrata-strata-services");
     let startup_seeded = collector_present("winstrata-strata-startup");
+    let pulse_seeded = collector_present("winstrata-strata-pulse");
     let health_seeded = collector_present("winstrata-strata-health");
     let registry = builtins
         .iter()
@@ -169,6 +170,8 @@ fn official_plugins_stay_absent_until_their_own_plans() {
         } else if report.id == "strata.services" && services_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.startup" && startup_seeded {
+            !report.enabled && report.phase == "disabled" && report.availability == "ready"
+        } else if report.id == "strata.pulse" && pulse_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
         } else if report.id == "strata.health" && health_seeded {
             !report.enabled && report.phase == "disabled" && report.availability == "ready"
@@ -206,6 +209,17 @@ fn official_plugins_stay_absent_until_their_own_plans() {
             "builtin_retained"
         );
     }
+    if pulse_seeded {
+        assert_eq!(
+            host.uninstall("strata.pulse").unwrap_err().code(),
+            "builtin_retained"
+        );
+    } else {
+        assert_eq!(
+            host.enable("strata.pulse").unwrap_err().code(),
+            "implementation_absent"
+        );
+    }
     if health_seeded {
         assert_eq!(
             host.uninstall("strata.health").unwrap_err().code(),
@@ -223,10 +237,6 @@ fn official_plugins_stay_absent_until_their_own_plans() {
     assert_eq!(
         host.uninstall("strata.rescue").unwrap_err().code(),
         "builtin_retained"
-    );
-    assert_eq!(
-        host.enable("strata.pulse").unwrap_err().code(),
-        "implementation_absent"
     );
     let reserved = scratch.dir("reserved");
     write_package(

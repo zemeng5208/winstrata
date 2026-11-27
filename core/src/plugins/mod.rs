@@ -1,7 +1,7 @@
 //! 插件清单、权限、依赖和进程生命周期。
 //!
 //! 官方 25 个身份保留在目录中。第三方安装不能占用这些身份。
-//! `strata.process`、`strata.services`、`strata.startup` 与 `strata.health` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
+//! `strata.process`、`strata.services`、`strata.startup`、`strata.pulse` 与 `strata.health` 只在同目录存在对应采集程序时登记为已安装且默认禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
@@ -46,6 +46,7 @@ const MAX_PACKAGE_FILES: usize = 16;
 const MAX_PACKAGE_FILE: u64 = 64 * 1024;
 const MAX_HISTORY_LINES: usize = 1024;
 const PROCESS_PLUGIN: &str = "strata.process";
+const PULSE_PLUGIN: &str = "strata.pulse";
 const SERVICES_PLUGIN: &str = "strata.services";
 const STARTUP_PLUGIN: &str = "strata.startup";
 
@@ -57,6 +58,14 @@ const PROCESS_MANIFEST: &str = concat!(
     r#""dependencies":[],"events":["process.started","process.exited","process.thread.started","#,
     r#""process.thread.exited","process.module.loaded","process.module.unloaded","#,
     r#""process.service","process.unresolved"],"rescue":false}"#,
+);
+
+// 清单与采集程序共同描述计划 024。宿主不通过第三方安装写入这个身份。
+const PULSE_MANIFEST: &str = concat!(
+    r#"{"version":{"major":1,"minor":0},"id":"strata.pulse","name":"StrataPulse","#,
+    r#""plugin_version":{"major":1,"minor":0,"patch":0},"kind":"builtin","runtime":"native","#,
+    r#""capabilities":["pulse.observe"],"permissions":["event.publish","storage.private"],"#,
+    r#""dependencies":[],"events":["pulse.sample"],"rescue":false}"#,
 );
 
 // 计划 022 的服务与驱动观察。事件名沿用插件令牌，不含下划线。
@@ -464,6 +473,7 @@ impl PluginHost {
         host.seed_process_collector()?;
         host.seed_services_collector()?;
         host.seed_startup_collector()?;
+        host.seed_pulse_collector()?;
         host.seed_health_collector()?;
         Ok(host)
     }
@@ -1336,6 +1346,13 @@ impl PluginHost {
                         "startup collector is not beside the plugin runtime",
                     )
                 })?
+            } else if manifest.id.as_str() == PULSE_PLUGIN {
+                pulse_beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "pulse collector is not beside the plugin runtime",
+                    )
+                })?
             } else if manifest.id.as_str() == health::PLUGIN {
                 health::beside(&self.runtime).ok_or_else(|| {
                     PluginError::new(
@@ -1924,6 +1941,41 @@ impl PluginHost {
         Ok(())
     }
 
+    fn seed_pulse_collector(&mut self) -> Result<(), PluginError> {
+        if pulse_beside(&self.runtime).is_none() || self.entry(PULSE_PLUGIN).is_ok() {
+            return Ok(());
+        }
+        let manifest = Manifest::from_json(PULSE_MANIFEST).map_err(manifest_error)?;
+        if manifest.id.as_str() != PULSE_PLUGIN || manifest.kind != PluginKind::Builtin {
+            return Err(PluginError::new(
+                "invalid_manifest",
+                "pulse collector manifest is not the official plugin",
+            ));
+        }
+        let files = vec![(
+            "manifest.json".to_owned(),
+            PULSE_MANIFEST.as_bytes().to_vec(),
+        )];
+        self.write_tree("packages", PULSE_PLUGIN, &files)?;
+        self.write_tree("recovery", PULSE_PLUGIN, &files)?;
+        self.ensure_dir("state", PULSE_PLUGIN)?;
+        self.entries.push(Installed {
+            id: PULSE_PLUGIN.to_owned(),
+            name: manifest.name.as_str().to_owned(),
+            kind: PluginKind::Builtin,
+            version: manifest.plugin_version,
+            enabled: false,
+            pin: None,
+            grants: manifest.permissions.clone(),
+            pending: Vec::new(),
+            loaded: false,
+            availability: "ready".to_owned(),
+        });
+        self.save()?;
+        self.audit(PULSE_PLUGIN, "seed", "ok", "present")?;
+        Ok(())
+    }
+
     fn seed_health_collector(&mut self) -> Result<(), PluginError> {
         if health::beside(&self.runtime).is_none() || self.entry(health::PLUGIN).is_ok() {
             return Ok(());
@@ -2167,6 +2219,10 @@ fn collector_beside(runtime: &Path, stem: &str) -> Option<PathBuf> {
     };
     let path = runtime.parent()?.join(name);
     path.is_file().then_some(path)
+}
+
+fn pulse_beside(runtime: &Path) -> Option<PathBuf> {
+    collector_beside(runtime, "winstrata-strata-pulse")
 }
 
 fn official(id: &str) -> Option<&'static OfficialPlugin> {

@@ -41,7 +41,6 @@ pub use network::{
     flow_event, interface_event,
 };
 pub use onboarding::{ModeMarker, Onboarding};
-pub use scope::CollectionScope;
 pub use plugins::{
     DependencyStatus, LanguageRequirement, OFFICIAL, OfficialPlugin, PluginError, PluginHost,
     PluginReport,
@@ -56,6 +55,7 @@ pub use runtime::{
     Runtime, RuntimeError,
 };
 pub use schedule::{Cancel, Scheduler, SchedulerHandle, SchedulerStats, Task, TaskId};
+pub use scope::CollectionScope;
 pub use storage::Settings;
 pub use vault::Protection;
 
@@ -467,6 +467,18 @@ impl Core {
         }
     }
 
+    /// 把一批指标写入插件状态目录所属的用户工作区。
+    ///
+    /// `state` 必须是 `<user>/plugins/state/<id>`。保险库存在时拒绝写入，避免在锁定后把明文指标写入混合存储。
+    pub fn commit_plugin_metrics(state: &Path, batch: Batch) -> io::Result<u64> {
+        let user = plugin_workspace(state)?;
+        if vault::exists(&user)? {
+            return Err(vault::locked_error());
+        }
+        let mut store = Hybrid::open(&user)?;
+        store.commit(batch)
+    }
+
     // 用户明确选择新的空工作区，原卷离线时仍能开始工作；此操作不代表已迁移历史。
     pub fn select_empty_directory(&mut self, root: &Path) -> io::Result<()> {
         self.refresh_location()?;
@@ -707,6 +719,66 @@ impl Core {
             },
         })
     }
+}
+
+fn plugin_workspace(state: &Path) -> io::Result<Anchor> {
+    let state = std::fs::canonicalize(state)?;
+    if !state.is_dir() {
+        return Err(io::Error::new(
+            ErrorKind::InvalidInput,
+            "plugin state is not a directory",
+        ));
+    }
+    let state_dir = state.parent().ok_or_else(|| {
+        io::Error::new(
+            ErrorKind::InvalidInput,
+            "plugin state is not inside plugins",
+        )
+    })?;
+    let plugins = state_dir.parent().ok_or_else(|| {
+        io::Error::new(
+            ErrorKind::InvalidInput,
+            "plugin state is not inside plugins",
+        )
+    })?;
+    let user = plugins.parent().ok_or_else(|| {
+        io::Error::new(
+            ErrorKind::InvalidInput,
+            "plugin state is not inside plugins",
+        )
+    })?;
+    if state_dir.file_name() != Some(OsStr::new("state"))
+        || plugins.file_name() != Some(OsStr::new("plugins"))
+    {
+        return Err(io::Error::new(
+            ErrorKind::InvalidInput,
+            "plugin state is not inside the user plugin directory",
+        ));
+    }
+    Anchor::open(&drive_path(user))
+}
+
+/// `canonicalize` on Windows returns a `\\?\` path. The anchor accepts a drive path.
+fn drive_path(path: &Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        let wide: Vec<u16> = path.as_os_str().encode_wide().collect();
+        let prefix = [
+            u16::from(b'\\'),
+            u16::from(b'\\'),
+            u16::from(b'?'),
+            u16::from(b'\\'),
+        ];
+        if wide.starts_with(&prefix)
+            && wide.len() >= prefix.len() + 3
+            && wide[prefix.len() + 1] == u16::from(b':')
+        {
+            return PathBuf::from(OsString::from_wide(&wide[prefix.len()..]));
+        }
+    }
+    path.to_path_buf()
 }
 
 struct BackupIdentity {
