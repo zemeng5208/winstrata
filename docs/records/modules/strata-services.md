@@ -16,6 +16,6 @@ Authoritative error records for `plugins/strata-services`.
 - Evidence: the restricted token called `capture`. It returned `Os { code: 5, kind: PermissionDenied, message: "Access is denied." }` instead of a snapshot with `permission_denied`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064710156/job/140727118812). The same job passed `missing_image_probe_records_creation_start_type_and_deletion`. Linux workspace checks passed. Workspace checks failed because Windows failed.
 - Root cause: `capture` reads `MachineGuid` before it opens the Service Control Manager. The restricted token is denied that registry read, so the manager is never opened and the permission gap is not recorded.
 - Impact: Windows workspace checks failed. An access-denied enumeration was not observed as `service.permission`.
-- Fix plan: an access-denied identity read still opens the manager. Manager access denied stays `permission_denied` with an empty inventory. If the manager opens while the identity read was denied, the snapshot is `identity:5` and does not publish rows under an unknown boot id.
-- Retest result: not run. The Windows target type-check on this Linux host succeeded. The Windows test has not executed again.
+- Fix plan: an access-denied identity read still opens the manager. Manager access denied stays `permission_denied` with an empty inventory. If the manager opens, the service and driver rows are kept and the snapshot also records `identity:5`. That gap does not replace an epoch already known to the tracker.
+- Retest result: not run on Windows. The Linux tracker test covers the gap plus the rows. The Windows Service Control Manager test has not executed again.
 - Current state: open

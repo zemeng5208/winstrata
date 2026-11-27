@@ -16,6 +16,6 @@
 - 证据: 受限令牌调用 `capture`，返回 `Os { code: 5, kind: PermissionDenied, message: "Access is denied." }`，而不是 `permission_denied` 的快照。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46064710156/job/140727118812)。同一作业中 `missing_image_probe_records_creation_start_type_and_deletion` 通过。Linux 工作区检查通过。Workspace 检查因 Windows 失败而失败。
 - 根因: `capture` 在打开服务控制管理器之前读取 `MachineGuid`。受限令牌被拒绝读取该注册表值，因此管理器没有被打开，权限缺口没有被记录。
 - 影响: Windows 工作区检查失败。拒绝访问的枚举没有被记成 `service.permission`。
-- 修复计划: 身份读取被拒绝时仍然打开管理器。管理器拒绝访问仍是 `permission_denied`，清单为空。如果身份读取被拒绝但管理器能打开，快照记为 `identity:5`，不在未知启动号下发布行。
-- 重测结果: 尚未执行。这台 Linux 主机上的 Windows 目标类型检查通过。Windows 测试还没有再次执行。
+- 修复计划: 身份读取被拒绝时仍然打开管理器。管理器拒绝访问仍是 `permission_denied`，清单为空。如果管理器能打开，服务行和驱动行保留，快照同时记录 `identity:5`。这个缺口不替换跟踪器已经知道的纪元。
+- 重测结果: 尚未在 Windows 上执行。Linux 跟踪测试覆盖了这个缺口和这些行。Windows 服务控制管理器测试还没有再次执行。
 - 当前状态: 未解决

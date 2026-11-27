@@ -107,8 +107,14 @@ impl ServiceTracker {
     }
 
     pub fn observe(&mut self, snapshot: &ServiceSnapshot) -> io::Result<Vec<Event>> {
-        if self.device.as_deref() != Some(snapshot.device.as_str())
-            || self.boot.as_deref() != Some(snapshot.boot.as_str())
+        let identity_gap = snapshot
+            .source_failure
+            .as_deref()
+            .is_some_and(|reason| reason.starts_with("identity:"));
+        let keep_epoch = identity_gap && self.device.is_some();
+        if !keep_epoch
+            && (self.device.as_deref() != Some(snapshot.device.as_str())
+                || self.boot.as_deref() != Some(snapshot.boot.as_str()))
         {
             self.device = Some(snapshot.device.clone());
             self.boot = Some(snapshot.boot.clone());
@@ -121,14 +127,20 @@ impl ServiceTracker {
             let denied = self.permission(snapshot)?;
             return Ok(vec![gap, denied]);
         }
-        if snapshot.source_failure.is_some() {
+        if snapshot.source_failure.is_some() && !identity_gap {
             return Ok(vec![self.gap(snapshot)?]);
+        }
+        let mut events = Vec::new();
+        if identity_gap {
+            events.push(self.gap(snapshot)?);
         }
         if !self.opened {
             self.opened = true;
-            return self.baseline(snapshot);
+            events.extend(self.baseline(snapshot)?);
+        } else {
+            events.extend(self.diff(snapshot)?);
         }
-        self.diff(snapshot)
+        Ok(events)
     }
 }
 
@@ -644,6 +656,36 @@ mod tests {
             .observe(&snapshot(vec![service], Coverage::Complete))
             .unwrap();
         assert!(quiet.is_empty(), "{:?}", types(&quiet));
+    }
+
+    #[test]
+    fn an_identity_gap_keeps_the_service_and_driver_rows() {
+        let mut tracker = ServiceTracker::new();
+        let service = fact("Live", Kind::Service, RunState::Running);
+        let mut denied = snapshot(vec![service], Coverage::Complete);
+        denied.device.clear();
+        denied.boot = "boot:unavailable".to_owned();
+        denied.source_failure = Some("identity:5".to_owned());
+        let events = tracker.observe(&denied).unwrap();
+        assert_eq!(types(&events), vec!["gap", "service.state"]);
+        let again = tracker.observe(&denied).unwrap();
+        assert_eq!(types(&again), vec!["gap"]);
+
+        let mut known = ServiceTracker::new();
+        let driver = fact("disk", Kind::Driver, RunState::Running);
+        known
+            .observe(&snapshot(vec![driver.clone()], Coverage::Complete))
+            .unwrap();
+        let mut unreadable = snapshot(vec![driver], Coverage::Complete);
+        unreadable.device.clear();
+        unreadable.boot = "boot:unavailable".to_owned();
+        unreadable.source_failure = Some("identity:5".to_owned());
+        let kept = known.observe(&unreadable).unwrap();
+        assert_eq!(types(&kept), vec!["gap"]);
+        let gone = known
+            .observe(&snapshot(Vec::new(), Coverage::Complete))
+            .unwrap();
+        assert_eq!(types(&gone), vec!["driver.unloaded", "driver.removed"]);
     }
 
     #[test]

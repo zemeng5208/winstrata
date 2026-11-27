@@ -83,10 +83,6 @@ pub(super) fn capture() -> io::Result<ServiceSnapshot> {
         return Ok(snapshot);
     }
     let manager = Manager(handle);
-    if identity_denied {
-        snapshot.source_failure = Some("identity:5".to_owned());
-        return Ok(snapshot);
-    }
     match read_kind(manager.0, SERVICE_WIN32, Kind::Service) {
         Ok(facts) => push_all(&mut snapshot, facts),
         Err(EnumError::Buffer) => snapshot.source_failure = Some("scm:buffer".to_owned()),
@@ -101,6 +97,8 @@ pub(super) fn capture() -> io::Result<ServiceSnapshot> {
     }
     if snapshot.source_failure.is_some() {
         snapshot.facts.clear();
+    } else if identity_denied {
+        snapshot.source_failure = Some("identity:5".to_owned());
     }
     Ok(snapshot)
 }
