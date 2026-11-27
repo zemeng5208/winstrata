@@ -38,11 +38,12 @@ const input = {
 
 test('real roadmap has ordered plan IDs and detects duplicate IDs', () => {
   assert.deepEqual(repoPlan.slice(0, 4), ['000', '001', '002', '003']);
-  assert.equal(repoPlan.length, 53);
+  assert.equal(repoPlan.length, 54);
   const at = (id) => repoPlan.indexOf(id);
   assert.deepEqual(repoPlan.slice(at('013'), at('013') + 4), ['013', '052', '051', '014']);
   const from014 = repoPlan.slice(at('014'));
-  assert.deepEqual(from014, Array.from({ length: 37 }, (_, index) => String(index + 14).padStart(3, '0')));
+  assert.deepEqual(from014.slice(0, 2), ['014', '053']);
+  assert.deepEqual(from014.slice(2), Array.from({ length: 36 }, (_, index) => String(index + 15).padStart(3, '0')));
   assert.throws(() => roadmapOrder('| <a id="pr-002"></a>002 |\n| <a id="pr-002"></a>002 |'));
 });
 
@@ -79,26 +80,24 @@ test('governance changes need owner approval for the current commit', () => {
 
 test('an added plan is accepted only as an insertion into the main order', () => {
   const headOrder = roadmapOrder(readFileSync('docs/roadmap/PLAN.md', 'utf8'));
-  const baseOrder = headOrder.filter((id) => id !== '052');
+  const baseOrder = headOrder.filter((id) => id !== '053');
   assert.deepEqual(
     baseOrder.slice(baseOrder.indexOf('013'), baseOrder.indexOf('015') + 1),
-    ['013', '051', '014', '015'],
+    ['013', '052', '051', '014', '015'],
   );
   assert.equal(roadmapExtension(baseOrder, headOrder), null);
-  assert.equal(headOrder[headOrder.indexOf('013') + 1], '052');
-  assert.equal(headOrder[headOrder.indexOf('052') + 1], '051');
-  assert.equal(headOrder[headOrder.indexOf('051') + 1], '014');
+  assert.equal(headOrder[headOrder.indexOf('014') + 1], '053');
 
   const planFiles = [{ filename: 'docs/roadmap/PLAN.md' }];
   const comment = { user: { id: 42 }, body: approvalText(head) };
-  const merged = baseOrder.slice(0, baseOrder.indexOf('013') + 1).map(accepted);
-  const pull052 = {
+  const merged = headOrder.slice(0, headOrder.indexOf('053')).map(accepted);
+  const pull053 = {
     ...pull,
-    title: 'PR 052: Process exit sample',
-    head: { ref: 'pr/052-process-exit-sample', sha: head },
+    title: 'PR 053: Replaceable GUI standards',
+    head: { ref: 'pr/053-ag64-replaceable-gui', sha: head },
   };
   const added = {
-    pull: pull052,
+    pull: pull053,
     order: headOrder,
     merged,
     blockedIssues: [],
@@ -109,31 +108,33 @@ test('an added plan is accepted only as an insertion into the main order', () =>
   };
   assert.match(policyDecision({ ...added, comments: [] }), /require owner confirmation/);
   assert.match(policyDecision({ ...added, upToDate: false }), /current main commit/);
-  assert.match(policyDecision({ ...added, pull: { ...pull052, draft: true } }), /draft/);
+  assert.match(policyDecision({ ...added, pull: { ...pull053, draft: true } }), /draft/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull052, labels: [{ name: 'merge-blocked' }] },
+    pull: { ...pull053, labels: [{ name: 'merge-blocked' }] },
   }), /merge blocker/);
   assert.match(policyDecision({ ...added, blockedIssues: [{ number: 17 }] }), /#17/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull052, title: 'PR 014: Wrong title' },
+    pull: { ...pull053, title: 'PR 014: Wrong title' },
   }), /identify a plan ID/);
   assert.equal(policyDecision(added), null);
   assert.match(policyDecision({ ...added, order: baseOrder }), /identify a plan ID/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull052, title: 'PR 014: Plugins', head: { ref: 'pr/014-plugins', sha: head } },
+    merged: baseOrder.slice(0, baseOrder.indexOf('013') + 1).map(accepted),
+    pull: { ...pull053, title: 'PR 014: Plugins', head: { ref: 'pr/014-plugins', sha: head } },
   }), /052 must merge before plan 014/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull052, title: 'PR 013: Again', head: { ref: 'pr/013-again', sha: head } },
+    pull: { ...pull053, title: 'PR 013: Again', head: { ref: 'pr/013-again', sha: head } },
     merged: baseOrder.map(accepted),
   }), /Plan 013 already merged/);
   assert.match(roadmapExtension(baseOrder, headOrder.filter((id) => id !== '014')), /drops plan 014/);
   const swapped = headOrder.slice();
-  const at = swapped.indexOf('014');
-  [swapped[at], swapped[at + 1]] = [swapped[at + 1], swapped[at]];
+  const at014 = swapped.indexOf('014');
+  const at015 = swapped.indexOf('015');
+  [swapped[at014], swapped[at015]] = [swapped[at015], swapped[at014]];
   assert.match(roadmapExtension(baseOrder, swapped), /reorders plan 015/);
   const tail = headOrder.slice();
   const from = tail.indexOf('014');

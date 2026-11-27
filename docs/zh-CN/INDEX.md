@@ -35,5 +35,6 @@
 - [需求追踪](roadmap/REQUIREMENTS.md)
 - [进度、决策和交接](records/STATUS.md)
 - [未验收事项登记](records/OPEN_ITEMS.md)
+- [GUI 来源登记](records/GUI_SOURCES.md)
 - [全局错误登记](records/ERRORS.md)
 - [模块错误登记](records/modules/core.md)

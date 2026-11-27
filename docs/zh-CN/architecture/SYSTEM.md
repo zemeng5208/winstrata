@@ -27,6 +27,8 @@ Core 不可卸载，仅承载通用基础设施：GUI 容器、插件市场及�
 
 GUI 与 Core 按普通用户权限运行，受控后台服务承担必要高权限，驱动在内核态运行。进程、服务和驱动之间通过版本化协议通信，进行身份/当前用户校验、参数验证、权限检查与审计。普通插件和脚本不得获得后台服务系统权限，不得直接访问驱动。官方插件遵守同一能力契约，特殊救援能力独立、显式、受限。当前服务、IPC 和驱动订阅管理见[服务与内核控制](SERVICE-KERNEL.md)。
 
+当前 GUI 按 [AG-64](../AGENTS.md#ag-64) 可以替换。Core 不拥有它的视觉体系。官方默认 GUI 保持安装，作为默认界面和恢复界面。更换 GUI 不停止采集、不重启无关服务、不丢弃已存储的数据。上面的图仍然是权限划分。它不是 GUI 工具包的选择。Tauri、React、TypeScript 和 Vite 仍是官方外壳的未批准候选。它们不是已批准的第三方替换方案。
+
 ### 3.2 底层采集与驱动
 
 混合采集、Windows 官方支持接口优先、最小化自研内核代码。候选接口包括 ETW、WFP、PDH、WMI/CIM、Windows API、USN Journal、Windows Event Log，以及必要时文件系统 minifilter、注册表、进程/线程/模块通知等官方机制。具体实现及外部项目必须调研、实测并审批。当前进程、线程和模块采样使用 procfs 或 Toolhelp 以及服务控制管理器，见[进程来源](PROCESS.md)，不加载 `strata-proc`。计划 011 在用户态观测接口和 TCP/UDP 端点，原始包默认留在内存，只有合格标记点名的一个报文可以落盘。见[网络源](NETWORK-SOURCES.md)。它不加载 `strata-net.sys`。
@@ -70,7 +72,7 @@ winstrata/
   Cargo.lock
   pnpm-workspace.yaml
   pnpm-lock.yaml
-  apps/desktop/                # Tauri / Web GUI 容器
+  apps/desktop/                # 桌面宿主。目录注释里的 Tauri 只是未批准候选，不是已选定的替换方案
   core/                        # 公共基础设施；可按真实职责拆 crate
   kernel/                      # 模块化驱动及共享协议
   services/                    # 高权限后台服务

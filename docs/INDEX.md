@@ -35,5 +35,6 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Requirements traceability](roadmap/REQUIREMENTS.md)
 - [Progress, decisions and handover](records/STATUS.md)
 - [Open-item register](records/OPEN_ITEMS.md)
+- [GUI source register](records/GUI_SOURCES.md)
 - [Global error register](records/ERRORS.md)
 - [Module error registers](records/modules/core.md)

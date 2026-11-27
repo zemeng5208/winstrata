@@ -6,7 +6,7 @@ This register is required by [AG-62](../../AGENTS.md#ag-62). Every still-open it
 
 The handoff owner for every row is repository owner zemeng5208. The developer of the responsible plan runs the named environment and records the result. The owner accepts the close. “Awaiting verification” is not a close condition.
 
-Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is not started.
+Plan 052 is merged and is the process-exit fix. Plan 051 writes this register and does not close these items. Plan 014 is merged as `0accacbaa2dac43db3845cc8c08f23b4e831c413`. Plan 053 records AG-64 immediately after 014 and does not close these items.
 
 ## Summary
 
@@ -47,7 +47,11 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-033](#oi-033) | Open process item | Owner closes GitHub PR #11 |
 | [OI-034](#oi-034) | Known limitation | 031 |
 | [OI-035](#oi-035) | Known limitation | 016 |
+| [OI-036](#oi-036) | Gap on an unmerged branch | 016, without a new predecessor |
+| [OI-037](#oi-037) | Unimplemented | No roadmap row |
+| [OI-038](#oi-038) | Pending decision | Owner |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
+| [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
 <a id="oi-001"></a>
 
@@ -760,5 +764,89 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Responsible PR: 050
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the exact merge candidate and actual main
-- Acceptance criteria: the scenario text, including 63 rules after plan 051 is in effect
+- Acceptance criteria: the scenario text, including 64 rules after AG-64 is in effect
 - Close conditions: that run is recorded on a main commit whose required checks are green
+
+<a id="oi-036"></a>
+
+## OI-036
+
+- Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md) and [REQ-19.15](../roadmap/REQUIREMENTS.md)
+- Source PR: unmerged GitHub PR #21, `pr/016-desktop-gui`, head `64bd627c362ad025869905441bee7802dda19ac1`. Main `0accacb` has no GUI file.
+- Current state: gap on an unmerged branch
+- Reason it is incomplete: five vendored files match the named upstream bytes. `packages/ui/static/shell.js` and `packages/ui/static/themes.css` are host-authored and are not the shadcn-admin shell or the approved materials. UI Moments is not included. This is not a product row.
+- Responsible PR: plan 016, on its existing row. Plan 053 does not add itself to that dependency cell and does not edit the branch.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the plan 016 change that merges official GUI files, compared with the upstream revisions
+- Acceptance criteria: [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19) for files in that commit. The host-authored layout and paint are either replaced by the approved sources or recorded as an owner-approved gap.
+- Close conditions: the source register rows match the files in the same commit. Not closed by this standards change.
+
+<a id="oi-037"></a>
+
+## OI-037
+
+- Related requirement: [REQ-19.06](../roadmap/REQUIREMENTS.md) through [REQ-19.14](../roadmap/REQUIREMENTS.md)
+- Source PR: the 2026-11-28 owner decision, recorded as proposed [AG-64](../../AGENTS.md#ag-64)
+- Current state: unimplemented
+- Reason it is incomplete: main has no GUI. Full replacement, the frontend SDK, decoupling under a second GUI, and the trusted-host prompts were not implemented. Plan 016's existing official-GUI acceptance is unchanged.
+- Responsible PR: no roadmap row. The owner assigns the follow-up. It is not plan 015 or plan 016.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: real Windows, with the official GUI installed and one third-party GUI plugin
+- Acceptance criteria: [E2E-17](../roadmap/ACCEPTANCE.md#e2e-17) and [E2E-18](../roadmap/ACCEPTANCE.md#e2e-18)
+- Close conditions: those runs are recorded after the owner has approved the technical approach and assigned a roadmap row. Not closed by a static page.
+
+<a id="oi-038"></a>
+
+## OI-038
+
+- Related requirement: [REQ-19.16](../roadmap/REQUIREMENTS.md)
+- Source PR: the 2026-11-28 owner decision
+- Current state: pending decision
+- Reason it is incomplete: the owner required the technical approach to be researched and verified later. This change does not select Tauri, React, Vite, or any other stack.
+- Responsible PR: no implementation plan ID. Plan 053 is the standards row immediately after 014. An implementation plan, if the owner adds one, is not another ID in this change.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the proposal's own measured evidence, recorded before implementation
+- Acceptance criteria: [the proposal section](../roadmap/ACCEPTANCE.md#gui-proposal)
+- Close conditions: the owner approves a verified proposal, or records that the capability is withdrawn. Not closed by naming a candidate.
+
+<a id="e2e-17"></a>
+
+## E2E-17
+
+- Related requirement: [E2E-17](../roadmap/ACCEPTANCE.md#e2e-17)
+- Source PR: the 2026-11-28 owner decision
+- Current state: not done
+- Reason it is incomplete: no third-party GUI plugin exists on main
+- Responsible PR: no roadmap row
+- Handoff owner: repository owner zemeng5208
+- Verification environment: real Windows with one third-party GUI plugin and the official GUI still installed
+- Acceptance criteria: the scenario text
+- Close conditions: that run is recorded. Plan 016's E2E-11 does not close it.
+
+<a id="e2e-18"></a>
+
+## E2E-18
+
+- Related requirement: [E2E-18](../roadmap/ACCEPTANCE.md#e2e-18)
+- Source PR: the 2026-11-28 owner decision
+- Current state: not done
+- Reason it is incomplete: the trusted-host prompts for a third-party GUI were not implemented
+- Responsible PR: no roadmap row
+- Handoff owner: repository owner zemeng5208
+- Verification environment: real Windows, including an isolated host for rescue and deletion attempts
+- Acceptance criteria: the scenario text
+- Close conditions: that run is recorded
+
+<a id="e2e-19"></a>
+
+## E2E-19
+
+- Related requirement: [E2E-19](../roadmap/ACCEPTANCE.md#e2e-19)
+- Source PR: the source register created with AG-64. The product table is empty at `0accacb`.
+- Current state: not done
+- Reason it is incomplete: no official GUI file is in this commit
+- Responsible PR: the change that adds the files. No new roadmap row.
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the commit that contains the official GUI or official plugin presentation
+- Acceptance criteria: the scenario text
+- Close conditions: the register and the files match. Not closed by the empty table.

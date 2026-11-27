@@ -57,7 +57,7 @@ Proceed within approvals. Reproduce assumptions and interfaces. Maintain issue, 
 
 ### Before requesting review
 
-Check approved scope and completeness, real build and Windows/GUI where applicable, integrated regression, performance and security. Record unrun checks in the open-item register with the [AG-62](../../AGENTS.md#ag-62) fields. Put confirmed defects in the error register. Do not record a defect as a limitation. Inspect architecture, dependencies, reuse, settings, docs and tree, and remove obsolete temporary artifacts. Verify actual latest-base merge, semantic conflicts, avoidance of reintroduced behaviors, and corrected defects. Update tracking, evidence and linked documents. Request order and let the owner merge.
+Check approved scope and completeness, real build and Windows/GUI where applicable, integrated regression, performance and security. Record unrun checks in the open-item register with the [AG-62](../../AGENTS.md#ag-62) fields. Put confirmed defects in the error register. Do not record a defect as a limitation. When official GUI or official plugin presentation changes, update the [GUI source register](../records/GUI_SOURCES.md) under [AG-64](../../AGENTS.md#ag-64) for files in that change. Inspect architecture, dependencies, reuse, settings, docs and tree, and remove obsolete temporary artifacts. Verify actual latest-base merge, semantic conflicts, avoidance of reintroduced behaviors, and corrected defects. Update tracking, evidence and linked documents. Request order and let the owner merge.
 
 ### After merge or session close
 
