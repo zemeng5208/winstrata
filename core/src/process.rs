@@ -800,23 +800,39 @@ mod tests {
         }
     }
 
+    // 启动时间读不到，或整表被截断时，跟踪器不会发出退出。
+    // Windows 回收进程后，Toolhelp 仍可能列出该 PID，而 OpenProcess 或 GetProcessTimes 失败。
+    // 等到完整采样里该实例消失，或被另一个启动时间替换，再要求 process.exited。
     fn capture_without(pid: u32, start: i64) -> winstrata_kernel::SystemSnapshot {
         let deadline = Instant::now() + Duration::from_secs(5);
         loop {
             let snapshot = capture().expect("capture");
-            let present = snapshot
-                .processes
-                .iter()
-                .any(|row| row.pid == pid && row.start_unix_ns == Some(start));
-            if !present {
+            if tracked_instance_left(&snapshot, pid, start) {
                 return snapshot;
             }
             assert!(
                 Instant::now() < deadline,
-                "pid {pid} stayed in the snapshot"
+                "pid {pid} stayed in a sample that cannot report its exit"
             );
             thread::sleep(Duration::from_millis(20));
         }
+    }
+
+    fn tracked_instance_left(
+        snapshot: &winstrata_kernel::SystemSnapshot,
+        pid: u32,
+        start: i64,
+    ) -> bool {
+        if snapshot.processes_truncated {
+            return false;
+        }
+        for row in snapshot.processes.iter().filter(|row| row.pid == pid) {
+            match row.start_unix_ns.filter(|value| *value > 0) {
+                Some(observed) if observed != start => {}
+                _ => return false,
+            }
+        }
+        true
     }
 
     fn chain_len(nodes: &[ProcessNode], pid: u32, start: i64) -> usize {
@@ -922,6 +938,85 @@ mod tests {
             .expect("exit dedup");
         assert!(!has_event(&fourth, PROCESS_EXITED, pid, start));
         assert!(!has_event(&fourth, PROCESS_STARTED, pid, start));
+    }
+
+    #[test]
+    fn unreadable_or_truncated_sample_is_not_an_exit() {
+        let start = 10;
+        let visible = fixed_sample(vec![fixed_row(40, Some(start))], false);
+        let unreadable = fixed_sample(vec![fixed_row(40, None)], false);
+        let zero_start = fixed_sample(vec![fixed_row(40, Some(0))], false);
+        let truncated = fixed_sample(Vec::new(), true);
+        let replaced = fixed_sample(vec![fixed_row(40, Some(start + 1))], false);
+        let gone = fixed_sample(Vec::new(), false);
+        assert!(!tracked_instance_left(&visible, 40, start));
+        assert!(!tracked_instance_left(&unreadable, 40, start));
+        assert!(!tracked_instance_left(&zero_start, 40, start));
+        assert!(!tracked_instance_left(&truncated, 40, start));
+        assert!(tracked_instance_left(&replaced, 40, start));
+        assert!(tracked_instance_left(&gone, 40, start));
+
+        let mut tracker = ProcessTracker::new();
+        let started = tracker.observe(&visible).expect("start");
+        assert!(has_event(&started, PROCESS_STARTED, 40, start));
+        for sample in [&unreadable, &zero_start, &truncated] {
+            let events = tracker.observe(sample).expect("not an exit");
+            assert!(!has_event(&events, PROCESS_EXITED, 40, start));
+            assert!(
+                tracker
+                    .tree()
+                    .iter()
+                    .any(|node| node.pid == 40 && node.start_unix_ns == start)
+            );
+        }
+        let exited = tracker.observe(&gone).expect("exit");
+        assert_eq!(
+            exited
+                .iter()
+                .filter(|event| event_type(event) == Some(PROCESS_EXITED)
+                    && identity(event) == Some((40, start)))
+                .count(),
+            1
+        );
+        assert!(
+            tracker
+                .tree()
+                .iter()
+                .all(|node| node.pid != 40 || node.start_unix_ns != start)
+        );
+    }
+
+    fn fixed_row(pid: u32, start: Option<i64>) -> winstrata_kernel::ProcessRow {
+        winstrata_kernel::ProcessRow {
+            pid,
+            parent_pid: 0,
+            start_unix_ns: start,
+            name: format!("pid-{pid}"),
+            image: None,
+            threads: Vec::new(),
+            modules: Vec::new(),
+            modules_truncated: false,
+            threads_truncated: false,
+            limited: start.is_none_or(|value| value <= 0),
+        }
+    }
+
+    fn fixed_sample(
+        processes: Vec<winstrata_kernel::ProcessRow>,
+        processes_truncated: bool,
+    ) -> winstrata_kernel::SystemSnapshot {
+        winstrata_kernel::SystemSnapshot {
+            device: "device".to_owned(),
+            boot: "boot".to_owned(),
+            sampled_unix_ns: 50,
+            precision_ns: None,
+            processes,
+            services: Vec::new(),
+            processes_truncated,
+            services_truncated: false,
+            services_unavailable: false,
+            evidence: "toolhelp",
+        }
     }
 
     #[test]
