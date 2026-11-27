@@ -1,0 +1,58 @@
+# Platform feasibility
+
+[简体中文](../zh-CN/architecture/PLATFORM_FEASIBILITY.md) · [Plan 004](../roadmap/PLAN.md#pr-004) · [Engineering record](../records/STATUS.md)
+
+## Native observation and runtime boundaries
+
+The Windows probe reads the OS edition and build through CIM and up to eight recent System records through the Windows Event Log reader. It checks that each record has an identity and a timestamp. For event records the probe logs only counts and elapsed time. On an x64 Windows Server 2022 Datacenter runner, build 20348, the process held an administrator token. Eight records passed in 98 ms. Ordinary-user access, continuous subscriptions, event loss and Windows 10/11 client editions need separate runs. Event Log and CIM are candidates for history and inventory. High-rate ETW, packet capture and kernel callbacks have different coverage and costs. [Windows run](https://github.com/zemeng5208/winstrata/actions/runs/45965865720) · [Windows Event Log](https://learn.microsoft.com/en-us/windows/win32/wes/windows-event-log)
+
+With one live child assigned to a Windows Job Object capped at one process, Windows rejected assignment of a second child with error 1816. Raising the limit to two admitted a fresh control process. Closing the last handle terminated both admitted children within the test timeout. The exercise took 27 ms on the same runner. Job Objects are a candidate for lifecycle and quotas. File access requires an independent security boundary. [Windows run](https://github.com/zemeng5208/winstrata/actions/runs/45965865720) · [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) · [AppContainer isolation](https://learn.microsoft.com/en-us/windows/win32/secauthz/appcontainer-isolation)
+
+On the same Windows edition, the probe creates a per-user temporary AppContainer with zero extra capabilities. Before each read-only child runs, the parent verifies its token's package SID. An always-granted control file was readable. Three fresh opens on the same synthetic target returned Win32 5 (access denied), 0 (granted and contents verified), then 5 (access denied after revocation). Initial launches with a hand-built environment returned 203. The OS-built user environment fixed launch. A general-purpose comparison utility then returned 2 even for the positive control. The image's installed Microsoft x64 C compiler built a fixture reader that directly checked open, read, contents and Win32 errors. The probe cleans up its fixtures and profile. Revocation of already-open handles, network access, the registry and hosting full Python/Node runtimes remain unverified. [AppContainer run](https://github.com/zemeng5208/winstrata/actions/runs/45967512493)
+
+On Linux x64, each of two temporary plugins received a separate `python -m venv --without-pip`, a same-named private module in its own site-packages, and a fresh `python -I` process. Node 24.22.3 ran a .mjs and a typed .mts entry for each plugin with its own same-named ESM dependency in node_modules. All six processes loaded their own module, and only the first plugin resolved an extra package by name. Each process exited and the temporary environments were removed. This covers dependency lookup. Absolute file access, network, system APIs and cross-user access still require product-level OS enforcement.
+
+## Local MCP
+
+The diagnostic starts a separate Node process over stdin/stdout, discovers the supported revision and supplies version metadata on each request, and checks JSON-RPC IDs, one progress notification and a tool returning the actual child PID. It exercises missing and unsupported version metadata, a denied call, a scoped grant, revocation, and clean shutdown on EOF. The test owns its synthetic grant file. The production service still needs a trusted grant store, verified process identity, cross-user denial, audit and resource budgets. A reported PID alone cannot establish identity. Loopback would also need authentication independent of the listening address. [Current stdio transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio) · [Discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)
+
+The two-process test passed on Linux with Node 24.22.3. Three requests, three responses and one notification also validated against the pinned official JSON Schema. An independent interoperability run used the host's existing official Python MCP SDK 1.29.0. After that version rejected modern discovery, legacy 2025-11-25 initialize and the initialized notification allowed listing, calling and verifying the PID tool and closing the pipe cleanly. Evaluate the official Rust rmcp stdio support, async runtime and serialization dependencies before selecting a version, license and dependency tree. [Official schema](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/024d5255eb4466ba4fab21e044b5ba84d6a79327/schema/2026-07-28/schema.json) · [Rust SDK candidate](https://github.com/modelcontextprotocol/rust-sdk/releases/tag/rmcp-v3.12.0)
+
+## GUI sources and licensing
+
+The owner authorized these exact revisions and their upstream-locked build dependencies for temporary component trials on 2026-11-27. The project workspace has no added product packages. Each revision contains an MIT license. Preserve its copyright and check the selected dependency closure before distribution.
+
+| Source and inspected revision | Reuse candidate and integration cost |
+|---|---|
+| [Amicro 1.0.1](https://github.com/Subhan-code/Amicro--Micro-transitions-/tree/fa5f8ffbe39537a8db191806066b8773c47c82e9) | The registry's FadeIn renders a React/Motion opacity transition. Select individual transitions and wire user motion preferences and application state. The full demo includes payments and analytics outside this use case. |
+| [Glasswork 1.1.0](https://github.com/kubai087/glasswork/tree/4f0b6744b898b3a9b98fbd913ab24fdb83c53162) | The standalone glass.css and lens.js supply the material for an accessible native button. The SVG displacement map and filters need visible-area and teardown measurements. The NOTICE excludes Apple wallpapers and videos from the code license. Omit demo media, remote photos and playground dependencies. [NOTICE](https://github.com/kubai087/glasswork/blob/4f0b6744b898b3a9b98fbd913ab24fdb83c53162/NOTICE) |
+| [shadcn-admin 2.2.1](https://github.com/satnaing/shadcn-admin/tree/a156d9b90519348c4d71f0f0e6fcea179c49a43f) | Main supplies fixed/fluid and responsive content layout. The full shell also uses providers, a sidebar, TanStack Router and Tailwind. Adopt selected layout components with a shared WinStrata theme controller. Demo authentication, sample data and cookie-based light/dark/system preferences need separate treatment. |
+
+An offline synthetic button in embedded WebView2 131.0.2903.86 on Server 2022 used the installed Microsoft SDK/loader 1.0.1661.34. Controller creation took 6,249 ms. The visible page delivered 30 animation intervals with median 15.6 ms and p95 16.7 ms. Computed backdrop blur was 6 px and the final horizontal offset was 30 px. These are single-run measurements for the diagnostic host. Product startup, CPU, GPU, I/O and full-theme budgets need measurements with the actual desktop application. [WebView2 run](https://github.com/zemeng5208/winstrata/actions/runs/45965942453)
+
+In Linux Chromium 156 the offline page passed six checks on three fresh loads. The Amicro transition took 653.7–664.9 ms including the configured duration and delay, Glasswork filter setup took 65.1–65.5 ms and mounting the shadcn-admin Main layout took 10.6–13.0 ms. Main was checked as the named container resized from 1,440 to 640 px and switched to fluid layout. Each run collected 30 frame intervals, p95 16.7–16.8 ms. The builder retrieves selected files at immutable upstream revisions and checks required npm archives against upstream lockfile SHA-512 digests. An intentionally changed digest was rejected. The temporary build holds the two independent locked React versions and their license notices. Upstream demo media, distribution bundles and install scripts stay out of the product workspace.
+
+After correcting missing Git blobs in the Windows checkout, the builder verified the selected raw files against their pinned Git objects. The real components then passed all six checks offline in embedded WebView2 131.0.2903.86. Thirty frame intervals had a median of 15.6 ms and p95 of 15.7 ms. The measured transition took 661.4 ms, glass filter setup 78.6 ms and Main layout mount 9.2 ms. The component host started in 271 ms after the synthetic host had warmed the runtime. A fresh Linux checkout and build also passed on three loads, including one run with a frame p95 of 33.2 ms. [Windows component and MCP results](https://github.com/zemeng5208/winstrata/actions/runs/45966969310)
+
+## Reproduction
+
+From the repository root on x64 Linux or Windows, use approved Node 24.22.3 and an empty output directory. The build contacts the specified upstreams, then the resulting page can run offline.
+
+```sh
+node --test --test-isolation=none .github/scripts/pr004-mcp.test.mjs
+node .github/scripts/pr004-ui-build.mjs target/pr004-components
+```
+
+Run the following from a 64-bit Windows PowerShell 5.1 STA process. The WebView2 host uses signature-checked Microsoft assemblies and loader already installed on the image and maps a local-only virtual host to the component output. The AppContainer probe creates and removes a per-user disposable profile and synthetic fixtures.
+
+```powershell
+.\.github\scripts\pr004-windows.ps1
+.\.github\scripts\pr004-appcontainer.ps1
+.\.github\scripts\pr004-webview.ps1 -AssetDirectory target/pr004-components
+```
+
+## Selection and acceptance
+
+Prefer small reusable surfaces from the three named sources. Keep their research bundles and assets outside the deliverable. Keep the development server disabled in trials. Known Vite advisories affect upstream-locked development tooling and need a fresh review before selecting a production toolchain. Compare integration and maintenance costs with the approved [frontend boundaries](FRONTEND.md#section-9). [Vite advisory](https://github.com/advisories/GHSA-587h-7wmj-h5pm)
+
+Candidate directions are built-in Windows observation, AppContainer file mediation with Job Object quotas, stdio for a locally launched peer and selected frontend components. Adopting a production runtime, IPC contract, library or frontend version requires owner selection. Windows 10 and 11 x64, unattended mixed-runtime isolation, long-running performance and the fully integrated product remain open. Phase 0 closes only after the owner reviews the remaining risks and effective merge gates.

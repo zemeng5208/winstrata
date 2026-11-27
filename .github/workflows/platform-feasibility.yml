@@ -2,7 +2,10 @@ name: Windows feasibility
 
 on:
   push:
-    branches: [pr/004-platform-feasibility]
+    branches: [pr/004-platform-feasibility, main]
+    paths:
+      - .github/scripts/pr004-*
+      - .github/workflows/platform-feasibility.yml
   pull_request:
     branches: [main]
     paths:

@@ -9,6 +9,7 @@
 - [系统架构与工程布局](architecture/SYSTEM.md)
 - [开发工具链](architecture/DEVELOPMENT_TOOLCHAIN.md)
 - [Windows x64 交叉构建探针](architecture/WINDOWS_CROSS_BUILD.md)
+- [平台可行性验证](architecture/PLATFORM_FEASIBILITY.md)
 - [扩展、MCP 与救援](architecture/EXTENSIONS.md)
 - [网络与数据策略](architecture/DATA.md)
 - [前端设计与主题](architecture/FRONTEND.md)
