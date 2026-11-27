@@ -93,8 +93,8 @@
 | REQ-28.01 | 集中工具链、锁文件及项目依赖解析 | [SYSTEM](../architecture/SYSTEM.md#section-11) | [001](PLAN.md#pr-001) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | Linux 已核验工作区版本及路径。 |
 | REQ-28.02 | 集中配置、迁移与敏感项管理 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-40) | [001](PLAN.md#pr-001), [006](PLAN.md#pr-006) | [01](ACCEPTANCE.md#e2e-01), [16](ACCEPTANCE.md#e2e-16) | 工具链配置已建立，运行配置规划中。 |
 | REQ-28.03 | 统一开发入口并验证仓库洁净度 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-19) | [001](PLAN.md#pr-001), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 开发入口和忽略规则已验证，自动门禁规划中。 |
-| REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
+| REQ-29.01 | 保护 main，经 PR 由所有者审核且按序合并 | [GIT_AND_PR](../standards/GIT_AND_PR.md#section-13) | [000](PLAN.md#pr-000), [002](PLAN.md#pr-002) | [16](ACCEPTANCE.md#e2e-16) | 已核验 main 原生保护。PR 002 检查待激活。 |
+| REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 策略与工作区检查本地已验证，托管强制执行待验证。 |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-30.02 | 逐项追踪需求、25 个插件和 61 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |

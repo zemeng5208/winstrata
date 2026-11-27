@@ -14,6 +14,7 @@
 - [开发规范](standards/DEVELOPMENT.md)
 - [架构规范](standards/ARCHITECTURE.md)
 - [Git、PR 与门禁](standards/GIT_AND_PR.md)
+- [CI 与合并门禁](architecture/MERGE_GATES.md)
 - [测试规范](standards/TESTING.md)
 - [安全工程](standards/SECURITY.md)
 - [文档与记录](standards/DOCUMENTATION.md)

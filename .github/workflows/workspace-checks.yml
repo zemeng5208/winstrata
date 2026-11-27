@@ -1,0 +1,33 @@
+name: WinStrata CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: workspace-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    name: Workspace checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Fetch the exact GitHub candidate
+        shell: bash
+        run: |
+          git init --quiet
+          git fetch --depth=2 --no-tags "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Install the pinned toolchain
+        shell: bash
+        run: bash .github/scripts/install-ci-toolchain.sh
+      - name: Verify the workspace
+        shell: bash
+        run: bash .github/scripts/check-workspace.sh

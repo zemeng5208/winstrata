@@ -15,8 +15,9 @@
 | 工作 | 状态 | 证据与下一步 |
 |---|---|---|
 | PR 000 | 已验收 | 所有者合并 [GitHub PR #1](https://github.com/zemeng5208/winstrata/pull/1)，提交为 `c3e8abf07895edbdd1f84792dbab5c48b00c25e8`。核验 main 与送审文件树一致，分支保护生效。 |
-| PR 001 | 待所有者审核 | [开发工具链](../architecture/DEVELOPMENT_TOOLCHAIN.md)，Linux 证据见下文。申请在 PR 000 后合并。 |
-| PR 002–050 | 规划中 | 依获批路线图及前置条件实施门禁、可行性、功能和验收。 |
+| PR 001 | 已验收 | 所有者合并 [GitHub PR #2](https://github.com/zemeng5208/winstrata/pull/2)，提交为 `e0a3bbf2ec8c6b3f322d3f0379e47618fd129c3c`。合并后的文件树与送审分支一致，Linux 的环境检查、构建和验证通过。 |
+| PR 002 | 待所有者审核 | [CI 与合并门禁](../architecture/MERGE_GATES.md)。核对 PR 检查结果，按文档顺序激活强制检查。 |
+| PR 003–050 | 规划中 | 依获批路线图及前置条件实施门禁、可行性、功能和验收。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 运行及性能均待验证；相关工作提交时更新需求及模块证据。 |
 
 ## PR 000 验证
@@ -28,6 +29,10 @@
 在 Linux x86_64 环境，用 Rust 与 Cargo 1.100.0、GCC 14.2、Node.js 24.22.3 和 pnpm 11.25.0 运行 `cargo dev doctor`、`cargo dev init`、`cargo dev build` 和 `cargo dev verify` 均成功。Cargo 实际编译了开发工具。本阶段测试框架报告 0 个单元测试，另已直接执行开发工具和包管理流程。
 
 分别从命令搜索路径移除 Node.js 与 pnpm 时，预检以状态码 1 退出并指出缺失工具。将干净源码副本移动到名称包含空格的目录后，从 Rust crate 子目录运行命令，确认使用迁移后的 Cargo 工作区、构建目录和 pnpm 存储。复用了外部宿主工具链。Windows 宿主执行待验证。Git 忽略检查覆盖 Rust 构建产物、pnpm 安装目录与工作区本地缓存。
+
+## PR 002 验证
+
+在 Linux x86_64，CI 初始化验证了官方 Node 发行包的校验和，安装了固定版本的 pnpm，并加载已批准的 Rust 工具链。7 项 Node 测试覆盖合并顺序、缺陷阻断、所有者确认绑定精确提交，以及测试合并与当前基线校验。本地状态适配测试核对结果与 GitHub Actions 检查记录在同一头提交。工作区脚本执行了策略测试与已批准的开发命令。现有 Protect main 规则生效。托管运行结果和规则激活状态通过 PR 和有效规则核验。
 
 ## 决策与技术假设
 
@@ -48,4 +53,4 @@
 | ERR-001 | 所有者配置后已解决 | 集成创建规则集返回 403。所有者保存保护规则，随后查询分支、规则集及有效规则已确认启用。集成仍缺设置权限。 |
 | ERR-002 | Linux 工作区已解决 | PR 001 预检发现 PATH 缺少 Rust 与 Cargo。验证 Rustup 安装器校验和后，将已批准的官方工具链安装至项目的忽略目录。工具版本与真实构建均通过验证。 |
 
-沿用 `pr/001-development-toolchain` 和已核验的 PR 000 合并提交。由所有者审核并合并 PR 001。合并后拉取及核验 main，再启动 PR 002。后续记录使用[统一记录字段](../standards/DOCUMENTATION.md#section-12)。
+沿用 `pr/002-merge-gates` 和已核验的 PR 001 合并提交。由所有者审核并合并 PR 002。检查有效规则，并在下一合格候选合并前激活从主分支执行的策略状态。后续记录使用[统一记录字段](../standards/DOCUMENTATION.md#section-12)。
