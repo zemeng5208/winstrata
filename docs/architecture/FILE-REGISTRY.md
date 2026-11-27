@@ -1,6 +1,6 @@
 # File and registry collection
 
-[简体中文](../zh-CN/architecture/FILE-REGISTRY.md) · [Session](../../kernel/src/file_registry.rs) · [Publisher](../../core/src/file_registry/mod.rs) · [Plan 009](../roadmap/PLAN.md#pr-009)
+[简体中文](../zh-CN/architecture/FILE-REGISTRY.md) · [Session](../../kernel/src/file_registry.rs) · [Publisher](../../core/src/file_registry/mod.rs) · [Plan 009](../roadmap/PLAN.md#pr-009) · [Trace plugin](TRACE.md)
 
 Plan 009 observes one chosen directory and one `HKEY_CURRENT_USER` subkey. The watches run in the ordinary user process through Windows APIs already linked by `windows-sys` 0.61.2. `CatalogHost` still returns `image_absent` and does not load `strata-fs.sys` or `strata-reg.sys`. Process and network collection remain PR 010 and PR 011. The service IPC from PR 008 is unchanged and is not the path that starts these watches.
 
@@ -20,7 +20,7 @@ The registry thread opens one subkey with `RegOpenKeyExW` and arms `RegNotifyCha
 
 The startup signal is sent only after the first read or notify is pending. The caller waits up to 2 seconds. If the registry notify is already signaled between the baseline snapshot and the first arm, the thread publishes one `lost` gap and takes a new snapshot. Those values cannot be attributed one by one. A later `lost` gap does not stop the watch. A hard read, arm, or snapshot failure publishes `source_failure`, records the health error, and exits the thread. `FileRegistry::view` and `subscribe` move a ready channel to failed when that health is set. `release` does not, so a failed thread can still be stopped.
 
-Win32 `ERROR_NOTIFY_ENUM_DIR` (1022) and a successful read of zero bytes are `lost` gaps with no range. `ERROR_OPERATION_ABORTED` (995) is cancellation. The unit test covers that classification. This plan does not force a live overflow of the 16 KiB buffer. Plan 019 records the plugin's current-user and local-machine before/after attribution in [Registry plugin](REGISTRY.md). Plan 009 still watches one HKCU subkey.
+Win32 `ERROR_NOTIFY_ENUM_DIR` (1022) and a successful read of zero bytes are `lost` gaps with no range. `ERROR_OPERATION_ABORTED` (995) is cancellation. The unit test covers that classification. This plan does not force a live overflow of the 16 KiB buffer. Plan 019 records the plugin's current-user and local-machine before/after attribution in [Registry plugin](REGISTRY.md). Plan 009 still watches one HKCU subkey. The file plugin is plan 021 and is described in [Trace plugin](TRACE.md). Plan 009 behavior is unchanged. Plan 021 adds `windows_file_watch_overflow_records_a_lost_gap` beside the existing file-watch test. The production buffer stays 16 KiB. That test was not executed on the plan 021 authoring host.
 
 ## Protocol fields
 
@@ -32,4 +32,4 @@ A registry subject is `HKCU\{subkey}\{name}`. The user is the current process id
 
 ## Limits that remain
 
-No signed driver was loaded or unloaded. Secure Boot and HVCI were not exercised. Windows 10 and Windows 11 clients were not tested by this change. The Windows tests are compiled for `x86_64-pc-windows-msvc` and run in the Windows workspace job. That job is Windows Server 2022. E2E-02 still requires the GUI query over a chosen disk, other users, and the broader file and registry scenario. Plan 019 records user-mode before/after plugin attribution. The file plugin remains PR 021.
+No signed driver was loaded or unloaded. Secure Boot and HVCI were not exercised. Windows 10 and Windows 11 clients were not tested by this change. The Windows tests are compiled for `x86_64-pc-windows-msvc` and run in the Windows workspace job. That job is Windows Server 2022. E2E-02 still requires the GUI query over a chosen disk, other users, and the broader file and registry scenario. Plan 019 records user-mode before/after plugin attribution. The file plugin is plan 021 and is described in [Trace plugin](TRACE.md). Plan 009 behavior is unchanged. `windows_file_watch_overflow_records_a_lost_gap` was not executed on the plan 021 authoring host.

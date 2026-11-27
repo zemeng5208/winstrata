@@ -271,12 +271,12 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
 - Current state: partly tested
-- Reason it is incomplete: plan 019 records user-mode before/after values for current-user and local-machine keys. `precision_ns` and the acting process are still omitted. A signed registry callback was not loaded. Plan 021 still owns the file side.
+- Reason it is incomplete: plan 021 records user-mode file metadata before and after: size, a permission-changed flag, and SDDL only when it fits an identifier. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution. Linux can test the grammar. The Windows file watch has not been run on the authoring host.
 - Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows file watch or a later approved kernel callback
 - Acceptance criteria: plan 021 tests its before/after attribution, or the omitted fields stay documented
-- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution.
+- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution. The Windows workspace job is the follow-up that must record the live result before close.
 
 <a id="oi-017"></a>
 
@@ -299,12 +299,12 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: plan 009 file-watch behavior
 - Source PR: plan 009. A live overflow of the 16 KiB file buffer was not forced.
 - Current state: untested
-- Reason it is incomplete: the overflow path was not driven
+- Reason it is incomplete: `windows_file_watch_overflow_records_a_lost_gap` is in the Windows file-watch suite and tries to force the plan 009 16 KiB overflow. The production buffer stays 16 KiB. This Linux host did not run that test. Not marked passed.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows file watch with a change larger than the 16 KiB buffer
 - Acceptance criteria: the test forces the overflow and records the gap behavior
-- Close conditions: that result is recorded. Not marked passed.
+- Close conditions: close only after that Windows result is recorded. Not marked passed.
 
 <a id="oi-019"></a>
 
@@ -565,7 +565,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [E2E-02](../roadmap/ACCEPTANCE.md#e2e-02)
 - Source PR: plans 009 and 010 record that E2E-02 was not run
 - Current state: not done
-- Reason it is incomplete: plan 020 watches user and system environment and PATH. This scenario still needs the GUI query, files, other users, and a chosen disk. That run was not done.
+- Reason it is incomplete: plan 020 watches user and system environment and PATH. Plan 021 adds the file plugin and an exact-path history projection. This scenario still needs the GUI query, a chosen disk, and other users. That run was not done. Not marked passed.
 - Responsible PR: 021
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with a chosen disk and test keys
