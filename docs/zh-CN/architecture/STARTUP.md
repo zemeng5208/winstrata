@@ -43,4 +43,4 @@ Linux 的覆盖范围是主机文件。它不是 Windows 启动项。采集器�
 
 ## 仍保留的限制
 
-这台 Linux 编写主机没有观察到 Windows 的 Run 键、启动文件夹、`StartupApproved`、快捷方式本地路径和任务计划程序。该缺口是 [OI-044](../../records/OPEN_ITEMS.md#oi-044)。通过 Linux 自启动和 timer 测试不能关闭它。Windows Server 2022 不是 Windows 10 或 Windows 11（[OI-001](../../records/OPEN_ITEMS.md#oi-001)）。E2E-03 和 E2E-14 未完成。服务控制管理器观测仍属于 [OI-043](../../records/OPEN_ITEMS.md#oi-043)。[ERR-021](../../records/modules/strata-services.md#err-021) 仍留在服务登记中。本计划不复测它，也不关闭它。
+这台 Linux 编写主机没有观察到 Windows 的 Run 键、启动文件夹、`StartupApproved`、快捷方式本地路径和任务计划程序。该缺口是 [OI-049](../../records/OPEN_ITEMS.md#oi-049)。通过 Linux 自启动和 timer 测试不能关闭它。Windows Server 2022 不是 Windows 10 或 Windows 11（[OI-001](../../records/OPEN_ITEMS.md#oi-001)）。E2E-03 和 E2E-14 未完成。服务控制管理器观测仍属于 [OI-043](../../records/OPEN_ITEMS.md#oi-043)。[ERR-021](../../records/modules/strata-services.md#err-021) 仍留在服务登记中。本计划不复测它，也不关闭它。

@@ -52,7 +52,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-038](#oi-038) | Pending decision | Owner |
 | [OI-039](#oi-039) | Untested on the authoring host | 020 |
 | [OI-043](#oi-043) | Untested | 022 |
-| [OI-044](#oi-044) | Untested on the authoring host | 023 |
+| [OI-049](#oi-049) | Untested on the authoring host | 023 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -840,14 +840,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Acceptance criteria: the Windows job observes at least one driver, an access-denied enumeration, creation, a start-type change, a failed start of the missing-image probe, and deletion of `WinStrata022Probe`, and records `service.stopped` only when a non-stopped state actually becomes stopped
 - Close conditions: that job's log is written into [STATUS.md](STATUS.md). Not closed by the Linux tracker test. Not closed by marking E2E-03 or E2E-14 passed. Not a substitute for Windows 10/11.
 
-<a id="oi-044"></a>
+<a id="oi-049"></a>
 
-## OI-044
+## OI-049
 
 - Related requirement: [REQ-06.04](../roadmap/REQUIREMENTS.md), [E2E-03](../roadmap/ACCEPTANCE.md#e2e-03), and [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - Source PR: plan 023
 - Current state: untested on the authoring host
-- Reason it is incomplete: This Linux authoring host cannot open Windows Run keys, startup folders, StartupApproved, shortcut local paths, or the Task Scheduler. Pid 1 is tini. The Linux test `linux_autostart_and_timer_changes_keep_attribution_across_restart` wrote one user autostart desktop file and one user timer, recorded `startup.added` and `task.added`, changed the command, reloaded `inventory.json` after disable, and recorded `startup.changed` with `before=` without a second baseline. That test does not observe Windows startup. The Windows probe `windows_run_folder_link_and_task_changes_are_attributed` was type-checked for `x86_64-pc-windows-msvc` and was not executed here. This item is OI-044. OI-039 remains plan 020. OI-040, OI-041, and OI-042 are used on other open plans. OI-043 and [ERR-021](modules/strata-services.md#err-021) stay with plan 022.
+- Reason it is incomplete: This Linux authoring host cannot open Windows Run keys, startup folders, StartupApproved, shortcut local paths, or the Task Scheduler. Pid 1 is tini. The Linux test `linux_autostart_and_timer_changes_keep_attribution_across_restart` wrote one user autostart desktop file and one user timer, recorded `startup.added` and `task.added`, changed the command, reloaded `inventory.json` after disable, and recorded `startup.changed` with `before=` without a second baseline. That test does not observe Windows startup. The Windows probe `windows_run_folder_link_and_task_changes_are_attributed` was type-checked for `x86_64-pc-windows-msvc` and was not executed here. This item is OI-049. Before this commit, main `6eebc2ab3dcfa0dc975e3cbae3c6c1fedec0b471` held OI-039 and OI-043. PR #34 head `d90fb398e8d700e814e19f7737417f0336a988be` held OI-044 and OI-045. PR #33 head `e4f2eb637f7d575167ee587629999d81fa6dd0eb` held OI-046. PR #32 head `55240ac57d1108e6aea58f23c9fc52288219ed32` held OI-047 and OI-048. OI-043 and [ERR-021](modules/strata-services.md#err-021) stay with plan 022.
 - Responsible PR: 023 for recording the Windows workspace job. E2E-03 and E2E-14 stay open.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows workspace job, Windows Server 2022, running `cargo test --locked --workspace`, including `windows_run_folder_link_and_task_changes_are_attributed`. Windows 10 and Windows 11 clients stay [OI-001](#oi-001).

@@ -52,7 +52,7 @@
 | [OI-038](#oi-038) | 待决定 | 所有者 |
 | [OI-039](#oi-039) | 编写主机未测试 | 020 |
 | [OI-043](#oi-043) | 未测试 | 022 |
-| [OI-044](#oi-044) | 编写主机上未测试 | 023 |
+| [OI-049](#oi-049) | 编写主机上未测试 | 023 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -840,14 +840,14 @@
 - 验收标准: Windows 作业至少观察到一个驱动、一次拒绝访问的枚举、创建、一次启动类型变更、缺失映像探测的启动失败，以及删除 `WinStrata022Probe`，并且只在非停止状态实际变为停止时记录 `service.stopped`
 - 关闭条件: 该作业的日志写入 [STATUS.md](STATUS.md)。Linux 跟踪测试不能关闭它。把 E2E-03 或 E2E-14 标成通过不能关闭它。它不能代替 Windows 10/11。
 
-<a id="oi-044"></a>
+<a id="oi-049"></a>
 
-## OI-044
+## OI-049
 
 - 关联需求: [REQ-06.04](../roadmap/REQUIREMENTS.md)、[E2E-03](../roadmap/ACCEPTANCE.md#e2e-03) 和 [E2E-14](../roadmap/ACCEPTANCE.md#e2e-14)
 - 来源 PR: 计划 023
 - 当前状态: 编写主机上未测试
-- 未完成原因: 这台 Linux 编写主机打不开 Windows 的 Run 键、启动文件夹、StartupApproved、快捷方式本地路径或任务计划程序。pid 1 是 tini。Linux 测试 `linux_autostart_and_timer_changes_keep_attribution_across_restart` 写入了一个用户自启动 desktop 文件和一个用户 timer，记录了 `startup.added` 和 `task.added`，改了命令，禁用后重新加载 `inventory.json`，并记录了带 `before=` 的 `startup.changed`，且没有第二次基线。该测试没有观察 Windows 启动项。Windows 探测 `windows_run_folder_link_and_task_changes_are_attributed` 已对 `x86_64-pc-windows-msvc` 做类型检查，没有在这里执行。本项是 OI-044。OI-039 仍属于计划 020。OI-040、OI-041 和 OI-042 被其他未合并计划占用。OI-043 和 [ERR-021](modules/strata-services.md#err-021) 仍属于计划 022。
+- 未完成原因: 这台 Linux 编写主机打不开 Windows 的 Run 键、启动文件夹、StartupApproved、快捷方式本地路径或任务计划程序。pid 1 是 tini。Linux 测试 `linux_autostart_and_timer_changes_keep_attribution_across_restart` 写入了一个用户自启动 desktop 文件和一个用户 timer，记录了 `startup.added` 和 `task.added`，改了命令，禁用后重新加载 `inventory.json`，并记录了带 `before=` 的 `startup.changed`，且没有第二次基线。该测试没有观察 Windows 启动项。Windows 探测 `windows_run_folder_link_and_task_changes_are_attributed` 已对 `x86_64-pc-windows-msvc` 做类型检查，没有在这里执行。本项是 OI-049。本次提交前，main `6eebc2ab3dcfa0dc975e3cbae3c6c1fedec0b471` 占用 OI-039 和 OI-043。PR #34 头 `d90fb398e8d700e814e19f7737417f0336a988be` 占用 OI-044 和 OI-045。PR #33 头 `e4f2eb637f7d575167ee587629999d81fa6dd0eb` 占用 OI-046。PR #32 头 `55240ac57d1108e6aea58f23c9fc52288219ed32` 占用 OI-047 和 OI-048。OI-043 和 [ERR-021](modules/strata-services.md#err-021) 仍属于计划 022。
 - 负责 PR: 023 负责把 Windows 工作区作业记入记录。E2E-03 和 E2E-14 保持开放。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows 工作区作业，Windows Server 2022，运行 `cargo test --locked --workspace`，包括 `windows_run_folder_link_and_task_changes_are_attributed`。Windows 10 和 Windows 11 客户端仍属于 [OI-001](#oi-001)。
