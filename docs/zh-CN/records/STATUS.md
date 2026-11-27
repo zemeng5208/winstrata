@@ -35,8 +35,9 @@ STATUS.md 是进度和决策记录。它不是未验收事项登记，也不是�
 | PR 014 | 已合并，验收仍有待项 | 所有者将 GitHub PR #20 合并为 `0accacbaa2dac43db3845cc8c08f23b4e831c413`。父提交是 `3deab7c21b3a6f3f0bcb72360f65fe2417bd6637` 和 `6744e0e0fbdc222fbea19851db5f5e2ed5e8cf25`。这份规范记录不附加 CI 地址，也不关闭 E2E-06。较早的审查头 `8778b09a853b18816517186e94aeb33e7b272869` 通过了 Linux 和已发布的 `winstrata/merge-policy` 状态，随后 Windows 插件生命周期测试因共享冲突失败。合并后的树保留已经固定的插件目录。 |
 | PR 053 | 已合并 | 所有者将 [GitHub PR #24](https://github.com/zemeng5208/winstrata/pull/24) 合并为 `90601459c3662a586cc335c234315d54b20422be`。仅规范。它紧接在 014 之后，直接前置是 014。015 和 016 的直接依赖格未改。 |
 | PR 015 | 已合并，验收仍有待项 | 所有者于 2026-11-27T18:50:26Z 将 [GitHub PR #22](https://github.com/zemeng5208/winstrata/pull/22) 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。审查头 `13483c1eb7750795bf042a1d12e00cdb51f34d8c` 通过了 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 状态。E2E-06、E2E-07 和 E2E-12 仍开放。 |
-| PR 016 | 待审查 | `apps/desktop` 和 `packages/ui` 上的官方默认 GUI。已关闭的 PR #21 和 `pr/016-desktop-gui` 不是这个分支。计划 017 没有开始。E2E-11、E2E-17、E2E-18 和 E2E-19 没有关闭。 |
-| PR 017–050 | 规划中 | 计划 017 等待 016。本次变更不开始它。 |
+| PR 016 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。已关闭的 PR #21 和 `pr/016-desktop-gui` 不是那个分支。E2E-11、E2E-17、E2E-18 和 E2E-19 没有关闭。 |
+| PR 017 | 待审查 | 官方外壳上的引导、模式和范围。分支 `pr/017-onboarding-modes`。它从上面的计划 016 合并提交开始。E2E-01 和 E2E-11 没有关闭。 |
+| PR 018–050 | 规划中 | 本次变更不开始它们。 |
 | Core 与 PL-01 至 PL-25 | 仅目录 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。计划 009 增加用户态文件和注册表监视。计划 010 采样进程、线程和模块，不加载驱动。计划 011 增加用户态网络观测和选择性报文留存。计划 012 已在 Linux 验证混合存储的写入、查询、分段、索引、容量和损坏回退。计划 013 已在 Linux 验证口令、锁定、加密、备份、恢复和跨位置迁移。计划 052 等待完整采样，并且仍然要求那次退出。计划 014 保留 25 个官方身份，并以独立进程运行原生第三方包。它们的采集实现仍属于计划 018–047。 |
 
 ## PR 000 验证
@@ -288,6 +289,14 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。
 
+## PR 017 验证
+
+计划 017 从 main `ad10523d81870d106eeef553a426beeb250e94ff` 开始，即 GitHub PR #25 的合并。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。分支是 `pr/017-onboarding-modes`。它不复用已关闭的 PR #21 或 `pr/016-desktop-gui`。路线图顺序仍是 016，然后 017，然后 018。`PLAN.md` 未改。
+
+在 Linux x86_64、Rust 1.100.0 上，`WINSTRATA_NODE` 指向 Node.js 24.22.3。`cargo build --locked --workspace` 之后，`RUSTFLAGS="-Dwarnings" cargo test --locked --workspace` 通过了 66 个 Core 测试、23 个内核测试、14 个协议库测试、2 个协议集成测试、3 个语言测试、5 个运行时生命周期测试、7 个服务测试和 5 个桌面测试。新增的桌面测试通过环回桥执行位置、启用选择、范围、保留期限、登录启动、加密、基线、实时、暂停、继续和历史。缺失的父目录不会被替换。救援不进入批量选择。插件保持未启用。暂停、历史和丢失保持可区分。这台主机没有服务端点，驱动记录是 `not_configured`。Node.js 24.22.3 上的 `node --test .github/scripts/merge-policy.test.mjs` 通过 9 项测试。本机默认 `node` 是 v22.23.4，因此没有运行 `cargo dev doctor`。`RUSTFLAGS="-Dwarnings" cargo check --locked --tests --target x86_64-pc-windows-msvc -p winstrata-core -p winstrata-desktop` 对 Windows 文件监视和窗口停止路径做了类型检查。这些 Windows 测试没有执行。没有运行普通用户的 Windows GUI 会话。E2E-01 和 E2E-11 未完成。没有新增外部 crate 版本。官方外壳用 esbuild 从已批准来源重新构建。没有加入 Fluent UI 或 Astryx。
+
+这份记录自己的 Linux、Windows、Workspace 和已发布的 `winstrata/merge-policy` 检查还没有回来，所以这份记录不是审查头。
+
 ## 交接
 
 所有者于 2026-11-27T15:48:53Z 将计划 013 合并为 `a2471d5fc13f0a307ee39d2629c454aea4537809`。父提交为 `be5eb0d699ad0a7e6aab46df6f6bbbf3d912f8af` 与 `31f22d3f0f9d5ef0e9120f9ba6b75af868ce32a7`。文件树为 `68a5db4598a9659a437368289d368ce60dd5b7d2`。当时的 main Windows 工作区检查失败。见 [ERR-005](modules/core.md#err-005)。
@@ -300,4 +309,6 @@ Release 构建中，一次提交写入 2000 条事件耗时 17 毫秒，测试�
 
 所有者于 2026-11-27T18:50:26Z 将计划 015 合并为 `58b7d4fb13f5084222bb985c5c4a81a8b82692de`。父提交是 `90601459c3662a586cc335c234315d54b20422be` 和 `824fc49bfa270d8e45ecfa596aed6c73470a4ab9`。该 main 是计划 016 的基线。路线图顺序仍是 015，然后 016，然后 017。
 
-当前交接点是计划 016，分支 `pr/016-official-default-gui`。它增加内置官方 GUI、Windows 宿主和来源登记。它不复用已关闭的 PR #21 或 `pr/016-desktop-gui`。计划 017 没有开始。E2E-11 没有在 Windows WebView2 上运行。E2E-17、E2E-18 和 E2E-19 仍开放。所有者审查本计划。不要合并。
+所有者将计划 016 作为 [GitHub PR #25](https://github.com/zemeng5208/winstrata/pull/25) 合并为 `ad10523d81870d106eeef553a426beeb250e94ff`。父提交是 `58b7d4fb13f5084222bb985c5c4a81a8b82692de` 和 `e028aa0af006a777a8080afbe8cf15e88ebb37ad`。该 main 是计划 017 的基线。路线图顺序仍是 016，然后 017，然后 018。
+
+当前交接点是计划 017，分支 `pr/017-onboarding-modes`。它在计划 016 的官方外壳上增加引导、范围、标记为重建的基线，以及实时、历史、暂停和继续。它不开始计划 018。E2E-01 和 E2E-11 没有在 Windows 上运行。E2E-17、E2E-18 和 E2E-19 仍开放。所有者审查本计划。不要合并。

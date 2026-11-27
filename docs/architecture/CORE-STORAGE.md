@@ -1,6 +1,6 @@
 # Per-user Core configuration and hybrid storage
 
-[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012) · [Plan 013](../roadmap/PLAN.md#pr-013) · [Plan 014](../roadmap/PLAN.md#pr-014)
+[简体中文](../zh-CN/architecture/CORE-STORAGE.md) · [Rust library](../../core/src/lib.rs) · [Plan 006](../roadmap/PLAN.md#pr-006) · [Plan 012](../roadmap/PLAN.md#pr-012) · [Plan 013](../roadmap/PLAN.md#pr-013) · [Plan 014](../roadmap/PLAN.md#pr-014) · [Plan 017](../roadmap/PLAN.md#pr-017)
 
 PR 006 provides the local Core session, its settings and the storage needed to reopen them. The caller gets the identity of the running OS account. Windows uses the process token's user SID and Linux uses the effective UID.
 
@@ -18,6 +18,10 @@ The managed file is `<selected-root>/<user-id>/core.json`. It contains format ve
 - If the existing workspace is unavailable, restore it and reselect its root. Core checks that its marker still matches the locator. To start fresh elsewhere, explicitly call `select_empty_directory` with an independent, empty per-user directory. Earlier data stays on the old volume. For an accessible workspace, use the verified migration path.
 
 Settings and locator JSON are limited to 64 KiB. Unsupported versions, corrupt documents and existing broad permissions fail closed and preserve the files for recovery. Clearing the monitoring scope stops live mode. This migration verifies regular file contents, directory structure and user isolation. It rejects NTFS named data streams. Windows filesystem testing covers NTFS. ReFS has not been exercised. Capacity checks compare the caller's available bytes with the requested write size, and write failures also suspend persistence.
+
+## Onboarding and modes
+
+Plan 017 stores `onboarding.json` beside `core.json`. It does not change the settings shape in `core.json`. `RunState` remains `Stopped`, `Live`, or `History`. Pause is a separate in-memory flag, so a new session starts stopped and unpaused. `start_live` still only changes that flag. `begin_live` also starts the selected file and registry watches and records a mode object. History and stop flush a gap when leaving live mode and ask the service to release a driver only when that driver has a subscription. Pause stops the user-mode watches and does not ask for a driver release. A loss marker uses `GapReason::Lost` and is not rewritten as a pause. Encryption is enabled before the first hybrid commit. The official GUI holds one Core for the process, because the run flag and the vault seal are in memory. Opt-in does not call `enable` and does not start plans 018–047. The GUI passes no default directory to `Core::open_at`, so a missing choice is not replaced with `D:\WinStrata\` or `C:\`.
 
 ## Hybrid records
 

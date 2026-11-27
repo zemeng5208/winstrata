@@ -26,7 +26,7 @@ fn run() -> io::Result<()> {
     println!("{url}");
     #[cfg(windows)]
     {
-        winstrata_desktop::run_window(&url, bridge.action());
+        winstrata_desktop::run_window(&url, bridge.token(), bridge.action());
     }
     #[cfg(not(windows))]
     {

@@ -30,14 +30,16 @@ const TRAY_MESSAGE: u32 = 0x8001;
 
 struct WindowData {
     origin: String,
+    token: String,
     action: Arc<AtomicU8>,
 }
 
-pub fn run_window(url: &str, action: Arc<AtomicU8>) {
+pub fn run_window(url: &str, token: &str, action: Arc<AtomicU8>) {
     unsafe { CoInitializeEx(null_mut(), COINIT_APARTMENTTHREADED as u32) };
     let origin = url.split("/?").next().unwrap_or(url).to_owned();
     let data = Box::new(WindowData {
         origin,
+        token: token.to_owned(),
         action,
     });
     let class_name = wide("WinStrataOfficialGui");
@@ -106,6 +108,7 @@ unsafe extern "system" fn window_proc(
                     0
                 }
                 "exit" => {
+                    stop_session(&data.origin, &data.token);
                     unsafe { DestroyWindow(hwnd) };
                     0
                 }
@@ -120,6 +123,7 @@ unsafe extern "system" fn window_proc(
             match data.action.swap(0, Ordering::AcqRel) {
                 HIDE => hide_to_tray(hwnd),
                 QUIT => {
+                    stop_session(&data.origin, &data.token);
                     unsafe { DestroyWindow(hwnd) };
                 }
                 _ => {}
@@ -156,6 +160,24 @@ fn request_close(origin: &str) -> String {
     } else {
         "ask".to_owned()
     }
+}
+
+fn stop_session(origin: &str, token: &str) {
+    let address = origin.trim_start_matches("http://");
+    let mut stream = match std::net::TcpStream::connect(address) {
+        Ok(stream) => stream,
+        Err(_) => return,
+    };
+    let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(2)));
+    let body = br#"{"command":"stop"}"#;
+    let header = format!(
+        "POST /command HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nCookie: winstrata_gui={token}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    let _ = std::io::Write::write_all(&mut stream, header.as_bytes());
+    let _ = std::io::Write::write_all(&mut stream, body);
+    let mut buffer = String::new();
+    let _ = std::io::Read::read_to_string(&mut stream, &mut buffer);
 }
 
 fn hide_to_tray(hwnd: HWND) {

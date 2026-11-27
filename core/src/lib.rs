@@ -6,11 +6,13 @@ mod files;
 mod hybrid;
 mod migration;
 mod network;
+mod onboarding;
 mod platform;
 mod plugins;
 mod process;
 mod runtime;
 mod schedule;
+mod scope;
 mod storage;
 mod vault;
 
@@ -38,6 +40,8 @@ pub use network::{
     DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
     flow_event, interface_event,
 };
+pub use onboarding::{ModeMarker, Onboarding};
+pub use scope::CollectionScope;
 pub use plugins::{
     DependencyStatus, LanguageRequirement, OFFICIAL, OfficialPlugin, PluginError, PluginHost,
     PluginReport,
@@ -75,6 +79,9 @@ pub struct Core {
     location: Option<Location>,
     state: StorageState,
     run: RunState,
+    pub(crate) paused: bool,
+    pub(crate) collectors: Vec<FileRegistry>,
+    pub(crate) collector_note: String,
     seal: Option<vault::Seal>,
 }
 
@@ -110,6 +117,9 @@ impl Core {
                 detail: "select a storage directory".into(),
             },
             run: RunState::Stopped,
+            paused: false,
+            collectors: Vec::new(),
+            collector_note: String::new(),
             seal: None,
         };
         let candidate = core.selected_root().or(default).map(Path::to_owned);
@@ -217,15 +227,20 @@ impl Core {
             self.suspend(&error);
             return Err(error);
         }
+        self.paused = false;
         self.run = RunState::Live;
         Ok(())
     }
 
     pub fn stop(&mut self) {
+        self.collectors.clear();
+        self.paused = false;
         self.run = RunState::Stopped;
     }
 
     pub fn enter_history(&mut self) {
+        self.collectors.clear();
+        self.paused = false;
         self.run = RunState::History;
     }
 

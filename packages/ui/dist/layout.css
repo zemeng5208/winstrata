@@ -18,6 +18,8 @@
     --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
     --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
     --font-weight-normal: 400;
@@ -463,6 +465,9 @@
   .min-h-0 {
     min-height: calc(var(--spacing) * 0);
   }
+  .min-h-20 {
+    min-height: calc(var(--spacing) * 20);
+  }
   .min-h-svh {
     min-height: 100svh;
   }
@@ -762,6 +767,10 @@
     font-size: var(--text-base);
     line-height: var(--tw-leading, var(--text-base--line-height));
   }
+  .text-lg {
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
+  }
   .text-sm {
     font-size: var(--text-sm);
     line-height: var(--tw-leading, var(--text-sm--line-height));
@@ -979,6 +988,9 @@
   .zoom-in-95 {
     --tw-enter-scale: calc(95*1%);
     --tw-enter-scale: .95;
+  }
+  .paused {
+    animation-play-state: paused;
   }
   .running {
     animation-play-state: running;

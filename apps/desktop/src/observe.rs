@@ -22,24 +22,23 @@ pub struct Observation {
 }
 
 pub fn observe_at(locator: &Path, endpoint: Option<&Endpoint>) -> Observation {
-    let privilege = match current_privilege() {
-        Ok(Privilege::WindowsElevated) => "windows_elevated",
-        Ok(Privilege::WindowsOrdinary) => "windows_ordinary",
-        Ok(Privilege::NotWindows) => "not_windows",
-        Err(error) => return unavailable(&error.to_string()),
+    if let Err(error) = current_privilege() {
+        return unavailable(&error.to_string());
+    }
+    match Core::open_at(locator, None) {
+        Ok(mut core) => describe(&mut core, endpoint),
+        Err(error) => unavailable(&error.to_string()),
+    }
+}
+
+pub(crate) fn describe(core: &mut Core, endpoint: Option<&Endpoint>) -> Observation {
+    let mut observation = core_view(core);
+    observation.privilege = match current_privilege() {
+        Ok(Privilege::WindowsElevated) => "windows_elevated".to_owned(),
+        Ok(Privilege::WindowsOrdinary) => "windows_ordinary".to_owned(),
+        Ok(Privilege::NotWindows) => "not_windows".to_owned(),
+        Err(error) => format!("unavailable: {error}"),
     };
-    let mut observation = match Core::open_at(locator, None) {
-        Ok(mut core) => core_view(&mut core),
-        Err(error) => Observation {
-            user: String::new(),
-            storage: format!("unavailable: {error}"),
-            run: "not_observed".to_owned(),
-            plugins: official_views("not_observed"),
-            service: String::new(),
-            privilege: privilege.to_owned(),
-        },
-    };
-    observation.privilege = privilege.to_owned();
     observation.service = endpoint
         .map(observe_service)
         .unwrap_or_else(|| "not_configured".to_owned());

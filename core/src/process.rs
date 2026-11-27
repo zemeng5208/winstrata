@@ -118,6 +118,28 @@ impl ProcessTracker {
         Ok(events)
     }
 
+    /// 只把落在选定范围内的进程交给采样。范围外的镜像不会进入事件。
+    pub fn observe_scoped(
+        &mut self,
+        snapshot: &SystemSnapshot,
+        scope: &crate::scope::CollectionScope,
+    ) -> io::Result<Vec<Event>> {
+        if !scope.watches_processes() {
+            return Ok(Vec::new());
+        }
+        let mut filtered = snapshot.clone();
+        filtered
+            .processes
+            .retain(|row| scope.admits_process(&row.name, row.image.as_deref()));
+        let pids = filtered
+            .processes
+            .iter()
+            .map(|row| row.pid)
+            .collect::<HashSet<_>>();
+        filtered.services.retain(|row| pids.contains(&row.pid));
+        self.observe(&filtered)
+    }
+
     fn close_epoch(&mut self, sampled_unix_ns: i64) -> io::Result<Vec<Event>> {
         let Some(epoch) = self.epoch.as_mut() else {
             return Ok(Vec::new());

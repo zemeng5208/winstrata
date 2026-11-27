@@ -23,6 +23,7 @@ use winstrata_protocols::{Event, GapReason, Id};
 
 use crate::EventBus;
 use crate::platform;
+use crate::scope::{CollectionScope, PathClass};
 
 pub use encode::{FILE_PROVIDER, REGISTRY_PROVIDER};
 
@@ -62,6 +63,7 @@ struct Platform {
     directory: PathBuf,
     subkey: String,
     user: Option<Id>,
+    scope: Arc<Mutex<Option<CollectionScope>>>,
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -141,8 +143,18 @@ impl FileRegistry {
                 directory: directory.to_path_buf(),
                 subkey: subkey.to_owned(),
                 user,
+                scope: Arc::new(Mutex::new(None)),
             }),
         })
+    }
+
+    pub fn set_scope(&mut self, scope: &CollectionScope) -> Result<(), CollectError> {
+        let host = self.session.host();
+        if !scope.admits_directory(&host.directory) {
+            return Err(CollectError::fault("invalid collection scope"));
+        }
+        *host.scope.lock().expect("collection scope") = Some(scope.clone());
+        Ok(())
     }
 
     pub fn subscribe(&mut self, channel: Channel) -> Result<ChannelView, CollectError> {
@@ -225,11 +237,17 @@ pub(super) struct Publisher {
     sequence: u64,
     user: Option<Id>,
     health: Arc<Mutex<Option<CollectError>>>,
+    scope: Arc<Mutex<Option<CollectionScope>>>,
+    watch_root: PathBuf,
+    subkey: String,
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
 impl Publisher {
     fn send_fields(&mut self, fields: &Fields, registry_user: bool) -> bool {
+        if !self.allows(fields, registry_user) {
+            return self.send_gap(GapReason::Filtered);
+        }
         let user = if registry_user {
             self.user.as_ref()
         } else {
@@ -265,6 +283,32 @@ impl Publisher {
                 false
             }
         }
+    }
+
+    fn allows(&self, fields: &Fields, registry: bool) -> bool {
+        let scope = self.scope.lock().expect("collection scope");
+        let Some(scope) = scope.as_ref() else {
+            return true;
+        };
+        if registry {
+            return scope.admits_registry(&self.subkey, self.user.as_ref().map(Id::as_str));
+        }
+        if fields.partial.as_deref() == Some("path_escapes_root") {
+            return false;
+        }
+        let class = if fields.event_type.starts_with("directory.") {
+            PathClass::Directory
+        } else if fields.event_type.starts_with("file.") {
+            PathClass::File
+        } else {
+            PathClass::Unknown
+        };
+        let path = match fields.subject_id.as_deref() {
+            Some(text) if Path::new(text).is_absolute() => PathBuf::from(text),
+            Some(text) => self.watch_root.join(text),
+            None => return false,
+        };
+        scope.decide_path(&path, class)
     }
 
     fn fail(&self, error: CollectError) {
@@ -354,6 +398,27 @@ mod tests {
             Err(error) => assert_eq!(error.code(), "collector_fault"),
             Ok(_) => panic!("invalid scope was accepted"),
         }
+    }
+
+    #[test]
+    fn selected_scope_rejects_a_directory_outside_it_without_echoing_the_path() {
+        let root = std::env::temp_dir().join("winstrata-scope-chosen");
+        let secret = std::env::temp_dir().join("winstrata-scope-secret");
+        let mut watch = FileRegistry::open(
+            EventBus::new(Limits::standard()).unwrap(),
+            Id::new("device-1").unwrap(),
+            &secret,
+            r"Software\WinStrata",
+        )
+        .unwrap();
+        let scope = CollectionScope {
+            roots: vec![root],
+            ..CollectionScope::default()
+        };
+        let error = watch.set_scope(&scope).unwrap_err();
+        assert_eq!(error.code(), "collector_fault");
+        assert!(error.detail().contains("invalid collection scope"));
+        assert!(!error.detail().contains("secret"));
     }
 
     #[cfg(not(windows))]

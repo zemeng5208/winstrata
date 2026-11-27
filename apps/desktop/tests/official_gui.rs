@@ -92,6 +92,175 @@ fn gui_client_reads_status_without_taking_the_service() {
 }
 
 #[test]
+fn bridge_onboarding_keeps_scope_pause_history_and_loss_distinct() {
+    let root = scratch("onboard");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("state");
+    let chosen = root.join("chosen");
+    std::fs::create_dir_all(&locator).unwrap();
+    std::fs::create_dir_all(&chosen).unwrap();
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator, None).unwrap();
+    let missing = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(&serde_json::json!({
+            "command": "choose-location",
+            "root": root.join("missing-parent").join("store"),
+        }).to_string()),
+        true,
+    );
+    assert!(missing.contains("400") || missing.contains("404"), "{missing}");
+    let before = json_body(&http(&bridge, "GET", "/state", None, true));
+    assert!(before["settings"]["monitoredRoots"].as_array().unwrap().is_empty(), "{before}");
+    assert_eq!(before["onboarding"]["step"], "language");
+    let located = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(&serde_json::json!({
+            "command": "choose-location",
+            "root": &chosen,
+            "language": "en",
+        }).to_string()),
+        true,
+    );
+    assert!(located.contains("200"), "{located}");
+    std::fs::write(chosen.join("keep.txt"), b"keep").unwrap();
+    std::fs::write(root.join("secret.txt"), b"secret").unwrap();
+    let rescue = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"opt-in","ids":["strata.rescue"]}"#),
+        true,
+    );
+    assert!(rescue.contains("400"), "{rescue}");
+    let opted = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"opt-in","ids":["strata.trace"]}"#),
+        true,
+    );
+    assert!(opted.contains("200"), "{opted}");
+    let marked = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"set-rescue","enabled":true}"#),
+        true,
+    );
+    assert!(marked.contains("200"), "{marked}");
+    let scoped = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(&serde_json::json!({
+            "command": "set-scope",
+            "roots": [&chosen],
+            "fileTypes": ["txt"],
+            "watchProcesses": false,
+        }).to_string()),
+        true,
+    );
+    assert!(scoped.contains("200"), "{scoped}");
+    let retention = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"confirm-retention","days":null}"#),
+        true,
+    );
+    assert!(retention.contains("200"), "{retention}");
+    let boot = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"set-boot","startAtLogin":false}"#),
+        true,
+    );
+    assert!(boot.contains("200"), "{boot}");
+    let weak = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"enable-encryption","password":"short","autoLockSeconds":0}"#),
+        true,
+    );
+    assert!(weak.contains("400"), "{weak}");
+    assert!(!weak.contains("short"), "{weak}");
+    let sealed = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"enable-encryption","password":"correct-horse","autoLockSeconds":0}"#),
+        true,
+    );
+    assert!(sealed.contains("200"), "{sealed}");
+    let mcp = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"set-mcp","enabled":false}"#),
+        true,
+    );
+    assert!(mcp.contains("200"), "{mcp}");
+    let baseline = http(&bridge, "POST", "/command", Some(r#"{"command":"build-baseline"}"#), true);
+    assert!(baseline.contains("200"), "{baseline}");
+    let state = json_body(&http(&bridge, "GET", "/state", None, true));
+    assert_eq!(state["onboarding"]["complete"], true, "{state}");
+    assert_eq!(state["onboarding"]["baselineLabel"], "reconstructed", "{state}");
+    assert_eq!(state["onboarding"]["scripts"], false, "{state}");
+    assert_eq!(state["onboarding"]["automaticSnapshots"], false, "{state}");
+    assert_eq!(state["onboarding"]["rescue"], true, "{state}");
+    assert_eq!(state["settings"]["startAtLogin"], false, "{state}");
+    assert!(state["onboarding"]["optedIn"].as_array().unwrap().iter().any(|id| id == "strata.trace"));
+    assert!(!state["onboarding"]["optedIn"].as_array().unwrap().iter().any(|id| id == "strata.rescue"));
+    assert!(state["plugins"].as_array().unwrap().iter().all(|plugin| plugin["enabled"] == false), "{state}");
+    assert!(!state.to_string().contains("secret"));
+    assert!(!state.to_string().contains("correct-horse"));
+    let live = http(&bridge, "POST", "/command", Some(r#"{"command":"start-live"}"#), true);
+    assert!(live.contains("200"), "{live}");
+    let running = json_body(&http(&bridge, "GET", "/state", None, true));
+    assert_eq!(running["run"], "live", "{running}");
+    assert_eq!(running["paused"], false, "{running}");
+    let collectors = running["collectors"].as_str().unwrap();
+    assert!(collectors == "unsupported" || collectors == "ready", "{running}");
+    let paused = http(&bridge, "POST", "/command", Some(r#"{"command":"pause"}"#), true);
+    assert!(paused.contains("200"), "{paused}");
+    let held = json_body(&http(&bridge, "GET", "/state", None, true));
+    assert_eq!(held["paused"], true, "{held}");
+    assert!(held["markers"].as_array().unwrap().iter().any(|marker| {
+        marker["activity"] == "pause" && marker["reason"] == "paused" && marker["releaseDrivers"] == false
+    }), "{held}");
+    let resumed = http(&bridge, "POST", "/command", Some(r#"{"command":"resume"}"#), true);
+    assert!(resumed.contains("200"), "{resumed}");
+    let history = http(&bridge, "POST", "/command", Some(r#"{"command":"enter-history"}"#), true);
+    assert!(history.contains("200"), "{history}");
+    let archived = json_body(&http(&bridge, "GET", "/state", None, true));
+    assert_eq!(archived["run"], "history", "{archived}");
+    assert_eq!(archived["drivers"], "not_configured", "{archived}");
+    assert!(archived["markers"].as_array().unwrap().iter().any(|marker| {
+        marker["activity"] == "history" && marker["releaseDrivers"] == true
+    }), "{archived}");
+    assert!(!archived["markers"].as_array().unwrap().iter().any(|marker| marker["activity"] == "loss"));
+    let denied = http(&bridge, "POST", "/command", Some(r#"{"command":"enable"}"#), true);
+    assert!(denied.contains("403"), "{denied}");
+    let started = http(&bridge, "POST", "/command", Some(r#"{"command":"start-live"}"#), true);
+    assert!(started.contains("200"), "{started}");
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+fn json_body(response: &str) -> serde_json::Value {
+    let body = response.split("\r\n\r\n").nth(1).unwrap_or("");
+    serde_json::from_str(body).unwrap_or_else(|error| panic!("{error}: {response}"))
+}
+
+#[test]
 fn vendored_shell_is_built_from_the_approved_sources() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui");
     let source = std::fs::read_to_string(root.join("compose/shell.tsx")).unwrap();
@@ -104,6 +273,10 @@ fn vendored_shell_is_built_from_the_approved_sources() {
         "FadeIn",
         "InkSwitch",
         "SignalReturn",
+        "choose-location",
+        "start-live",
+        "enter-history",
+        "strata.rescue",
     ] {
         assert!(source.contains(required), "{required}");
     }

@@ -121,6 +121,9 @@ impl super::Platform {
             sequence: 1,
             user: self.user.clone(),
             health: Arc::clone(&health),
+            scope: Arc::clone(&self.scope),
+            watch_root: self.directory.clone(),
+            subkey: self.subkey.clone(),
         };
         let directory = self.directory.clone();
         let subkey = self.subkey.clone();

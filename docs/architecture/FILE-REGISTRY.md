@@ -8,7 +8,7 @@ Plan 009 observes one chosen directory and one `HKEY_CURRENT_USER` subkey. The w
 
 `FileRegistrySession` counts subscriptions for `files` and `registry` only. The limit is the same 64 used by the driver manager. The first subscription starts that channel. Another subscription does not start it again. The last release stops the channel and joins its thread. A failed stop leaves the channel resident, and the next subscription does not start a second thread. A fault in one channel leaves the other channel ready. Dropping the session stops a channel that is ready or whose stop already failed.
 
-`FileRegistry::open` rejects a directory that is not absolute or that contains a control character, and a subkey that is empty, longer than 200 characters, has more than eight components, or contains an empty component, `.`, `..`, `/`, `:`, or a control character. The error is `collector_fault` with the fixed detail `invalid collection scope`. The rejected path is not copied into the error.
+`FileRegistry::open` rejects a directory that is not absolute or that contains a control character, and a subkey that is empty, longer than 200 characters, has more than eight components, or contains an empty component, `.`, `..`, `/`, `:`, or a control character. The error is `collector_fault` with the fixed detail `invalid collection scope`. The rejected path is not copied into the error. Plan 017 can attach a `CollectionScope`. While it is set, a path or registry key outside that scope is not published. The publisher records a filtered gap and does not copy the rejected path into it. With no scope, plan 009 behavior is unchanged. Linux still returns `unsupported` from subscribe.
 
 On Linux, start returns `unsupported` and publishes nothing. The other channel stays idle.
 

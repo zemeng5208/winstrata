@@ -23,7 +23,7 @@ Rewriting a component after looking at an upstream visual style is not a reuse r
 
 ## Product rows in this commit
 
-Plan 016 adds these files. The base is main `58b7d4fb13f5084222bb985c5c4a81a8b82692de`, the merge of plan 015 and GitHub PR #22. `packages/ui/upstream.json` is the same register in the tree. SHA-256 below is the product file. For a row whose modifications are `none`, that digest is also the upstream blob. The four adapted files record a separate upstream digest in `upstream.json`.
+Plan 016 adds these files. Plan 017 changes the composition text for `copy.ts` and `shell.tsx` and rebuilds `packages/ui/dist`. It does not add a source or a visual system. The base is main `58b7d4fb13f5084222bb985c5c4a81a8b82692de`, the merge of plan 015 and GitHub PR #22. `packages/ui/upstream.json` is the same register in the tree. SHA-256 below is the product file. For a row whose modifications are `none`, that digest is also the upstream blob. The four adapted files record a separate upstream digest in `upstream.json`.
 
 Glasswork `NOTICE` (`824058026d7338161460df1fda278d593e7a1682d9601c3780167c7fd6144a29`) says the repository code is MIT and that the macOS wallpaper media is not. This commit vendors `lens.js` and `glass.css` only. It does not vendor that media. Fluent UI and Astryx are not product dependencies.
 
@@ -81,9 +81,9 @@ These files bind the official shell to host state. They are not upstream compone
 
 | ID | Product path | Upstream repository | Version | Source path | License | Reuse method | Modifications | Introducing plan | State |
 |---|---|---|---|---|---|---|---|---|---|
-| winstrata-copy | `packages/ui/compose/copy.ts` | none | none | none | Apache-2.0 | WinStrata composition | English and zh-CN strings. English is the fallback. | 016 | in-product |
+| winstrata-copy | `packages/ui/compose/copy.ts` | none | none | none | Apache-2.0 | WinStrata composition | English and zh-CN strings. English is the fallback. Plan 017 adds the onboarding and mode strings. | 016 | in-product |
 | winstrata-entry | `packages/ui/compose/entry.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Memory-router routes for the official pages. | 016 | in-product |
-| winstrata-shell | `packages/ui/compose/shell.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the shadcn shell, Glasswork material, Amicro fade, and the UI Moments controls below. Binds real host state. | 016 | in-product |
+| winstrata-shell | `packages/ui/compose/shell.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the shadcn shell, Glasswork material, Amicro fade, and the UI Moments controls below. Plan 017 adds onboarding, scope, and live, history, pause, and resume controls inside that shell. It does not add a visual system. | 016 | in-product |
 | winstrata-moments | `packages/ui/compose/moments.tsx` | none | none | none | Apache-2.0 | WinStrata composition | Mounts the Ink Switch for language and Signal Return while the service is not connected. Tokens are scoped to the switch host. The label uses the active locale. | 016 | in-product |
 | winstrata-ink-switch | `packages/ui/compose/ink-switch.js` | none | none | none | Apache-2.0 | WinStrata composition | The behavior block is the upstream `standalone:ink-switch-script` section. Queries are scoped to the mounted node. | 016 | in-product |
 
