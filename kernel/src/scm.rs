@@ -4,6 +4,7 @@ use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
 use std::path::Path;
 use std::ptr::{null, null_mut};
 use std::thread;
+use std::time::Duration;
 
 use windows_sys::Win32::Foundation::{
     ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_SERVICE_DOES_NOT_EXIST,
@@ -227,11 +228,21 @@ fn service_control_manager_refuses_to_start_a_missing_kernel_image_and_the_entry
     assert_ne!(deleted, 0, "DeleteService failed: {}", unsafe {
         GetLastError()
     });
-    let gone = unsafe { OpenServiceW(manager.0, name.as_ptr(), SERVICE_START) };
-    let gone_error = unsafe { GetLastError() };
-    if !gone.is_null() {
+    // DeleteService only marks the entry. SCM removes it after the failed start
+    // finishes and every handle is closed. Opening it during the wait must not
+    // keep a handle, and the entry still has to be gone.
+    let mut gone_error = 0;
+    for attempt in 0..40 {
+        let gone = unsafe { OpenServiceW(manager.0, name.as_ptr(), SERVICE_START) };
+        gone_error = unsafe { GetLastError() };
+        if gone.is_null() {
+            break;
+        }
         unsafe { CloseServiceHandle(gone) };
-        panic!("probe service still exists");
+        if attempt == 39 {
+            panic!("probe service still exists");
+        }
+        thread::sleep(Duration::from_millis(50));
     }
     assert_eq!(gone_error, ERROR_SERVICE_DOES_NOT_EXIST);
 }
