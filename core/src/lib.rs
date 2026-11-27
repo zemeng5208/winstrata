@@ -1,6 +1,7 @@
 mod bus;
 mod files;
 mod migration;
+mod network;
 mod platform;
 mod runtime;
 mod schedule;
@@ -17,6 +18,10 @@ use storage::{
 };
 
 pub use bus::{BusStats, EventBus, Filter, PublishError, PublishOutcome, Subscription};
+pub use network::{
+    DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
+    flow_event, interface_event,
+};
 pub use runtime::{
     Limits, MAX_ADMISSION_WAIT, MAX_QUEUE, MAX_SUBSCRIPTIONS, MAX_TASK_TIMEOUT, MAX_WORKERS,
     Runtime, RuntimeError,

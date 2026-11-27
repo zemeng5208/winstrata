@@ -22,9 +22,11 @@
 | PR 005 | 已验收 | 所有者已合并[公共协议 PR #6](https://github.com/zemeng5208/winstrata/pull/6)。主分支提交 `14a8ec6` 与送审提交 `e446453` 的文件树相同。 |
 | PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
 | PR 007 | 已验收 | 所有者将 [GitHub PR #9](https://github.com/zemeng5208/winstrata/pull/9) 合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。父提交为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d` 与 `a95bb7005d014cc4872b56c78fc869a3e0705540`。文件树为 `faf3878360e09dd679e0f2ebe9aacb019ae37d72`。 |
-| PR 008 | 待审查 | 已在 `pr/008-service-kernel` 实现[服务与驱动管理](../architecture/SERVICE-KERNEL.md)。提交 `fe4b59117f7b3948f2e1a6ecdcc181ab11ea9795` 已通过 Linux、Windows 和合并策略。没有进行已签名驱动的加载或卸载，因此验收未完成。 |
-| PR 009–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
-| Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。存储、采集、插件及其他指标仍按各自计划推进。 |
+| PR 008 | 已合并，验收仍有待项 | 所有者将 [GitHub PR #12](https://github.com/zemeng5208/winstrata/pull/12) 合并为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。父提交为 `3e0097a44f54d552662b39ab3621002ebce59505` 与 `8eff3a84901eb430728b8d6d744a40d3d7e66155`。文件树为 `e745b6af56936bfc0971218cb9c692542122d940`。没有进行已签名驱动的加载或卸载。 |
+| PR 009–010 | 规划中 | 并行计划。本记录不实现它们。 |
+| PR 011 | 待审查 | 已在 `pr/011-network-sources` 实现[网络源](../architecture/NETWORK-SOURCES.md)，基线为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。本机 Linux 观测和选择性留存已通过。Windows 执行和 GitHub 检查尚未记录。E2E-04 未完成。 |
+| PR 012–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
+| Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加服务控制面。计划 011 增加用户态网络观测和选择性报文留存。文件、注册表和进程采集、插件及其他指标仍按各自计划推进。 |
 
 ## PR 000 验证
 
@@ -84,7 +86,17 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 在提交 `c056e32389f0e2a75ec0e1407d0e253a5cdde8ab` 上，Linux 工作区检查再次通过。Windows 管道测试已经连上，但在交换数据时失败。三个客户端看到流结束，或看到没有原生代码的传输错误。受限令牌被拒绝后，普通客户端再次得到 Win32 错误 232。客户端没有请求模拟权限，服务因此关闭管道而不是应答。客户端现在以 `SECURITY_IMPERSONATION` 打开管道。[第二次 Windows 失败](https://github.com/zemeng5208/winstrata/actions/runs/45999133804/job/140506021647) · [第二次 Linux 通过](https://github.com/zemeng5208/winstrata/actions/runs/45999133804/job/140506021252) · [第二次工作区失败](https://github.com/zemeng5208/winstrata/actions/runs/45999133804/job/140506340654)
 
-在提交 `fe4b59117f7b3948f2e1a6ecdcc181ab11ea9795` 上，Linux、Windows 和合并策略均成功。Linux 通过 28 项 Core 测试、6 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。Windows 通过 27 项 Core 测试、9 项内核测试、11 项协议库测试、2 项协议集成测试、1 项真实系统事件测试和 7 项服务测试。内核测试再次拒绝启动缺失映像，并拒绝受限令牌的 SCM 创建权限。服务测试在命名管道上交换了帧，受限令牌被拒绝访问该管道。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140507919189) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140507919585) · [工作区](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140508248861) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45999704275) 该 Windows 作业是 Windows Server 2022。它不是 Windows 10/11 客户端、交互式未提升 GUI，也不是在 Secure Boot 与 HVCI 启用时加载已签名驱动。`winstrata-service` 没有注册到服务控制管理器。没有加载或卸载已签名驱动。E2E-14 与 E2E-15 仍待完成。采集仍属于 PR 009–011。验收尚未完成。
+在提交 `fe4b59117f7b3948f2e1a6ecdcc181ab11ea9795` 上，Linux、Windows 和合并策略均成功。Linux 通过 28 项 Core 测试、6 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。Windows 通过 27 项 Core 测试、9 项内核测试、11 项协议库测试、2 项协议集成测试、1 项真实系统事件测试和 7 项服务测试。内核测试再次拒绝启动缺失映像，并拒绝受限令牌的 SCM 创建权限。服务测试在命名管道上交换了帧，受限令牌被拒绝访问该管道。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140507919189) · [Windows](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140507919585) · [工作区](https://github.com/zemeng5208/winstrata/actions/runs/45999706617/job/140508248861) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45999704275) 该 Windows 作业是 Windows Server 2022。它不是 Windows 10/11 客户端、交互式未提升 GUI，也不是在 Secure Boot 与 HVCI 启用时加载已签名驱动。`winstrata-service` 没有注册到服务控制管理器。没有加载或卸载已签名驱动。E2E-14 与 E2E-15 仍待完成。文件、注册表和进程采集仍属于 PR 009 和 PR 010。验收尚未完成。
+
+所有者将 PR #12 合并为 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。父提交为 `3e0097a44f54d552662b39ab3621002ebce59505` 与 `8eff3a84901eb430728b8d6d744a40d3d7e66155`。文件树为 `e745b6af56936bfc0971218cb9c692542122d940`。`8eff3a84901eb430728b8d6d744a40d3d7e66155` 包含 `fe4b59117f7b3948f2e1a6ecdcc181ab11ea9795`。
+
+## PR 011 验证
+
+在 Linux x86_64、Rust 1.100.0 和 Intel Xeon 主机上，`RUSTFLAGS="-Dwarnings" cargo test --workspace --offline` 通过了 31 项 Core 测试、13 项内核测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。新增测试打开真实环回 TCP 连接，写入一条 TLS 记录，并读取当前接口列表和连接表。它们要求同时看到环回和另一种接口、一个监听端点，以及本进程的推断出站和推断入站流。私有临时目录保持为空。另一项测试用 `create_new` 写入一个已标记报文，并证明默认策略和未标记调用都不创建文件。`cargo test --workspace --locked --offline` 通过了同样的计数。锁文件只给 `winstrata-kernel` 增加已经锁定的 `libc` 0.2.191 边，并给 `winstrata-core` 增加 `winstrata-kernel` 开发依赖边。没有 crate 版本变化。
+
+未提权的现场测试记录 `capture_inaccessible`，因为 `AF_PACKET` 返回 `EPERM`。以 root 运行同一项已提交测试，在 0.42 秒内通过，这段时间就是采样等待。在删除临时断言之前，另一次 root 运行要求客户端帧被分类为 `tls-record-header`，同样在 0.42 秒内通过。该断言不在已提交测试中，因此 CI 可以记录采样缺口而不是失败。root 结果是本机证据，不是 CI 结果。
+
+`RUSTFLAGS="-Dwarnings" cargo check --target x86_64-pc-windows-msvc --tests -p winstrata-kernel -p winstrata-core -p winstrata-service -p winstrata-protocols` 完成了 Windows 连接表、适配器和原始套接字代码的类型检查。这些测试没有执行。当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。该提交的 GitHub Linux、Windows 和工作区检查尚未记录。没有运行 Windows 10/11 客户端、HVCI、已签名 `strata-net.sys` 加载、拓扑、发现和 PCAPNG 导出。未标记连接元数据没有落盘。E2E-04 未完成。没有加载已签名驱动。
 
 ## 决策与技术假设
 
@@ -96,9 +108,9 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 | ADR-003 | 所有者已确认 | 按各自工具许可，在本地开发环境使用官方 Microsoft WDK 与 Windows SDK x64 10.0.26100.6584 导入库验证 Linux 探针。 |
 | ADR-004 | 所有者已确认 | 以初版事件、对象、错误及版本契约启动 Phase 1。使用启用 `derive` 的 `serde` 1.0.229、`serde_json` 1.0.154 及其锁定的间接依赖进行 JSON 编解码。[协议契约](../architecture/PROTOCOLS.md) |
 | ADR-005 | 所有者已确认 | Windows 以当前令牌 SID 隔离数据，默认使用 D 盘。Local AppData 保存位置指针和会话锁。固定 windows-sys 0.61.2、windows-link 0.2.1 与 Linux 开发依赖 libc 0.2.191。三者均为 MIT OR Apache-2.0；2026-11-27 的 OSV 查询未返回已知公告。[存储接口](../architecture/CORE-STORAGE.md) |
-| AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。计划 008 没有增加 INF/CAT 包，也没有加载已签名驱动。在启用 Secure Boot 与 HVCI 的 Windows 上做代表性加载和卸载仍待完成。PR 050 需验证完整 Linux 交叉构建。 |
+| AS-001 | 部分已验证 | Linux 已链接两个 x64 探针。计划 008 和 011 都没有增加 INF/CAT 包，也没有加载已签名驱动。在启用 Secure Boot 与 HVCI 的 Windows 上做代表性加载和卸载仍待完成。PR 050 需验证完整 Linux 交叉构建。 |
 | AS-002 | 部分已验证 | [平台报告](../architecture/PLATFORM_FEASIBILITY.md)记录 Server 2022 探针结果。计划 008 检查了 Linux 对端凭据，并实现了 Windows 令牌、管道 ACL 和 SCM 拒绝；这些 Windows 检查只完成类型检查，本机没有执行。普通用户 GUI 仍属于 PR 016，混合运行时隔离属于 PR 015，持续性能属于 PR 048，Windows 10/11 客户端属于 PR 049。 |
-| AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。 |
+| AS-003 | 待决策 | 确认计量与清理语义、无标记元数据留存、WebView2 主题、Windows 支持和性能方法。见[待决事项](../roadmap/PLAN.md#section-19)。计划 011 不持久化未标记连接元数据。 |
 | AS-004 | 已记录的约束 | 计划 007 的工作者池使用 Rust 标准库，因为尚未批准异步运行时包。更换运行时须单独决定依赖。[Core 运行时](../architecture/CORE-RUNTIME.md) |
 | AS-005 | 已记录的限制 | 服务认证的是操作系统用户，不是进程角色。以服务所有者身份运行的进程可以发送角色 `core`。`GuiClient` 只提供状态查询，服务端拒绝 `gui`、`plugin` 和 `script` 的订阅、释放和审计。插件能力隔离仍属于 PR 014 和 PR 015。[服务 IPC](../architecture/SERVICE-KERNEL.md) |
 
@@ -112,4 +124,4 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 | ERR-003 | 已解决 | 所选 x64 WDK 导入库未导出 `KeQueryInterruptTime`，第一次内核映像链接失败。检查归档后改用文档所列的真实导出 `KeQueryTimeIncrement`，重跑两项探针和 PE 检查。 |
 | ERR-004 | 已在 PR 004 复验并关闭 | PR 003 合并时策略检查失败，当时仅强制 Workspace checks，最新基线选项关闭。PR 004 的送审提交 `1788410` 通过两项检查。生效规则已要求 `Workspace checks`、`winstrata/merge-policy` 以及分支保持最新，两项检查的来源均为 GitHub Actions，绕过名单为空。[PR 003 策略失败](https://github.com/zemeng5208/winstrata/actions/runs/45964752411) · [PR 003 主分支 CI](https://github.com/zemeng5208/winstrata/actions/runs/45965182726) · [PR 004 策略通过](https://github.com/zemeng5208/winstrata/actions/runs/45968732577) · [生效规则](https://api.github.com/repos/zemeng5208/winstrata/rules/branches/main) |
 
-当前交接点为计划 008，分支 `pr/008-service-kernel`，提交 `fe4b59117f7b3948f2e1a6ecdcc181ab11ea9795`，基线为合并提交 `3e0097a44f54d552662b39ab3621002ebce59505`。该提交已通过 Linux、Windows 和合并策略。验收尚未完成。已签名驱动的加载和卸载、把 `winstrata-service` 注册到服务控制管理器、交互式未提升 GUI，以及 E2E-14 和 E2E-15 仍待完成。测试宿主返回的 `ready` 不是已加载的驱动。计划 012 可能并行修改本记录，且不依赖本计划。
+当前交接点为计划 011，分支 `pr/011-network-sources`，基线为合并提交 `9f70e62a01bbedcdcbb09af956945eef2e23dcd5`。本机 Linux 测试已通过。该提交的 Windows 执行和 GitHub 检查尚未记录。E2E-04 未完成。已签名驱动加载、拓扑、发现、PCAPNG 导出和未标记元数据留存仍待完成。测试宿主返回的 `ready` 不是已加载的驱动。计划 009、010 和 012 可能并行修改本记录。本计划不实现它们。

@@ -121,6 +121,7 @@ dependencies = [
  "serde",
  "serde_json",
  "windows-sys",
+ "winstrata-kernel",
  "winstrata-protocols",
 ]
 
@@ -132,6 +133,7 @@ version = "0.1.0"
 name = "winstrata-kernel"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "windows-sys",
 ]
 
