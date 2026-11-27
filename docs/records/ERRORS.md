@@ -29,7 +29,7 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-016 | Resolved | [Core](modules/core.md#err-016) |
 | ERR-017 | Resolved | [Services](modules/services.md#err-017) |
 | ERR-018 | Resolved | [Core](modules/core.md#err-018) |
-| ERR-019 | Open | This file |
+| ERR-019 | Resolved | This file |
 
 ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c454aea4537809`. ERR-013 names the same defect. Plan 052 is the designated fix and is merged as `004974215e239f96160b47d3eef40a84c316e802`. Windows workspace checks on that commit passed. Plan 051 does not implement the fix.
 
@@ -109,6 +109,6 @@ ERR-005 is the Windows process-exit failure on main `a2471d5fc13f0a307ee39d2629c
 - Evidence: the test created `observed.txt` and saw only `gap:SourceFailure`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687). Linux workspace checks on that head passed. `windows_file_watch_overflow_records_a_lost_gap` passed in the same Windows process. Workspace checks then failed because Windows failed. The published `winstrata/merge-policy` status failed with “Plan 020 must merge before plan 021”; that order result is expected and is not this defect.
 - Root cause: `ReadDirectoryChangesW` was issued while `OVERLAPPED` still lived in a stack value. Pushing that value into the watch vector moved the structure. The kernel wrote the completion into the old address, and `GetOverlappedResult` read the empty copy.
 - Impact: a real file create was reported as `source_failure`. The watch thread then stopped. Windows workspace checks failed.
-- Fix plan: park the directory in the vector first, then issue the read in place. Keep the completion byte count in that same structure. The production buffer stays 16 KiB.
-- Retest result: not yet recorded. This Linux host cannot run the Windows watch. The next Windows workspace job is the retest.
-- Current state: open
+- Fix plan: park the directory in the vector first, then issue the read in place. Keep the completion byte count in that same structure. The production buffer stays 16 KiB. Implemented in `dc9d9e378f9f585929f6acfc18944411f1bbcc75`.
+- Retest result: on that head, Windows Server 2022 `cargo test --locked --workspace` passed. `windows_trace_records_metadata_without_content` passed with the other 7 trace tests. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512). Linux workspace checks and Workspace checks also passed. The published `winstrata/merge-policy` status still failed with “Plan 020 must merge before plan 021”. That order result is not this defect.
+- Current state: resolved

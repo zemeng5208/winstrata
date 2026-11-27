@@ -27,7 +27,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-013](#oi-013) | Untested | 016 |
 | [OI-014](#oi-014) | Unaccepted | 008 follow-up |
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
-| [OI-016](#oi-016) | Partly tested | 021 |
+| [OI-016](#oi-016) | Closed | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
 | [OI-018](#oi-018) | Closed | 021 |
 | [OI-019](#oi-019) | Partly tested | 015 |
@@ -270,13 +270,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [AS-006](STATUS.md)
 - Source PR: plan 009. `ReadDirectoryChangesW` and `RegNotifyChangeKeyValue` omit `precision_ns` and the acting process. A signed minifilter or registry callback was not loaded.
-- Current state: partly tested
-- Reason it is incomplete: plan 021 records user-mode file metadata before and after: size, a permission-changed flag, and SDDL only when it fits an identifier. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution. Linux grammar tests passed. On Windows Server 2022, `windows_trace_records_metadata_without_content` failed before any file event. That defect is [ERR-019](ERRORS.md#err-019) and is not closed.
+- Current state: closed
+- Reason it is incomplete: the live Windows result is now recorded. The evidence is user-mode size and permission metadata. `precision_ns` and the acting process stay omitted. A signed file minifilter was not loaded. This is not kernel attribution.
 - Responsible PR: 021. Plan 019's user-mode registry evidence is recorded and is not kernel attribution.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows file watch or a later approved kernel callback
 - Acceptance criteria: plan 021 tests its before/after attribution, or the omitted fields stay documented
-- Close conditions: plan 021's evidence is recorded. Not closed by plan 019. Not marked as kernel attribution. The Windows workspace job is the follow-up that must record the live result before close.
+- Close conditions: met on `dc9d9e378f9f585929f6acfc18944411f1bbcc75`. Windows Server 2022 passed `windows_trace_records_metadata_without_content`: a real create, size change, and removal were observed, the secret file bytes were absent, `precision_ns` was omitted, and the process field was omitted. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512). Not closed by plan 019. Not kernel attribution. [ERR-019](ERRORS.md#err-019) is the failed run that preceded this result.
 
 <a id="oi-017"></a>
 

@@ -29,7 +29,7 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-016 | 已解决 | [Core](modules/core.md#err-016) |
 | ERR-017 | 已解决 | [服务](modules/services.md#err-017) |
 | ERR-018 | 已解决 | [Core](modules/core.md#err-018) |
-| ERR-019 | 未解决 | 本文件 |
+| ERR-019 | 已解决 | 本文件 |
 
 ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进程退出失败。ERR-013 是同一次缺陷。计划 052 是指定的修复，已合并为 `004974215e239f96160b47d3eef40a84c316e802`。该提交的 Windows 工作区检查通过。计划 051 不实现这项修复。
 
@@ -109,6 +109,6 @@ ERR-005 是 main `a2471d5fc13f0a307ee39d2629c454aea4537809` 上的 Windows 进�
 - 证据: 测试创建了 `observed.txt`，只看到 `gap:SourceFailure`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46064663019/job/140726967687)。该头的 Linux 工作区检查通过。同一个 Windows 进程里 `windows_file_watch_overflow_records_a_lost_gap` 通过。随后 Workspace 检查失败，因为 Windows 失败。已发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 020 must merge before plan 021”。这个顺序结果是预期的，不是这项缺陷。
 - 根因: `ReadDirectoryChangesW` 发出时，`OVERLAPPED` 还在栈上的值里。把该值推进监视向量会移动这个结构。内核把完成状态写到旧地址，`GetOverlappedResult` 读到的是空副本。
 - 影响: 一次真实的文件创建被报成 `source_failure`。监视线程随后停止。Windows 工作区检查失败。
-- 修复计划: 先把目录放进向量，再在原地址发出读取。完成字节数也留在同一结构里。生产缓冲区仍是 16 KiB。
-- 重测结果: 尚未记录。这台 Linux 主机不能运行 Windows 监视。下一次 Windows 工作区作业是复测。
-- 当前状态: 未解决
+- 修复计划: 先把目录放进向量，再在原地址发出读取。完成字节数也留在同一结构里。生产缓冲区仍是 16 KiB。实现于 `dc9d9e378f9f585929f6acfc18944411f1bbcc75`。
+- 重测结果: 在该头上，Windows Server 2022 的 `cargo test --locked --workspace` 通过。`windows_trace_records_metadata_without_content` 与另外 7 个跟踪测试一起通过。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46065282125/job/140728981512)。Linux 工作区检查和 Workspace 检查也通过。已发布的 `winstrata/merge-policy` 状态仍然失败，说明是 “Plan 020 must merge before plan 021”。这个顺序结果不是这项缺陷。
+- 当前状态: 已解决
