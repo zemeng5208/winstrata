@@ -27,7 +27,7 @@ The GUI and Core use ordinary user privileges. The controlled service performs n
 
 ### Collection and drivers
 
-Prefer supported ETW, WFP, PDH, WMI/CIM, Windows API, USN Journal and Event Log, with official minifilter and registry, process, thread and module callbacks where needed. Get implementation and external project approval after practical research. The current process, thread and module sample uses procfs or Toolhelp and the Service Control Manager. It is specified in [Process sources](PROCESS.md) and does not load `strata-proc`.
+Prefer supported ETW, WFP, PDH, WMI/CIM, Windows API, USN Journal and Event Log, with official minifilter and registry, process, thread and module callbacks where needed. Get implementation and external project approval after practical research. The current process, thread and module sample uses procfs or Toolhelp and the Service Control Manager. It is specified in [Process sources](PROCESS.md) and does not load `strata-proc`. Plan 011 observes interfaces and TCP/UDP endpoints from user mode and keeps raw packets in memory unless a qualifying tag names one packet. See [Network sources](NETWORK-SOURCES.md). It does not load `strata-net.sys`.
 
 Independently build, version, manage, load on demand, and unload drivers. Candidate names are `strata-fs.sys`, `strata-reg.sys`, `strata-proc.sys`, and `strata-net.sys`. Validate module boundaries and subscription reference counts. Contain failed loads. Limit kernel work to collection and transport and manage IRQL, locks, memory, buffers, and callback time. Preserve signing, Secure Boot and HVCI and use supported interfaces. Verify real Windows loading, unloading, fault recovery, stability, and sustained operation.
 

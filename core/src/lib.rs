@@ -3,6 +3,7 @@ mod file_registry;
 mod files;
 mod hybrid;
 mod migration;
+mod network;
 mod platform;
 mod process;
 mod runtime;
@@ -25,7 +26,12 @@ pub use file_registry::{
 };
 pub use hybrid::{
     Batch, CapacityReport, CaptureWrite, Confidence, DataClass, Hybrid, ObjectRecord, Point,
-    RecordRef, Recovery, Relation, RiskTag, Snapshot, SnapshotEntry, StoredCapture,
+    RecordRef, Recovery, Relation, RiskTag as HybridRiskTag, Snapshot, SnapshotEntry,
+    StoredCapture,
+};
+pub use network::{
+    DiskPolicy, FlowFact, InterfaceFact, PacketClass, PacketLedger, PersistFailure, RiskTag,
+    flow_event, interface_event,
 };
 pub use process::{
     MODULE_LOADED, MODULE_UNLOADED, PROCESS_EXITED, PROCESS_PROVIDER, PROCESS_SERVICE,
