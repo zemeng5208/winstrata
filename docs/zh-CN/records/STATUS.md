@@ -22,7 +22,7 @@
 | PR 005 | 已验收 | 所有者已合并[公共协议 PR #6](https://github.com/zemeng5208/winstrata/pull/6)。主分支提交 `14a8ec6` 与送审提交 `e446453` 的文件树相同。 |
 | PR 006 | 已验收 | 所有者将 [GitHub PR #7](https://github.com/zemeng5208/winstrata/pull/7) 合并为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d`。合并树 `9cd3c33c49919c7e82f73824f9e5581148d5ff62` 与送审树一致。主分支 CI 和合并策略通过。Windows 10/11 客户端、ReFS 和加密迁移仍未验证。 |
 | PR 007 | 已验收 | 所有者将 [GitHub PR #9](https://github.com/zemeng5208/winstrata/pull/9) 合并为 `3e0097a44f54d552662b39ab3621002ebce59505`。父提交为 `6e601ed6dc8bec5769b3f28cc6790be57a58b78d` 与 `a95bb7005d014cc4872b56c78fc869a3e0705540`。文件树为 `faf3878360e09dd679e0f2ebe9aacb019ae37d72`。 |
-| PR 008 | 待审查 | 已在 `pr/008-service-kernel` 实现[服务与驱动管理](../architecture/SERVICE-KERNEL.md)。Linux 测试通过。Windows 管道和 SCM 测试只做了类型检查，没有执行。没有进行已签名驱动的加载或卸载，因此验收未完成。 |
+| PR 008 | 待审查 | 已在 `pr/008-service-kernel` 实现[服务与驱动管理](../architecture/SERVICE-KERNEL.md)。Linux 测试通过。第一次 Windows 运行通过了 SCM 探针，管道测试因实例创建过晚而失败。没有进行已签名驱动的加载或卸载，因此验收未完成。 |
 | PR 009–050 | 规划中 | 按已批准的路线图推进并核验前置条件。 |
 | Core 与 PL-01 至 PL-25 | 规划中 | 计划 007 已在 Linux 验证进程内调度和事件总线。计划 008 增加不含采集的服务控制面。存储、采集、插件及其他指标仍按各自计划推进。 |
 
@@ -78,7 +78,9 @@ GitHub Actions 在 `58452bd` 的 Linux 工作区检查中，`unsubscribe_and_shu
 
 在 Linux x86_64、Rust 1.100.0 和 Intel Xeon 主机上，`cargo test --workspace --locked` 通过 28 项 Core 测试、6 项内核管理器测试、11 项协议库测试、2 项协议集成测试和 7 项服务测试。服务测试使用真实 Unix 套接字。它们拒绝 `gui`、`plugin` 和 `script` 的订阅，并在 Linux 进程尝试订阅时保持每个模块为 `idle`，同时检查身份、版本、重复键、未知驱动、多余字段、损坏的 JSON 和超过 16 KiB 的帧。服务库测试在 0.01 秒内结束，其中包括 64 次状态往返和随后的审计调用，处于该测试 5 秒界限内。审计页报告丢弃了 1 条记录，且不再保留最旧的 id。同一组内核和服务测试在 `RUSTFLAGS="-Dwarnings"` 下也通过。`cargo check --locked --target x86_64-pc-windows-msvc --tests -p winstrata-kernel -p winstrata-service` 对 Windows 管道、令牌和服务控制管理器测试做了类型检查。这些测试没有执行。`CatalogHost` 返回 `image_absent`，不调用服务控制管理器。没有加载或卸载已签名驱动。锁文件只加入这两个路径包，没有新增外部包版本。
 
-当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。工作区测试命令已直接执行。本送审提交的 GitHub Actions 结果尚未记录。后续 Windows 工作区作业可以运行管道 ACL 测试和缺失映像探针。该作业不是 Windows 10/11 客户端、交互式未提升 GUI，也不是在 Secure Boot 与 HVCI 启用时加载已签名驱动。`winstrata-service` 没有注册到服务控制管理器。E2E-14 与 E2E-15 仍待完成。采集仍属于 PR 009–011。
+当前 Node.js 为 v22.23.4，固定版本为 24.22.3，因此未运行 `cargo dev doctor`。工作区测试命令已直接执行。
+
+在提交 `4f7dbf1254b647e92d1b06110cc3f4dfe86c8a8d` 上，Linux 工作区检查通过，Windows 工作区检查失败。Windows 通过了 27 项 Core 测试、9 项内核测试和协议测试。这 9 项内核测试包括枚举现有驱动服务、拒绝启动指向不存在文件 `C:\Windows\Temp\WinStrata008-missing.sys` 的 `WinStrata008MissingImage`、删除该探针，以及拒绝受限令牌的 SCM 创建权限。四项服务管道测试失败。三个客户端在 `listen` 返回时管道尚不存在，因而得到 Win32 错误 2。第四项测试中，受限令牌被拒绝访问，随后的普通客户端在 200 毫秒等待关闭实例后得到 Win32 错误 232。[Windows 失败](https://github.com/zemeng5208/winstrata/actions/runs/45998537771/job/140503975068) · [Linux 通过](https://github.com/zemeng5208/winstrata/actions/runs/45998537771/job/140503975617) · [工作区失败](https://github.com/zemeng5208/winstrata/actions/runs/45998537771/job/140504351262) · [合并策略](https://github.com/zemeng5208/winstrata/actions/runs/45998537937) 监听器现在会在返回前创建实例，并在轮询期间保持它打开。这次修正的检查结果尚未记录。该 Windows 作业不是 Windows 10/11 客户端、交互式未提升 GUI，也不是在 Secure Boot 与 HVCI 启用时加载已签名驱动。`winstrata-service` 没有注册到服务控制管理器。E2E-14 与 E2E-15 仍待完成。采集仍属于 PR 009–011。
 
 ## 决策与技术假设
 

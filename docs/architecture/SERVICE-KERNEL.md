@@ -14,7 +14,7 @@ The operating system authenticates the user, not the process role. A process run
 
 ## Transport
 
-A frame is a little-endian `u32` length and then UTF-8 JSON, at most 16 KiB. A read or write waits at most 2 seconds. The accept loop serves one connection at a time and polls for the next connection every 200 ms.
+A frame is a little-endian `u32` length and then UTF-8 JSON, at most 16 KiB. A read or write waits at most 2 seconds. The accept loop serves one connection at a time. On Windows the pipe instance is created before `listen` returns. The 200 ms wait checks the stop flag and leaves that instance open. A client retries for up to 2 seconds while the next instance is not yet listening. A closed-pipe read, including Win32 error 232, is end of stream.
 
 Linux uses a Unix-domain socket. A unique endpoint is a mode `0700` directory containing a mode `0600` socket; shutdown removes that directory. The default endpoint is `$XDG_RUNTIME_DIR/winstrata/service.sock` after checking that the runtime directory is private. Startup unlinks a stale socket name. Shutdown does not remove the default socket, so a replacement listener is left alone. `SO_PEERCRED` supplies the peer user, and that uid must equal the service effective uid. If the credential cannot be read or the uid differs, the connection is dropped and `faults` increases. The bytes are not parsed and no audit row is written.
 
@@ -36,4 +36,4 @@ The `winstrata-service` binary listens on the default endpoint, waits for one by
 
 ## Verification boundary
 
-This host ran the Linux manager and service tests. It type-checked the Windows MSVC x64 tests and did not execute them. No signed INF/CAT package was built or loaded. Collection remains PR 009 through PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).
+Linux ran the manager and service tests. The first Windows workspace run executed the manager tests and the three Service Control Manager tests, including the missing-image start refusal and the restricted-token denial. Its service pipe tests failed because the instance did not exist until after `listen` returned. That listener now creates the instance first. No signed INF/CAT package was built or loaded. Collection remains PR 009 through PR 011. E2E-14 and E2E-15 remain later scenarios. Commands, counts and remaining gaps are in the [engineering record](../records/STATUS.md).

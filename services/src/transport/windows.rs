@@ -7,9 +7,9 @@ use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
 use windows_sys::Win32::Foundation::{
-    CloseHandle, ERROR_BROKEN_PIPE, ERROR_INSUFFICIENT_BUFFER, ERROR_IO_PENDING,
-    ERROR_PIPE_CONNECTED, GetLastError, HANDLE, INVALID_HANDLE_VALUE, LocalFree, WAIT_OBJECT_0,
-    WAIT_TIMEOUT,
+    CloseHandle, ERROR_BROKEN_PIPE, ERROR_FILE_NOT_FOUND, ERROR_INSUFFICIENT_BUFFER,
+    ERROR_IO_PENDING, ERROR_NO_DATA, ERROR_PIPE_BUSY, ERROR_PIPE_CONNECTED, GetLastError, HANDLE,
+    INVALID_HANDLE_VALUE, LocalFree, WAIT_OBJECT_0, WAIT_TIMEOUT,
 };
 use windows_sys::Win32::Security::Authorization::{
     ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
@@ -137,21 +137,30 @@ pub(super) fn user_endpoint() -> io::Result<Endpoint> {
 
 pub(super) fn connect(address: &str) -> io::Result<Connection> {
     let name = wide(address)?;
-    let handle = unsafe {
-        CreateFileW(
-            name.as_ptr(),
-            GENERIC_READ_WRITE,
-            0,
-            null(),
-            OPEN_EXISTING,
-            FILE_FLAG_OVERLAPPED,
-            null_mut(),
-        )
-    };
-    if handle == INVALID_HANDLE_VALUE || handle.is_null() {
-        return Err(io::Error::last_os_error());
+    let deadline = std::time::Instant::now() + super::IO_TIMEOUT;
+    loop {
+        let handle = unsafe {
+            CreateFileW(
+                name.as_ptr(),
+                GENERIC_READ_WRITE,
+                0,
+                null(),
+                OPEN_EXISTING,
+                FILE_FLAG_OVERLAPPED,
+                null_mut(),
+            )
+        };
+        if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+            return Ok(Connection(unsafe { OwnedHandle::from_raw_handle(handle) }));
+        }
+        let error = unsafe { GetLastError() };
+        let retryable = error == ERROR_FILE_NOT_FOUND || error == ERROR_PIPE_BUSY;
+        // 上一个实例关闭后，新实例可能还没创建完成。
+        if !retryable || std::time::Instant::now() >= deadline {
+            return Err(io::Error::from_raw_os_error(error as i32));
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
-    Ok(Connection(unsafe { OwnedHandle::from_raw_handle(handle) }))
 }
 
 pub(super) fn serve<H>(
@@ -165,29 +174,36 @@ where
     let descriptor = user_descriptor()?;
     let name = address.to_owned();
     let shared = Arc::new(Mutex::new(session));
+    // 返回前创建实例，避免客户端在监听线程启动前连接。
+    let first = create_pipe(&name, descriptor.0)?;
     Ok(thread::spawn(move || {
-        accept_loop(&name, &descriptor, shared, &stop)
+        accept_loop(&name, &descriptor, Some(first), shared, &stop)
     }))
 }
 
 fn accept_loop<H>(
     name: &str,
     descriptor: &LocalBlock,
+    mut ready: Option<OwnedHandle>,
     shared: Arc<Mutex<Session<H>>>,
     stop: &AtomicBool,
 ) where
     H: DriverHost,
 {
     while !stop.load(Ordering::Acquire) {
-        let pipe = match create_pipe(name, descriptor.0) {
-            Ok(pipe) => pipe,
-            Err(_) => {
-                lock(&shared).record_fault();
-                break;
-            }
+        let pipe = match ready.take() {
+            Some(pipe) => pipe,
+            None => match create_pipe(name, descriptor.0) {
+                Ok(pipe) => pipe,
+                Err(_) => {
+                    lock(&shared).record_fault();
+                    break;
+                }
+            },
         };
-        match connect_pipe(pipe.as_raw_handle(), 200) {
-            Err(error) if error.kind() == ErrorKind::TimedOut => continue,
+        // 等待期间保留同一个实例。超时只检查停止标志，不关闭管道。
+        match connect_pipe(pipe.as_raw_handle(), stop) {
+            Err(error) if error.kind() == ErrorKind::Interrupted => break,
             Err(_) => {
                 lock(&shared).record_fault();
                 break;
@@ -256,7 +272,7 @@ fn create_pipe(name: &str, descriptor: *mut c_void) -> io::Result<OwnedHandle> {
     Ok(unsafe { OwnedHandle::from_raw_handle(handle) })
 }
 
-fn connect_pipe(handle: HANDLE, timeout_ms: u32) -> io::Result<()> {
+fn connect_pipe(handle: HANDLE, stop: &AtomicBool) -> io::Result<()> {
     let event = Event::new()?;
     let mut overlapped = OVERLAPPED::default();
     overlapped.hEvent = event.0;
@@ -271,8 +287,36 @@ fn connect_pipe(handle: HANDLE, timeout_ms: u32) -> io::Result<()> {
     if error != ERROR_IO_PENDING {
         return Err(io::Error::from_raw_os_error(error as i32));
     }
-    finish_overlapped(handle, &overlapped, event.0, timeout_ms)?;
-    Ok(())
+    loop {
+        if stop.load(Ordering::Acquire) {
+            cancel_overlapped(handle, &overlapped);
+            return Err(io::Error::new(
+                ErrorKind::Interrupted,
+                "service stopped while waiting for a client",
+            ));
+        }
+        let waited = unsafe { WaitForSingleObject(event.0, 200) };
+        if waited == WAIT_TIMEOUT {
+            continue;
+        }
+        if waited != WAIT_OBJECT_0 {
+            return Err(io::Error::last_os_error());
+        }
+        let mut transferred = 0u32;
+        let ok = unsafe { GetOverlappedResult(handle, &overlapped, &mut transferred, 0) };
+        if ok == 0 {
+            return Err(io::Error::from_raw_os_error(
+                unsafe { GetLastError() } as i32
+            ));
+        }
+        return Ok(());
+    }
+}
+
+fn cancel_overlapped(handle: HANDLE, overlapped: &OVERLAPPED) {
+    unsafe { CancelIoEx(handle, overlapped) };
+    let mut ignored = 0;
+    unsafe { GetOverlappedResult(handle, overlapped, &mut ignored, 1) };
 }
 
 fn transfer(handle: HANDLE, bytes: *mut u8, len: usize, write: bool) -> io::Result<usize> {
@@ -301,7 +345,7 @@ fn transfer(handle: HANDLE, bytes: *mut u8, len: usize, write: bool) -> io::Resu
         return Ok(transferred as usize);
     }
     let error = unsafe { GetLastError() };
-    if error == ERROR_BROKEN_PIPE {
+    if error == ERROR_BROKEN_PIPE || (!write && error == ERROR_NO_DATA) {
         return Ok(0);
     }
     if error != ERROR_IO_PENDING {
@@ -338,7 +382,7 @@ fn finish_overlapped(
     let ok = unsafe { GetOverlappedResult(handle, overlapped, &mut transferred, 0) };
     if ok == 0 {
         let error = unsafe { GetLastError() };
-        if error == ERROR_BROKEN_PIPE {
+        if error == ERROR_BROKEN_PIPE || error == ERROR_NO_DATA {
             return Ok(0);
         }
         return Err(io::Error::from_raw_os_error(error as i32));
