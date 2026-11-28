@@ -67,7 +67,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-055](#oi-055) | Closed on Windows Server 2022 for head `a4f2edd` | 029 |
 | [OI-056](#oi-056) | Unimplemented | 045 |
 | [OI-057](#oi-057) | Unimplemented | 030 |
-| [OI-058](#oi-058) | Failed on Windows job 140803723177; fix not retested | 030 |
+| [OI-058](#oi-058) | Closed for head `2b4a202` job 140822369803 | 030 |
 | [OI-059](#oi-059) | Untested | 030 |
 | [OI-060](#oi-060) | Unimplemented | 045 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
@@ -1031,8 +1031,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md), [REQ-12.03](../roadmap/REQUIREMENTS.md), and PL-25
 - Source PR: plan 030, `plugins/strata-storage`
-- Current state: failed on Windows job 140803723177; the fix is not retested on Windows
-- Reason it is incomplete: the Linux authoring host did not execute `cargo test --locked --workspace` for `winstrata-strata-storage` on Windows. Pid 1 is tini. A Linux pass is not a Windows pass. Attempt 1, job 140801875313, timed out in `plugins/strata-process` before this storage test ran. This plan does not change that package. Attempt 2, job 140803723177, completed 2026-11-28T00:35:38Z on `windows-2022` and panicked in `thresholds_survive_restart_and_confirmed_deletion_updates_indexes`. That defect is [ERR-025](modules/strata-storage.md#err-025). This failed job does not close this row. This item is OI-058 because OI-039 through OI-056 stay as already recorded. [OI-055](#oi-055) stays the plan 029 Windows job.
+- Current state: closed only for head `2b4a20271a626607cdff60f1b97db62de930cda7` and Windows job 140822369803
+- Reason it is incomplete: the Linux authoring host did not execute `cargo test --locked --workspace` for `winstrata-strata-storage` on Windows. Pid 1 is tini. A Linux pass is not a Windows pass. Attempt 1, job 140801875313, timed out in `plugins/strata-process` before this storage test ran. This plan does not change that package. Attempt 2, job 140803723177, completed 2026-11-28T00:35:38Z on `windows-2022` and panicked in `thresholds_survive_restart_and_confirmed_deletion_updates_indexes`. That defect is [ERR-025](modules/strata-storage.md#err-025). That failed job does not close this row. The close is Windows Server 2022 job 140822369803 in run 46094411828, completed success at 2026-11-28T01:44:07Z on head `2b4a20271a626607cdff60f1b97db62de930cda7`. The log shows `thresholds_survive_restart_and_confirmed_deletion_updates_indexes ... ok`. This item is OI-058 because OI-039 through OI-056 stay as already recorded. [OI-055](#oi-055) stays the plan 029 Windows job.
 - Responsible PR: 030, on the Windows workspace job for this plan's review head
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows workspace job for this plan's review head, `cargo test --locked --workspace`

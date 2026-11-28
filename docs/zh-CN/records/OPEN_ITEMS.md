@@ -67,7 +67,7 @@
 | [OI-055](#oi-055) | 头 `a4f2edd` 的 Windows Server 2022 已关闭 | 029 |
 | [OI-056](#oi-056) | 未实现 | 045 |
 | [OI-057](#oi-057) | 未实现 | 030 |
-| [OI-058](#oi-058) | Windows 作业 140803723177 失败；修复尚未复测 | 030 |
+| [OI-058](#oi-058) | 头 `2b4a202` 的作业 140822369803 已关闭 | 030 |
 | [OI-059](#oi-059) | 未测试 | 030 |
 | [OI-060](#oi-060) | 未实现 | 045 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
@@ -1031,8 +1031,8 @@
 
 - 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md)、[REQ-12.03](../roadmap/REQUIREMENTS.md) 和 PL-25
 - 来源 PR: 计划 030，`plugins/strata-storage`
-- 当前状态: Windows 作业 140803723177 失败；修复尚未在 Windows 上复测
-- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-storage` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。第 1 次尝试，作业 140801875313，在这项存储测试运行之前于 `plugins/strata-process` 超时。本计划不修改那个包。第 2 次尝试，作业 140803723177，于 2026-11-28T00:35:38Z 在 `windows-2022` 上完成，并在 `thresholds_survive_restart_and_confirmed_deletion_updates_indexes` 中崩溃。该缺陷是 [ERR-025](modules/strata-storage.md#err-025)。这次失败的作业不关闭本行。本项是 OI-058，因为 OI-039 至 OI-056 保持已有记录。[OI-055](#oi-055) 仍是计划 029 的 Windows 作业。
+- 当前状态: 只对头 `2b4a20271a626607cdff60f1b97db62de930cda7` 和 Windows 作业 140822369803 关闭
+- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-storage` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。第 1 次尝试，作业 140801875313，在这项存储测试运行之前于 `plugins/strata-process` 超时。本计划不修改那个包。第 2 次尝试，作业 140803723177，于 2026-11-28T00:35:38Z 在 `windows-2022` 上完成，并在 `thresholds_survive_restart_and_confirmed_deletion_updates_indexes` 中崩溃。该缺陷是 [ERR-025](modules/strata-storage.md#err-025)。那次失败的作业不关闭本行。关闭的是运行 46094411828 中的 Windows Server 2022 作业 140822369803，于 2026-11-28T01:44:07Z 在头 `2b4a20271a626607cdff60f1b97db62de930cda7` 上成功完成。日志显示 `thresholds_survive_restart_and_confirmed_deletion_updates_indexes ... ok`。本项是 OI-058，因为 OI-039 至 OI-056 保持已有记录。[OI-055](#oi-055) 仍是计划 029 的 Windows 作业。
 - 负责 PR: 030，本计划审查头上的 Windows 工作区作业
 - 交接所有者: 仓库所有者 zemeng5208
 - 验证环境: 本计划审查头上的 Windows 工作区作业，`cargo test --locked --workspace`

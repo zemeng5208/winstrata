@@ -35,9 +35,9 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-022 | Resolved | [StrataScript](modules/strata-script.md#err-022) |
 | ERR-023 | Resolved | [Core](modules/core.md#err-023) |
 | ERR-024 | Resolved | [StrataScript](modules/strata-script.md#err-024) |
-| ERR-025 | Open | [StrataStorage](modules/strata-storage.md#err-025) |
+| ERR-025 | Resolved | [StrataStorage](modules/strata-storage.md#err-025) |
 
-[`plugins/strata-storage`](modules/strata-storage.md) records [ERR-025](modules/strata-storage.md#err-025). The Windows test gap remains [OI-058](OPEN_ITEMS.md#oi-058). Job 140803723177 does not close it. `plugins/strata-script` has [ERR-024](modules/strata-script.md#err-024) resolved for the Windows retest on head `a4f2edd6efd32a504723664f037677f294279592`, job 140790098053. [ERR-022](modules/strata-script.md#err-022) stays resolved. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
+[`plugins/strata-storage`](modules/strata-storage.md) records [ERR-025](modules/strata-storage.md#err-025), resolved only for head `2b4a20271a626607cdff60f1b97db62de930cda7` and Windows job 140822369803. [OI-058](OPEN_ITEMS.md#oi-058) is closed only for that same head and job. Job 140803723177 does not close it. A later head does not inherit either close. `plugins/strata-script` has [ERR-024](modules/strata-script.md#err-024) resolved for the Windows retest on head `a4f2edd6efd32a504723664f037677f294279592`, job 140790098053. [ERR-022](modules/strata-script.md#err-022) stays resolved. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
 
 `plugins/strata-tag` has no open error. [OI-055](OPEN_ITEMS.md#oi-055) is closed only for head `a4f2edd6efd32a504723664f037677f294279592` and Windows job 140790098053. That close is not a writing-host pass beyond that job, and it is not a waiver. [OI-054](OPEN_ITEMS.md#oi-054) and [OI-056](OPEN_ITEMS.md#oi-056) stay open. Plan 028 keeps OI-052 and OI-053. This file does not rewrite them. [ERR-021](modules/strata-services.md#err-021) stays with services.
 
