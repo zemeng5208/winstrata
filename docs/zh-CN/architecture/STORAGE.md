@@ -12,7 +12,7 @@
 
 ## 阈值
 
-Core 把阶梯保存在 `<user>/storage-alerts.json`，与 `core.json` 并列。插件进程只写自己的私有文件 `policy.json`、`decline.json` 和 `proposal-request.json`。`storage_notice` 在 `policy.json` 已经存在时采用其中的阈值，然后消费一张 `decline.json`。`Core::configure_storage` 写入同一条阶梯。如果 `policy.json` 已经存在，它会覆盖该文件，使两份副本不再分叉。`Core::decline_storage` 只移动一步，并且不读取那张票据。
+Core 把阶梯保存在 `<user>/storage-alerts.json`，与 `core.json` 并列。插件进程只写自己的私有文件 `policy.json`、`decline.json` 和 `proposal-request.json`。在 Windows 上，这些文件按 `O:<user>D:P(A;;FA;;;<user>)` 创建，所有者和受保护的 DACL 与 Core 的私有文件相同。提升后的令牌否则会把所有者记成 Administrators，`open_existing` 就会拒绝 `policy.json`。这项检查没有放宽。`storage_notice` 在 `policy.json` 已经存在时采用其中的阈值，然后消费一张 `decline.json`。`Core::configure_storage` 写入同一条阶梯。如果 `policy.json` 已经存在，它会覆盖该文件，使两份副本不再分叉。`Core::decline_storage` 只移动一步，并且不读取那张票据。
 
 候选默认值使用十进制字节：已持久化的捕获在 1,000,000,000 时警告，之后每 1,000,000,000 再警告一次；已保存日志在 2,000,000,000 时警告，之后每 500,000,000 再警告一次。配置值是 1 到 1,000,000,000,000,000 的整数。这些单位不是所有者决定。[OI-024](../records/OPEN_ITEMS.md#oi-024) 保持开放。
 

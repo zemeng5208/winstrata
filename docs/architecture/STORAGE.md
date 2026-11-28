@@ -12,7 +12,7 @@ Enable starts the storage process. Pause and resume keep the process. Disable an
 
 ## Thresholds
 
-Core keeps the ladder in `<user>/storage-alerts.json`, beside `core.json`. The plugin process writes only its private `policy.json`, `decline.json`, and `proposal-request.json`. `storage_notice` adopts `policy.json` when that file already exists, then consumes one `decline.json` ticket. `Core::configure_storage` writes the same ladder. If `policy.json` already exists, it overwrites that file so the two copies do not diverge. `Core::decline_storage` moves one step and does not read the ticket.
+Core keeps the ladder in `<user>/storage-alerts.json`, beside `core.json`. The plugin process writes only its private `policy.json`, `decline.json`, and `proposal-request.json`. On Windows those files are created with the explicit owner and protected DACL `O:<user>D:P(A;;FA;;;<user>)`, the same descriptor Core gives a private file. An elevated token would otherwise record the owner as Administrators, and `open_existing` would refuse `policy.json`. That check is unchanged. `storage_notice` adopts `policy.json` when that file already exists, then consumes one `decline.json` ticket. `Core::configure_storage` writes the same ladder. If `policy.json` already exists, it overwrites that file so the two copies do not diverge. `Core::decline_storage` moves one step and does not read the ticket.
 
 The candidate defaults are decimal bytes: persisted captures warn at 1,000,000,000 and repeat every 1,000,000,000; saved logs warn at 2,000,000,000 and repeat every 500,000,000. A configured value is an integer from 1 through 1,000,000,000,000,000. These units are not an owner decision. [OI-024](../records/OPEN_ITEMS.md#oi-024) stays open.
 

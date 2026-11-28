@@ -2,9 +2,14 @@
 //!
 //! 它只把阈值、拒绝和提案写进自己的私有目录。确认字段不会删除任何文件。
 
+#[cfg(unix)]
 use std::fs::OpenOptions;
+#[cfg(unix)]
 use std::io::Write;
 use std::path::{Path, PathBuf};
+
+#[cfg(windows)]
+mod windows;
 
 use serde_json::{Value, json};
 
@@ -130,17 +135,23 @@ impl Desk {
 }
 
 fn write_private(path: &Path, text: &str) -> Result<(), &'static str> {
-    let mut options = OpenOptions::new();
-    options.write(true).create(true).truncate(true);
     #[cfg(unix)]
     {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
+        let mut options = OpenOptions::new();
+        options.write(true).create(true).truncate(true);
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options.open(path).map_err(|_| "faulted")?;
+        file.write_all(text.as_bytes()).map_err(|_| "faulted")?;
+        file.sync_all().map_err(|_| "faulted")?;
+        return Ok(());
     }
-    let mut file = options.open(path).map_err(|_| "faulted")?;
-    file.write_all(text.as_bytes()).map_err(|_| "faulted")?;
-    file.sync_all().map_err(|_| "faulted")?;
-    Ok(())
+    #[cfg(windows)]
+    {
+        windows::write_private(path, text.as_bytes()).map_err(|_| "faulted")
+    }
 }
 
 fn number(value: &Value, field: &str) -> Result<u64, &'static str> {
