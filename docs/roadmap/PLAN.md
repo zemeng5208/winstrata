@@ -4,15 +4,15 @@
 
 <a id="section-14"></a>
 
-## 54 proposed PRs
+## 55 proposed PRs
 
-The owner reviews the proposed order in PR 000. Plan numbers are independent of GitHub PR numbers. On 2026-11-28 the owner inserted plan 052 and plan 051 between 013 and 014. The same day the owner assigned plan 053 immediately after 014 and before 015. Its direct prerequisite is 014 only. Plans 000 through 014, 052, and 051 keep their relative order, and plans 015 through 050 keep theirs. Plan 015 still precedes plan 016. The dependency cells of 015 and 016 do not list 053. Table order makes 015 wait until 053 is merged, and 016 waits behind 015. Dependencies listed are direct and also imply their ancestors. Use named component paths and directly affected documents. Seek approval for scope expansion, unapproved interfaces or dependencies, or additions, reordering, splits and combinations. Every PR requests a merge position under the [Git standard](../standards/GIT_AND_PR.md#section-13) and applies the [acceptance plan](ACCEPTANCE.md). Confirm interfaces, exact test scenarios, and measurable criteria before implementing affected work. Record evidence for each scope during review.
+The owner reviews the proposed order in PR 000. Plan numbers are independent of GitHub PR numbers. On 2026-11-28 the owner inserted plan 052 and plan 051 between 013 and 014. The same day the owner assigned plan 053 immediately after 014 and before 015, and plan 055 immediately after 030 and before 031. Plan 055's direct prerequisite is 030 only. Plans 000 through 014, 052, 051, 053, and 015 through 030 keep their relative order, and plans 031 through 050 keep theirs. Plan 015 still precedes plan 016. The dependency cells of 015 and 016 do not list 053, and the dependency cell of 031 does not list 055. Table order makes 015 wait until 053 is merged, 016 wait behind 015, and 031 wait until 055 is merged. Dependencies listed are direct and also imply their ancestors. Use named component paths and directly affected documents. Seek approval for scope expansion, unapproved interfaces or dependencies, or additions, reordering, splits and combinations. Every PR requests a merge position under the [Git standard](../standards/GIT_AND_PR.md#section-13) and applies the [acceptance plan](ACCEPTANCE.md). Confirm interfaces, exact test scenarios, and measurable criteria before implementing affected work. Record evidence for each scope during review.
 
 ### Phase 0. Foundation and feasibility
 
 | PR | Scope | Direct prerequisites | Acceptance evidence |
 |---|---|---|---|
-| <a id="pr-000"></a>000 | Project foundation, AGENTS, docs, contribution policies and license | Initial baseline | Check all requirements and 64 rules, links and bilingual consistency, then obtain owner approval. AG-64 is proposed and is not accepted by the already merged plan 000. |
+| <a id="pr-000"></a>000 | Project foundation, AGENTS, docs, contribution policies and license | Initial baseline | Check all requirements and 65 rules, links and bilingual consistency, then obtain owner approval. AG-64 and AG-65 are proposed after PR 000 and are not accepted by the already merged plan 000. |
 | <a id="pr-001"></a>001 | Cargo and pnpm, toolchains, developer entry point and project dependency paths | 000 | Initialize and build in the available environment, detect missing dependencies and verify resolution after moving the checkout. Keep outputs out of Git. |
 | <a id="pr-002"></a>002 | .github, merge-order requests, main protection and shared checks | 001 | Exercise order and defect blocking, protection against bypass and reuse of the checks. |
 | <a id="pr-003"></a>003 | Linux to Windows x64 cross-build and driver proof of concept | 001 | Link and inspect real artifacts and verify signing, load and security feasibility. Record blockers and distinguish the proof of concept. |
@@ -60,6 +60,7 @@ Once contracts are approved, independent plugin preparation can proceed under th
 | <a id="pr-028"></a>028 | plugins/strata-filter | 021,025,027 | Prevent self-event recursion and preserve outside changes. Test GUI and script filtering, batch writes and I/O. |
 | <a id="pr-029"></a>029 | plugins/strata-tag | 012,014,016,027 | Tag real events manually and by scripts with evidence, permissions and attribution. Verify the untagged packet policy. |
 | <a id="pr-030"></a>030 | plugins/strata-storage | 012,013,027,029 | Trigger, decline and repeat thresholds across restart. Confirm deletion, indexes and GUI/script configuration. |
+| <a id="pr-055"></a>055 | Standards only: AG-65, bilingual PLATFORM_ISOLATION.md, mandatory reading entry, and linked governance records | 030 | Owner approval of the AG-65 text and PLATFORM_ISOLATION.md. Bilingual standards match baseline `4f257ae`. This plan keeps existing Linux reserves, makes no runtime code changes, and does not add itself to the dependency cell of 031. |
 | <a id="pr-031"></a>031 | plugins/strata-net | 011,017,018,026,028,029,030 | Verify actual capture, traffic, topology, authorized discovery, risk-only writes and PCAPNG. |
 | <a id="pr-032"></a>032 | plugins/strata-disk | 024,025,028,030 | Check real drive health and I/O, logical/physical distinction, unsupported counters and write impact. |
 
@@ -100,7 +101,7 @@ Verify an actual extension ecosystem, external local agents, authorization, publ
 |---|---|---|---|
 | <a id="pr-048"></a>048 | Approved performance, I/O, storage and sustained stability work | 042,044,046,047 | Compare actual benchmarks and budgets, preserve coverage, study errors and quantify hardware overhead. |
 | <a id="pr-049"></a>049 | Approved security, compatibility and real user regression fixes | 048 | Validate the supported Windows 10/11 range, driver safeguards, MCP, plugins, imports, encryption and real end-to-end flows. |
-| <a id="pr-050"></a>050 | Development build delivery, docs, SDK, reproducibility and acceptance | 049 | Check every requirement, 25 plugins, 64 rules, available-host verification, both build capabilities, real artifacts and debug material. Obtain final approval. AG-64 is included once the owner has merged it. Requirements with no roadmap row stay open until the owner assigns one. |
+| <a id="pr-050"></a>050 | Development build delivery, docs, SDK, reproducibility and acceptance | 049 | Check every requirement, 25 plugins, 65 rules, available-host verification, both build capabilities, platform build/packaging isolation (`OI-061`), real artifacts and debug material. Obtain final approval. AG-64 and AG-65 are included once the owner has merged them. Requirements with no roadmap row stay open until the owner assigns one. |
 
 Address findings from real integrated validation and approved optimizations. Resolve earlier confirmed defects before their next merge. Ask for a roadmap amendment if a planned PR has no work. Installer and portable releases are outside this phase.
 

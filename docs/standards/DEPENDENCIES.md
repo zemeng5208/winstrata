@@ -18,7 +18,7 @@ Exclude build outputs, caches, temporary files, debug logs, real telemetry and c
 
 ## AG-35 Cross-platform build capability
 
-Keep Linux and Windows builds with unified dependencies, parameters, paths, and outputs. Avoid hardcoded environments and unapproved Windows-only build limits. Test the available environment, record unrun environments, and validate Windows runtime separately from Linux compilation. Fix and retest confirmed cross-platform faults and block merges. Synchronize toolchain documents. AG-49 defines per-PR responsibility.
+Keep Linux and Windows builds with unified dependencies, parameters, paths, and outputs. Avoid hardcoded environments and unapproved Windows-only build limits. Test the available environment, record unrun environments, and validate Windows runtime separately from Linux compilation. Fix and retest confirmed cross-platform faults and block merges. Synchronize toolchain documents, and enforce target-platform build/packaging isolation under [AG-65](../../AGENTS.md#ag-65) and [PLATFORM_ISOLATION.md](PLATFORM_ISOLATION.md). AG-49 defines per-PR responsibility.
 
 <a id="ag-39"></a>
 

@@ -51,7 +51,7 @@ Rust Core, web frontend, mixed runtimes, Windows artifacts, and Linux/Windows de
 
 Build full Windows x64 artifacts, including drivers, service, GUI, and development outputs, on native Linux without delegating compilation to Windows. Verify cross-linking, INF/CAT, signing and toolchain feasibility. Real Windows separately verifies loading, HVCI, and GUI. Start with official research and actual proofs of concept, and report blockers for approval before changing constraints.
 
-The current developer checks dependencies, build, test and diagnosis in their available environment. Preserve both build capabilities and fix confirmed cross-platform faults. Record unrun checks. Windows runtime needs separate evidence. Cloud VMs and dual verification are optional per PR.
+The current developer checks dependencies, build, test and diagnosis in their available environment. Preserve both build capabilities and fix confirmed cross-platform faults. Record unrun checks. Windows runtime needs separate evidence. Cloud VMs and dual verification are optional per PR. Target-platform implementation status, build/packaging isolation, and mandatory pre-task reading follow [AG-65](../../AGENTS.md#ag-65) and [PLATFORM_ISOLATION.md](../standards/PLATFORM_ISOLATION.md).
 
 <a id="section-11"></a>
 

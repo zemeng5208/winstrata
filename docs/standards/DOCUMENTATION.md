@@ -6,7 +6,7 @@
 
 ## AG-05 Evidence and development records
 
-Update module and global records after a module or submodule, PR, extended session, significant change, blocker, or verified result. Record actual commands, environment, files, results, builds, tests, performance, remaining issues, and next actions. Mark unrun items unverified in the [open-item register](../records/OPEN_ITEMS.md), with the fields [AG-62](../../AGENTS.md#ag-62) requires. Preserve evidence in the repository. A lower-cost agent may organize supplied evidence. The lead verifies it and completes the work directly when delegation is unavailable.
+Update module and global records after a module or submodule, PR, extended session, significant change, blocker, or verified result. Record actual commands, environment, files, results, builds, tests, performance, remaining issues, and next actions. Cite the read revision of [PLATFORM_ISOLATION.md](PLATFORM_ISOLATION.md) whenever [AG-65](../../AGENTS.md#ag-65) applies. Mark unrun items unverified in the [open-item register](../records/OPEN_ITEMS.md), with the fields [AG-62](../../AGENTS.md#ag-62) requires. Preserve evidence in the repository. A lower-cost agent may organize supplied evidence. The lead verifies it and completes the work directly when delegation is unavailable.
 
 <a id="ag-06"></a>
 
