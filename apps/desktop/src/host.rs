@@ -4,43 +4,150 @@
 //! 找不到已安装的加载器时，窗口仍在，并写明页面地址。界面不因此取得服务权限。
 
 use std::ffi::c_void;
-use std::path::Path;
+use std::io::Read;
+use std::os::windows::process::CommandExt;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::ptr::null_mut;
-use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicIsize, AtomicU32, AtomicU8, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
 
 use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
-use windows_sys::Win32::Graphics::Gdi::COLOR_WINDOW;
+use windows_sys::Win32::Graphics::Gdi::{
+    BeginPaint, COLOR_WINDOW, EndPaint, PAINTSTRUCT, TextOutW,
+};
 use windows_sys::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx};
 use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
 use windows_sys::Win32::UI::Shell::{
     NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NOTIFYICONDATAW, Shell_NotifyIconW,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow,     CREATESTRUCTW, DispatchMessageW, GWLP_USERDATA, GetClientRect, GetMessageW, GetWindowLongPtrW,
-    IDI_APPLICATION,
-    LoadIconW, PostQuitMessage, RegisterClassW, SW_HIDE, SW_SHOW, SetTimer, SetWindowLongPtrW,
-    ShowWindow, TranslateMessage, WM_CLOSE, WM_CREATE, WM_DESTROY, WM_PAINT, WM_TIMER, WNDCLASSW,
+    CREATESTRUCTW, CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW,
+    GWLP_USERDATA, GetClientRect, GetMessageW, GetWindowLongPtrW, IDI_APPLICATION, IsWindow,
+    IsWindowVisible, LoadIconW, PostMessageW, PostQuitMessage, RegisterClassW, SW_HIDE, SW_SHOW,
+    SWP_NOMOVE, SWP_NOZORDER, SetTimer, SetWindowLongPtrW, SetWindowPos, ShowWindow,
+    TranslateMessage, WM_CLOSE, WM_CREATE, WM_DESTROY, WM_PAINT, WM_SIZE, WM_TIMER, WNDCLASSW,
     WS_OVERLAPPEDWINDOW,
 };
 
 use crate::bridge::{HIDE, QUIT};
 
 const TRAY_MESSAGE: u32 = 0x8001;
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 struct WindowData {
     origin: String,
     token: String,
     action: Arc<AtomicU8>,
+    url: String,
+    controller: *mut c_void,
+    attached: bool,
+    last_tip: String,
+}
+
+static CURRENT_HWND: AtomicIsize = AtomicIsize::new(0);
+static SNAPSHOT: OnceLock<Mutex<(bool, String)>> = OnceLock::new();
+
+fn snapshot_lock() -> &'static Mutex<(bool, String)> {
+    SNAPSHOT.get_or_init(|| Mutex::new((false, "WinStrata".to_owned())))
+}
+
+fn reset_snapshot() {
+    if let Ok(mut guard) = snapshot_lock().lock() {
+        *guard = (false, "WinStrata".to_owned());
+    }
+}
+
+fn set_attached_snapshot(attached: bool) {
+    if let Ok(mut guard) = snapshot_lock().lock() {
+        guard.0 = attached;
+    }
+}
+
+fn set_tip_snapshot(tip: String) {
+    if let Ok(mut guard) = snapshot_lock().lock() {
+        guard.1 = tip;
+    }
+}
+
+#[doc(hidden)]
+pub fn last_window_snapshot() -> (bool, String) {
+    snapshot_lock()
+        .lock()
+        .map(|guard| guard.clone())
+        .unwrap_or_else(|_| (false, "WinStrata".to_owned()))
+}
+
+#[doc(hidden)]
+pub fn loader_present() -> bool {
+    find_loader().is_some()
+}
+
+#[doc(hidden)]
+pub fn resize_current_window(width: i32, height: i32) -> bool {
+    let raw = CURRENT_HWND.load(Ordering::Acquire);
+    if raw == 0 {
+        return false;
+    }
+    let hwnd = raw as HWND;
+    if unsafe { IsWindow(hwnd) } == 0 {
+        return false;
+    }
+    unsafe { SetWindowPos(hwnd, null_mut(), 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER) != 0 }
+}
+
+#[doc(hidden)]
+pub fn close_current_window() -> bool {
+    let raw = CURRENT_HWND.load(Ordering::Acquire);
+    if raw == 0 {
+        return false;
+    }
+    let hwnd = raw as HWND;
+    if unsafe { IsWindow(hwnd) } == 0 {
+        return false;
+    }
+    unsafe { PostMessageW(hwnd, WM_CLOSE, 0, 0) != 0 }
+}
+
+#[doc(hidden)]
+pub fn restore_current_window() -> bool {
+    let raw = CURRENT_HWND.load(Ordering::Acquire);
+    if raw == 0 {
+        return false;
+    }
+    let hwnd = raw as HWND;
+    if unsafe { IsWindow(hwnd) } == 0 {
+        return false;
+    }
+    unsafe { PostMessageW(hwnd, TRAY_MESSAGE, 0, 0) != 0 }
+}
+
+#[doc(hidden)]
+pub fn current_window_visible() -> Option<bool> {
+    let raw = CURRENT_HWND.load(Ordering::Acquire);
+    if raw == 0 {
+        return None;
+    }
+    let hwnd = raw as HWND;
+    if unsafe { IsWindow(hwnd) } == 0 {
+        return None;
+    }
+    Some(unsafe { IsWindowVisible(hwnd) != 0 })
 }
 
 pub fn run_window(url: &str, token: &str, action: Arc<AtomicU8>) {
     unsafe { CoInitializeEx(null_mut(), COINIT_APARTMENTTHREADED as u32) };
+    reset_snapshot();
     let origin = url.split("/?").next().unwrap_or(url).to_owned();
     let data = Box::new(WindowData {
         origin,
         token: token.to_owned(),
         action,
+        url: url.to_owned(),
+        controller: null_mut(),
+        attached: false,
+        last_tip: "WinStrata".to_owned(),
     });
     let class_name = wide("WinStrataOfficialGui");
     let title = wide("WinStrata");
@@ -71,6 +178,7 @@ pub fn run_window(url: &str, token: &str, action: Arc<AtomicU8>) {
         if hwnd.is_null() {
             return;
         }
+        CURRENT_HWND.store(hwnd as isize, Ordering::Release);
         ShowWindow(hwnd, SW_SHOW);
         attach_webview(hwnd, url);
         let mut message = std::mem::zeroed();
@@ -78,6 +186,7 @@ pub fn run_window(url: &str, token: &str, action: Arc<AtomicU8>) {
             TranslateMessage(&message);
             DispatchMessageW(&message);
         }
+        CURRENT_HWND.compare_exchange(hwnd as isize, 0, Ordering::AcqRel, Ordering::Acquire).ok();
     }
 }
 
@@ -96,19 +205,31 @@ unsafe extern "system" fn window_proc(
     }
     let data = unsafe { GetWindowLongPtrW(hwnd, GWLP_USERDATA) } as *mut WindowData;
     match message {
+        WM_SIZE => {
+            if !data.is_null() {
+                let controller = unsafe { (*data).controller };
+                if !controller.is_null() {
+                    let mut bounds = RECT { left: 0, top: 0, right: 0, bottom: 0 };
+                    unsafe { GetClientRect(hwnd, &mut bounds) };
+                    unsafe { controller_put_bounds(controller, bounds) };
+                }
+            }
+            0
+        }
         WM_CLOSE => {
             if data.is_null() {
                 return unsafe { DefWindowProcW(hwnd, message, wparam, lparam) };
             }
-            let data = unsafe { &*data };
-            let decision = request_close(&data.origin);
+            let origin = unsafe { (*data).origin.clone() };
+            let token = unsafe { (*data).token.clone() };
+            let decision = request_close(&origin);
             match decision.as_str() {
                 "hide" => {
                     hide_to_tray(hwnd);
                     0
                 }
                 "exit" => {
-                    stop_session(&data.origin, &data.token);
+                    stop_session(&origin, &token);
                     unsafe { DestroyWindow(hwnd) };
                     0
                 }
@@ -119,11 +240,18 @@ unsafe extern "system" fn window_proc(
             if data.is_null() {
                 return 0;
             }
-            let data = unsafe { &*data };
-            match data.action.swap(0, Ordering::AcqRel) {
+            let (origin, token, action_code) = unsafe {
+                let state = &*data;
+                (
+                    state.origin.clone(),
+                    state.token.clone(),
+                    state.action.swap(0, Ordering::AcqRel),
+                )
+            };
+            match action_code {
                 HIDE => hide_to_tray(hwnd),
                 QUIT => {
-                    stop_session(&data.origin, &data.token);
+                    stop_session(&origin, &token);
                     unsafe { DestroyWindow(hwnd) };
                 }
                 _ => {}
@@ -136,12 +264,58 @@ unsafe extern "system" fn window_proc(
         }
         WM_DESTROY => {
             remove_tray(hwnd);
+            if !data.is_null() {
+                unsafe { SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0) };
+                let mut boxed = unsafe { Box::from_raw(data) };
+                if !boxed.controller.is_null() {
+                    unsafe { release_controller(boxed.controller) };
+                    boxed.controller = null_mut();
+                }
+                drop(boxed);
+            }
             unsafe { PostQuitMessage(0) };
             0
         }
-        WM_PAINT => unsafe { DefWindowProcW(hwnd, message, wparam, lparam) },
+        WM_PAINT => {
+            if !data.is_null() && unsafe { !(*data).attached } {
+                let text = unsafe {
+                    let state = &*data;
+                    let _ = &state.url;
+                    state.origin.encode_utf16().collect::<Vec<u16>>()
+                };
+                let mut paint = unsafe { std::mem::zeroed::<PAINTSTRUCT>() };
+                let hdc = unsafe { BeginPaint(hwnd, &mut paint) };
+                if !hdc.is_null() && !text.is_empty() {
+                    unsafe { TextOutW(hdc, 16, 16, text.as_ptr(), text.len() as i32) };
+                }
+                unsafe { EndPaint(hwnd, &paint) };
+                return 0;
+            }
+            unsafe { DefWindowProcW(hwnd, message, wparam, lparam) }
+        }
         _ => unsafe { DefWindowProcW(hwnd, message, wparam, lparam) },
     }
+}
+
+fn query_storage_status(origin: &str, token: &str) -> String {
+    let address = origin.trim_start_matches("http://");
+    let mut stream = match std::net::TcpStream::connect(address) {
+        Ok(stream) => stream,
+        Err(_) => return String::new(),
+    };
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
+    let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
+    let body = br#"{"command":"storage-status"}"#;
+    let header = format!(
+        "POST /command HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nCookie: winstrata_gui={token}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    if stream.write_all(header.as_bytes()).is_err() || stream.write_all(body).is_err() {
+        return String::new();
+    }
+    let mut response = String::new();
+    let _ = std::io::Read::read_to_string(&mut stream, &mut response);
+    response.split("\r\n\r\n").nth(1).unwrap_or("").to_owned()
 }
 
 fn request_close(origin: &str) -> String {
@@ -181,10 +355,20 @@ fn stop_session(origin: &str, token: &str) {
 }
 
 fn hide_to_tray(hwnd: HWND) {
-    unsafe { ShowWindow(hwnd, SW_HIDE) };
+    let data = unsafe { GetWindowLongPtrW(hwnd, GWLP_USERDATA) } as *mut WindowData;
+    let tip_text = if data.is_null() {
+        "WinStrata".to_owned()
+    } else {
+        let state = unsafe { &mut *data };
+        let status = query_storage_status(&state.origin, &state.token);
+        let formatted = crate::prefs::format_tray_tip(&status);
+        state.last_tip = formatted.clone();
+        set_tip_snapshot(formatted.clone());
+        formatted
+    };
     let mut tip = [0u16; 128];
-    let text = wide("WinStrata");
-    tip[..text.len().min(127)].copy_from_slice(&text[..text.len().min(127)]);
+    let encoded: Vec<u16> = tip_text.encode_utf16().take(127).collect();
+    tip[..encoded.len()].copy_from_slice(&encoded);
     let mut icon = unsafe { std::mem::zeroed::<NOTIFYICONDATAW>() };
     icon.cbSize = std::mem::size_of::<NOTIFYICONDATAW>() as u32;
     icon.hWnd = hwnd;
@@ -193,7 +377,10 @@ fn hide_to_tray(hwnd: HWND) {
     icon.uCallbackMessage = TRAY_MESSAGE;
     icon.hIcon = unsafe { LoadIconW(null_mut(), IDI_APPLICATION) };
     icon.szTip = tip;
-    unsafe { Shell_NotifyIconW(NIM_ADD, &icon) };
+    unsafe {
+        Shell_NotifyIconW(NIM_ADD, &icon);
+        ShowWindow(hwnd, SW_HIDE);
+    }
 }
 
 fn remove_tray(hwnd: HWND) {
@@ -218,7 +405,7 @@ fn attach_webview(hwnd: HWND, url: &str) {
     let create = unsafe { GetProcAddress(module, symbol.as_ptr().cast()) };
     let Some(create) = create else { return };
     let create: CreateEnvironment = unsafe { std::mem::transmute(create) };
-    let profile = std::env::temp_dir().join("winstrata-official-gui");
+    let profile = std::env::temp_dir().join(format!("winstrata-official-gui-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&profile);
     let profile_wide = wide(profile.to_string_lossy().as_ref());
     let url_wide = wide(url);
@@ -226,11 +413,55 @@ fn attach_webview(hwnd: HWND, url: &str) {
     unsafe { create(null_mut(), profile_wide.as_ptr(), null_mut(), handler) };
 }
 
-fn find_loader() -> Option<std::path::PathBuf> {
+fn is_amd64_pe(path: &Path) -> bool {
+    let Ok(mut file) = std::fs::File::open(path) else {
+        return false;
+    };
+    let mut dos = [0u8; 64];
+    if file.read_exact(&mut dos).is_err() || &dos[0..2] != b"MZ" {
+        return false;
+    }
+    let pe_offset = u32::from_le_bytes([dos[0x3c], dos[0x3d], dos[0x3e], dos[0x3f]]) as u64;
+    if std::io::Seek::seek(&mut file, std::io::SeekFrom::Start(pe_offset)).is_err() {
+        return false;
+    }
+    let mut header = [0u8; 6];
+    if file.read_exact(&mut header).is_err() || &header[0..4] != b"PE\0\0" {
+        return false;
+    }
+    u16::from_le_bytes([header[4], header[5]]) == 0x8664
+}
+
+fn walk_webview_loader(dir: &Path, depth: usize) -> Option<PathBuf> {
+    if depth == 0 {
+        return None;
+    }
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            if path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.eq_ignore_ascii_case("WebView2Loader.dll"))
+                && is_amd64_pe(&path)
+            {
+                return Some(path);
+            }
+        } else if path.is_dir() {
+            if let Some(found) = walk_webview_loader(&path, depth - 1) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+fn find_loader() -> Option<PathBuf> {
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
             let beside = dir.join("WebView2Loader.dll");
-            if beside.is_file() {
+            if beside.is_file() && is_amd64_pe(&beside) {
                 return Some(beside);
             }
         }
@@ -244,13 +475,45 @@ fn find_loader() -> Option<std::path::PathBuf> {
             .join("Microsoft")
             .join("EdgeWebView")
             .join("Application");
-        let Ok(entries) = std::fs::read_dir(&application) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let candidate = entry.path().join("WebView2Loader.dll");
-            if candidate.is_file() {
-                return Some(candidate);
+        if let Ok(entries) = std::fs::read_dir(&application) {
+            for entry in entries.flatten() {
+                let candidate = entry.path().join("WebView2Loader.dll");
+                if candidate.is_file() && is_amd64_pe(&candidate) {
+                    return Some(candidate);
+                }
+            }
+        }
+    }
+    if let Some(pf86) = std::env::var_os("ProgramFiles(x86)") {
+        let vswhere = Path::new(&pf86)
+            .join("Microsoft Visual Studio")
+            .join("Installer")
+            .join("vswhere.exe");
+        if vswhere.is_file() {
+            if let Ok(output) = Command::new(&vswhere)
+                .args(["-latest", "-products", "*", "-property", "installationPath"])
+                .creation_flags(CREATE_NO_WINDOW)
+                .output()
+            {
+                if output.status.success() {
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    for line in stdout.lines().map(str::trim).filter(|s| !s.is_empty()) {
+                        let root = Path::new(line);
+                        for rel in [
+                            r"Common7\IDE\CommonExtensions\Microsoft\Markdown\runtimes\win-x64\native\WebView2Loader.dll",
+                            r"Common7\IDE\PrivateAssemblies\WebView2Loader.dll",
+                        ] {
+                            let candidate = root.join(rel);
+                            if candidate.is_file() && is_amd64_pe(&candidate) {
+                                return Some(candidate);
+                            }
+                        }
+                        let ide = root.join("Common7").join("IDE");
+                        if let Some(found) = walk_webview_loader(&ide, 6) {
+                            return Some(found);
+                        }
+                    }
+                }
             }
         }
     }
@@ -390,19 +653,30 @@ unsafe extern "system" fn invoke_controller(this: *mut Handler, result: i32, con
         return 0;
     }
     let handler = unsafe { &*this };
-    let mut bounds = RECT { left: 0, top: 0, right: 0, bottom: 0 };
-    unsafe { GetClientRect(handler.hwnd, &mut bounds) };
+    type AddRef = unsafe extern "system" fn(*mut c_void) -> u32;
     type PutBool = unsafe extern "system" fn(*mut c_void, i32) -> i32;
-    type PutBounds = unsafe extern "system" fn(*mut c_void, RECT) -> i32;
     type GetWebView = unsafe extern "system" fn(*mut c_void, *mut *mut c_void) -> i32;
     type Navigate = unsafe extern "system" fn(*mut c_void, *const u16) -> i32;
     type Release = unsafe extern "system" fn(*mut c_void) -> u32;
     let vtbl = unsafe { *(controller as *const *const usize) };
+    let add_ref_ctl: AddRef = unsafe { std::mem::transmute(*vtbl.add(1)) };
+    unsafe { add_ref_ctl(controller) };
+    let data = unsafe { GetWindowLongPtrW(handler.hwnd, GWLP_USERDATA) } as *mut WindowData;
+    if !data.is_null() {
+        let state = unsafe { &mut *data };
+        if !state.controller.is_null() {
+            unsafe { release_controller(state.controller) };
+        }
+        state.controller = controller;
+        state.attached = true;
+        set_attached_snapshot(true);
+    }
+    let mut bounds = RECT { left: 0, top: 0, right: 0, bottom: 0 };
+    unsafe { GetClientRect(handler.hwnd, &mut bounds) };
     let put_visible: PutBool = unsafe { std::mem::transmute(*vtbl.add(4)) };
-    let put_bounds: PutBounds = unsafe { std::mem::transmute(*vtbl.add(6)) };
     let get_webview: GetWebView = unsafe { std::mem::transmute(*vtbl.add(25)) };
     unsafe {
-        put_bounds(controller, bounds);
+        controller_put_bounds(controller, bounds);
         put_visible(controller, 1);
     }
     let mut webview = null_mut();
@@ -413,6 +687,25 @@ unsafe extern "system" fn invoke_controller(this: *mut Handler, result: i32, con
         unsafe { release(webview) };
     }
     0
+}
+
+unsafe fn controller_put_bounds(controller: *mut c_void, bounds: RECT) {
+    type PutBounds = unsafe extern "system" fn(*mut c_void, RECT) -> i32;
+    let vtbl = unsafe { *(controller as *const *const usize) };
+    let put_bounds: PutBounds = unsafe { std::mem::transmute(*vtbl.add(6)) };
+    unsafe { put_bounds(controller, bounds) };
+}
+
+unsafe fn release_controller(controller: *mut c_void) {
+    type Close = unsafe extern "system" fn(*mut c_void) -> i32;
+    type Release = unsafe extern "system" fn(*mut c_void) -> u32;
+    let vtbl = unsafe { *(controller as *const *const usize) };
+    let close: Close = unsafe { std::mem::transmute(*vtbl.add(24)) };
+    let release: Release = unsafe { std::mem::transmute(*vtbl.add(2)) };
+    unsafe {
+        close(controller);
+        release(controller);
+    }
 }
 
 fn same_guid(left: &Guid, right: &Guid) -> bool {

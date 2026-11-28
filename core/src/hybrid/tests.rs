@@ -714,3 +714,141 @@ fn flip_token(dir: &std::path::Path, token: &str) -> PathBuf {
     }
     panic!("token was not stored");
 }
+
+fn find_on_path(names: &[&str]) -> Option<PathBuf> {
+    let paths = std::env::var_os("PATH")?;
+    for dir in std::env::split_paths(&paths) {
+        for name in names {
+            let candidate = dir.join(name);
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+#[test]
+fn external_pcapng_tools_read_risk_tagged_capture_segment() {
+    let tshark = find_on_path(&["tshark", "tshark.exe"]);
+    let editcap = find_on_path(&["editcap", "editcap.exe"]);
+    if tshark.is_none() && editcap.is_none() {
+        assert!(
+            std::env::var_os("WINSTRATA_REQUIRE_PCAP_TOOLS").is_none(),
+            "WINSTRATA_REQUIRE_PCAP_TOOLS is set, but tshark and editcap were not found on PATH"
+        );
+        return;
+    }
+
+    let temp = Temp::new();
+    let user = temp.user();
+    let mut store = Hybrid::create(&user, 1024 * 1024).unwrap();
+
+    // 最小以太网 + IPv4 + UDP 帧，便于 tshark 正常解析且无格式警告。
+    #[rustfmt::skip]
+    let frame: Vec<u8> = vec![
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, // dst MAC
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x01, // src MAC
+        0x08, 0x00,                         // EtherType: IPv4
+        0x45, 0x00, 0x00, 0x20,             // IPv4, IHL=5, total len=32
+        0x00, 0x01, 0x00, 0x00,             // id=1, flags/frag=0
+        0x40, 0x11, 0x7c, 0xc9,             // TTL=64, UDP=17, checksum
+        0x7f, 0x00, 0x00, 0x01,             // src 127.0.0.1
+        0x7f, 0x00, 0x00, 0x01,             // dst 127.0.0.1
+        0x30, 0x39, 0x30, 0x3a,             // UDP src=12345, dst=12346
+        0x00, 0x0c, 0x00, 0x00,             // len=12, checksum=0
+        b'w', b's', b'0', b'6',             // payload
+    ];
+    let mut batch = Batch::new();
+    batch
+        .append_capture(CaptureWrite {
+            id: id("pkt-ext-1"),
+            tag: Some(tag("risk.connection")),
+            link_type: 1,
+            timestamp_ns: 1_700_000_000_000_000_000,
+            bytes: frame,
+        })
+        .unwrap();
+    store.commit(batch).unwrap();
+
+    let capture_file = fs::read_dir(store.category_path(CAPTURES))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .find(|path| path.is_file())
+        .expect("capture segment file");
+
+    let capture_drive_path = temp
+        .0
+        .join("user")
+        .join("data")
+        .join("captures")
+        .join(capture_file.file_name().expect("capture file name"));
+    let capture_arg = capture_drive_path.to_str().expect("UTF-8 capture path");
+
+    if let Some(tshark_bin) = &tshark {
+        let output = std::process::Command::new(tshark_bin)
+            .args([
+                "-r",
+                capture_arg,
+                "-T",
+                "fields",
+                "-e",
+                "frame.number",
+                "-e",
+                "frame.comment",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "tshark failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let first_line = stdout.lines().next().expect("tshark frame line");
+        let mut columns = first_line.splitn(2, '\t');
+        assert_eq!(columns.next(), Some("1"), "{stdout}");
+        let comment: Value =
+            serde_json::from_str(columns.next().unwrap_or("")).expect("JSON frame comment");
+        assert_eq!(comment["reason"], "risk.connection", "{comment}");
+    }
+
+    if let Some(editcap_bin) = &editcap {
+        let copy = temp.0.join("rewritten.pcapng");
+        let output = std::process::Command::new(editcap_bin)
+            .args([
+                "-F",
+                "pcapng",
+                capture_arg,
+                copy.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "editcap failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let bytes = fs::read(&copy).unwrap();
+        assert_eq!(&bytes[..4], &[0x0a, 0x0d, 0x0d, 0x0a]);
+        if let Some(tshark_bin) = &tshark {
+            let recheck = std::process::Command::new(tshark_bin)
+                .args([
+                    "-r",
+                    copy.to_str().unwrap(),
+                    "-T",
+                    "fields",
+                    "-e",
+                    "frame.number",
+                ])
+                .output()
+                .unwrap();
+            assert!(
+                recheck.status.success(),
+                "tshark reread failed: {}",
+                String::from_utf8_lossy(&recheck.stderr)
+            );
+            assert_eq!(String::from_utf8_lossy(&recheck.stdout).trim(), "1");
+        }
+    }
+}

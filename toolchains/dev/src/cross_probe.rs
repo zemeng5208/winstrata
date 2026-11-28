@@ -65,12 +65,22 @@ pub(super) fn run_probe(root: &Path) -> Result<(), String> {
     run(
         &kits,
         "sha256sum",
-        [OsStr::new("--check"), OsStr::new("--strict"), checksums.as_os_str()],
+        [
+            OsStr::new("--check"),
+            OsStr::new("--strict"),
+            checksums.as_os_str(),
+        ],
     )?;
 
-    let target_libdir = output(root, "rustc", &["--target", TARGET, "--print", "target-libdir"])?;
+    let target_libdir = output(
+        root,
+        "rustc",
+        &["--target", TARGET, "--print", "target-libdir"],
+    )?;
     if !Path::new(&target_libdir).is_dir() {
-        return Err(format!("missing Rust standard library component for {TARGET}"));
+        return Err(format!(
+            "missing Rust standard library component for {TARGET}"
+        ));
     }
     let sysroot = output(root, "rustc", &["--print", "sysroot"])?;
     let details = output(root, "rustc", &["-vV"])?;
@@ -87,17 +97,21 @@ pub(super) fn run_probe(root: &Path) -> Result<(), String> {
     fs::create_dir_all(&output_root)
         .map_err(|error| format!("create probe output directory: {error}"))?;
     let build = output_root.join(std::process::id().to_string());
-    fs::create_dir(&build).map_err(|error| format!("create this run's probe directory: {error}"))?;
-    let result = [&CONSOLE, &DRIVER].into_iter().try_for_each(|probe| {
-        link_probe(root, &source, &kits, &linker, &build, probe)
-    });
+    fs::create_dir(&build)
+        .map_err(|error| format!("create this run's probe directory: {error}"))?;
+    let result = [&CONSOLE, &DRIVER]
+        .into_iter()
+        .try_for_each(|probe| link_probe(root, &source, &kits, &linker, &build, probe));
     if let Err(error) = result {
         return match fs::remove_dir_all(&build) {
             Ok(()) => Err(error),
             Err(cleanup) => Err(format!("{error}. Clean up {}: {cleanup}", build.display())),
         };
     }
-    println!("Windows x64 console and driver linkage verified in {}", build.display());
+    println!(
+        "Windows x64 console and driver linkage verified in {}",
+        build.display()
+    );
     Ok(())
 }
 
@@ -124,10 +138,10 @@ fn link_probe(
     run(
         root,
         "rustc",
-        flags.map(OsString::from).into_iter().chain([
-            object.as_os_str().to_owned(),
-            source_file.into_os_string(),
-        ]),
+        flags
+            .map(OsString::from)
+            .into_iter()
+            .chain([object.as_os_str().to_owned(), source_file.into_os_string()]),
     )?;
 
     let extension = if probe.driver { "sys" } else { "exe" };
@@ -175,9 +189,14 @@ fn inspect(root: &Path, binary: &Path, probe: &Probe) -> Result<(), String> {
         || hex_field(&headers, "AddressOfEntryPoint").unwrap_or(0) == 0
         || (probe.driver && hex_field(&headers, "CheckSum").unwrap_or(0) == 0)
         || !correct_import
-        || !headers.split_whitespace().any(|value| value == probe.symbol)
+        || !headers
+            .split_whitespace()
+            .any(|value| value == probe.symbol)
     {
-        return Err(format!("unexpected PE headers or import table in {}", binary.display()));
+        return Err(format!(
+            "unexpected PE headers or import table in {}",
+            binary.display()
+        ));
     }
     println!(
         "{}: PE32+ / {} / {}!{}",

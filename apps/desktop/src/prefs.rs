@@ -175,6 +175,21 @@ fn create_private(path: &Path) -> io::Result<std::fs::File> {
     options.open(path)
 }
 
+/// 把存储容量状态渲染为托盘提示文本。
+pub fn format_tray_tip(status_json: &str) -> String {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(status_json) else {
+        return "WinStrata".to_owned();
+    };
+    let capture_pending = value["capture"]["pending"].as_bool() == Some(true);
+    let logs_pending = value["logs"]["pending"].as_bool() == Some(true);
+    match (capture_pending, logs_pending) {
+        (true, true) => "WinStrata — storage pending: capture, logs".to_owned(),
+        (true, false) => "WinStrata — storage pending: capture".to_owned(),
+        (false, true) => "WinStrata — storage pending: logs".to_owned(),
+        (false, false) => "WinStrata".to_owned(),
+    }
+}
+
 /// 官方默认界面保持安装。调用它不会删除文件。
 pub fn uninstall_official_gui() -> Result<(), &'static str> {
     Err("builtin_retained")

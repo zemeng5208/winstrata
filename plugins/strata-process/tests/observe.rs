@@ -184,6 +184,7 @@ fn real_process_thread_module_tree_and_release_on_disable() {
     assert!(running.enabled);
     assert_eq!(running.phase, "running");
     let plugin_pid = running.pid.expect("collector process");
+    assert!(plugin_pid > 0);
     let status = host
         .call("strata.process", "process.observe", "status")
         .unwrap();

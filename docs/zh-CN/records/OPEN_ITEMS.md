@@ -12,27 +12,27 @@
 
 | ID | 状态 | 负责计划 |
 |---|---|---|
-| [OI-001](#oi-001) | 未测试 | 049 |
-| [OI-002](#oi-002) | 未测试 | 049 |
-| [OI-003](#oi-003) | 未测试 | 049 |
-| [OI-004](#oi-004) | 未测试 | 049 |
+| [OI-001](#oi-001) | Windows 11 客户端已实测；Windows 10 本机暂缓 | 049 |
+| [OI-002](#oi-002) | 本机暂缓（无 ReFS 卷） | 049 |
+| [OI-003](#oi-003) | 本机暂缓（无第二台物理机） | 049 |
+| [OI-004](#oi-004) | 本机暂缓（禁止创建第二个本地账户） | 049 |
 | [OI-005](#oi-005) | 未测试 | 042 |
-| [OI-006](#oi-006) | 未测试 | 031 |
-| [OI-007](#oi-007) | 未验收 | 008，Linux 交叉构建属于 050 |
+| [OI-006](#oi-006) | 已在分支 `pr/054-windows11-remediation` 关闭（`TShark`/`Editcap` 4.6.10） | 054 |
+| [OI-007](#oi-007) | 本机暂缓（不加载签名驱动 / 不修改系统 HVCI） | 008，Linux 交叉构建属于 050 |
 | [OI-008](#oi-008) | 已知限制 | 052 之后的存储计划，不是 051 |
-| [OI-009](#oi-009) | 未测试 | 016 |
-| [OI-010](#oi-010) | 部分已测试 | 050 |
-| [OI-011](#oi-011) | 未测试 | 050 |
-| [OI-012](#oi-012) | 未测试 | 050 |
-| [OI-013](#oi-013) | 未测试 | 016 |
-| [OI-014](#oi-014) | 未验收 | 008 的后续 |
+| [OI-009](#oi-009) | 已在 Windows 11 Edge WebView2 158.0.4370.45 部分实测 | 016 |
+| [OI-010](#oi-010) | 部分已测试（Windows 11 `doctor` 与 `build` 通过） | 050 |
+| [OI-011](#oi-011) | 部分已测试（Windows 11 `doctor` 与 `build` 通过） | 050 |
+| [OI-012](#oi-012) | 本机暂缓（`cross-probe` 仅 Linux 运行；无 Linux 产物） | 050 |
+| [OI-013](#oi-013) | 已在 Windows 11 普通用户下关闭（`pr/054-windows11-remediation`） | 054 |
+| [OI-014](#oi-014) | 本机暂缓（禁止修改系统或注册 SCM 服务） | 008 的后续 |
 | [OI-015](#oi-015) | 已知限制 | 018、022 |
 | [OI-016](#oi-016) | 已关闭 | 021 |
 | [OI-017](#oi-017) | 未测试 | 031 |
 | [OI-018](#oi-018) | 已关闭 | 021 |
-| [OI-019](#oi-019) | 部分已测 | 015 |
+| [OI-019](#oi-019) | 已在 Windows 11 部分实测（Python 通过；JS/TS 受 [ERR-028](modules/core.md#err-028) 阻断） | 015，[OI-062](#oi-062) |
 | [OI-020](#oi-020) | 未测试 | 015、048 |
-| [OI-021](#oi-021) | 已知限制 | 050 |
+| [OI-021](#oi-021) | 已在分支 `pr/054-windows11-remediation` 关闭 | 054 |
 | [OI-022](#oi-022) | 待决定 | 所有者 |
 | [OI-023](#oi-023) | 待决定 | 016 |
 | [OI-024](#oi-024) | 待决定 | 030 |
@@ -62,15 +62,16 @@
 | [OI-050](#oi-050) | 编写主机未测试 | 026 |
 | [OI-051](#oi-051) | 未实现 | 030、031、032、016、042 |
 | [OI-052](#oi-052) | 头 `bc009ea` 的 Windows Server 2022 已关闭 | 028 |
-| [OI-053](#oi-053) | 未测试 | 028 |
-| [OI-054](#oi-054) | 未测试 | 029 |
+| [OI-053](#oi-053) | 已在 Windows 11 部分实测（已核验空闲页面） | 028 |
+| [OI-054](#oi-054) | 已在 Windows 11（`10.0.26200` `/tags` 空闲核验）关闭 | 029 |
 | [OI-055](#oi-055) | 头 `a4f2edd` 的 Windows Server 2022 已关闭 | 029 |
 | [OI-056](#oi-056) | 未实现 | 045 |
-| [OI-057](#oi-057) | 未实现 | 030 |
+| [OI-057](#oi-057) | 已在分支 `pr/054-windows11-remediation` 关闭 | 054 |
 | [OI-058](#oi-058) | 头 `2b4a202` 的作业 140822369803 已关闭 | 030 |
-| [OI-059](#oi-059) | 未测试 | 030 |
+| [OI-059](#oi-059) | 已在 Windows 11 部分实测（已核验空闲阈值页） | 030 |
 | [OI-060](#oi-060) | 未实现 | 045 |
 | [OI-061](#oi-061) | 未实现 | 050 |
+| [OI-062](#oi-062) | 未测试 / 开放（[ERR-028](modules/core.md#err-028)） | 后续计划 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -79,14 +80,14 @@
 ## OI-001
 
 - 关联需求: [REQ-29.03](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 004 以及 006 至 013。已记录的 Windows 作业是 Windows Server 2022。
-- 当前状态: 未测试
-- 未完成原因: 没有记录 Windows 10 或 Windows 11 客户端运行。Server 2022 的成功不是那次运行。
-- 负责 PR: 049
+- 来源 PR: 计划 004 以及 006 至 013。先前记录的 Windows 作业是 Windows Server 2022。计划 054 在 Windows 11 家庭中文版 x64（10.0.26200，内部版本 26200）执行了本机普通用户实测。
+- 当前状态: Windows 11 客户端已实测（剩余提权与 JS 缺口已登记）；Windows 10 x64 本机暂缓
+- 未完成原因: 计划 054 已在 Windows 11 家庭中文版 x64（10.0.26200）实测 `pr004-windows.ps1`、`pr004-appcontainer.ps1`、`pr004-mcp.test.mjs`、Edge WebView2 `158.0.4370.45` 官方界面与 `winstrata-desktop` 真实 `run_window`、Python AppContainer（`fixture.pywin`）、外部 `TShark`/`Editcap` 4.6.10，以及 17 个通过的工作区测试目标；其余 6 个测试目标仅因普通用户令牌触发 Win32 Error 5 未通过，Node AppContainer 受 [ERR-028](modules/core.md#err-028) 阻断。2026-11-28 所有者确认本机无 Windows 10 环境，因此 Windows 10 x64 本机暂缓。
+- 负责 PR: 049（如后续取得 Windows 10 外部设备/虚拟机及提权回归环境）
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows 10 x64 和 Windows 11 x64 客户端安装，不是 Server 2022
 - 验收标准: 当时已有的工作区测试和产品流程在两个客户端版本上运行，并记录版本
-- 关闭条件: 这些记录存在，或者所有者根据证据写下更窄的支持范围。Server 2022 作业不能关闭它。
+- 关闭条件: Windows 11 证据已记入 [STATUS.md](STATUS.md#pr-054-验证)；完全关闭待取得 Windows 10 环境或所有者依证据收窄 [REQ-02.01](../roadmap/REQUIREMENTS.md)。
 
 <a id="oi-002"></a>
 
@@ -94,13 +95,13 @@
 
 - 关联需求: [REQ-11.01](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 006、012 和 013。[Core 存储](../architecture/CORE-STORAGE.md) 写明尚未在 ReFS 上执行。
-- 当前状态: 未测试
-- 未完成原因: 已记录的文件系统测试使用 Windows 上的 NTFS 和 Linux 宿主文件系统
+- 当前状态: 本机暂缓（主机卷均为 NTFS/FAT32；所有者禁止修改系统/磁盘分区）
+- 未完成原因: Windows 11 10.0.26200 与 CI 的文件系统测试均使用 NTFS 与 Linux 宿主文件系统；本机无 ReFS 卷。
 - 负责 PR: 049
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 格式化为 ReFS 的 Windows 卷
 - 验收标准: 在 ReFS 上执行私有目录检查、迁移和混合存储创建，或者尝试失败并把限制记录下来
-- 关闭条件: 该证据进入仓库。NTFS 结果不能关闭它。
+- 关闭条件: 该证据进入仓库，或在发布前由所有者排除 ReFS。NTFS 结果不能关闭它。
 
 <a id="oi-003"></a>
 
@@ -108,13 +109,13 @@
 
 - 关联需求: [REQ-14.02](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 013。计划 013 的验收文本包含跨设备完整性。没有运行第二台物理设备。
-- 当前状态: 未测试
-- 未完成原因: Linux 跨位置迁移把源留在同一台宿主上。它不是第二台机器。
+- 当前状态: 本机暂缓（仅有一台物理机）
+- 未完成原因: Linux 跨位置迁移把源留在同一台宿主上；2026-11-28 所有者确认本机无第二台物理设备。
 - 负责 PR: 049。计划 038 仍然是插件和时间范围导出。计划 051 不运行这台设备。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 两台物理机器，使用可迁移保险库
 - 验收标准: 密文在第二台机器上恢复或迁移并解密，源目录仍按计划 013 的规则保留
-- 关闭条件: 该运行被记录。同一宿主上的 Linux 迁移不能关闭它。
+- 关闭条件: 该运行被记录。同一宿主上的迁移不能关闭它。
 
 <a id="oi-004"></a>
 
@@ -122,8 +123,8 @@
 
 - 关联需求: [REQ-14.02](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 013
-- 当前状态: 未测试
-- 未完成原因: 没有运行第二个操作系统账户。Linux 用户不匹配测试不是那个账户。
+- 当前状态: 本机暂缓（所有者禁止在本机创建新用户）
+- 未完成原因: 没有运行第二个操作系统账户；2026-11-28 所有者明确禁止在本机新建本地用户或修改系统配置。
 - 负责 PR: 049
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 同一宿主上的两个操作系统账户
@@ -137,7 +138,7 @@
 - 关联需求: [REQ-14.01](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 013。界面锁定显示仍属于计划 042。
 - 当前状态: 未测试
-- 未完成原因: 没有运行 GUI
+- 未完成原因: 没有运行 GUI 锁定流程
 - 负责 PR: 042
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 能够锁定和解锁保险库的 Windows GUI
@@ -149,14 +150,14 @@
 ## OI-006
 
 - 关联需求: [REQ-11.02](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 012。该宿主没有 `tshark`、`tcpdump` 或 `editcap`。
-- 当前状态: 未测试
-- 未完成原因: 仓库内解析器核对了节头魔数 `0x0A0D0D0A` 并读回报文。没有运行外部 PCAPNG 工具。
-- 负责 PR: 031
+- 来源 PR: 计划 012。已由计划 054 在本机关闭。
+- 当前状态: 已在分支 `pr/054-windows11-remediation` 关闭
+- 未完成原因: 本机已满足。计划 054 在项目忽略目录 `.winstrata/toolchain/wireshark/App/Wireshark` 安装便携版 `TShark (Wireshark) 4.6.10 (v4.6.10-0-geac916f07299)` 与 `Editcap (Wireshark) 4.6.10 (v4.6.10-0-geac916f07299)`，并在 `core/src/hybrid/tests.rs` 新增 `hybrid::tests::external_pcapng_tools_read_risk_tagged_capture_segment`，使用 `tshark` 读取真实风险标记 PCAPNG 分段（`"reason":"risk.connection"`），并使用 `editcap -F pcapng` 重写及复读（`0x0A0D0D0A`）。
+- 负责 PR: 054
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 装有这三种工具之一的宿主
+- 验证环境: Windows 11 家庭中文版 x64（10.0.26200）及 Wireshark 4.6.10 命令行工具（`WINSTRATA_REQUIRE_PCAP_TOOLS=1`）
 - 验收标准: 该工具读取存储写出的带风险标记的捕获
-- 关闭条件: 记录工具名称、版本和结果。仓库内解析器不能关闭本项。
+- 关闭条件: 已由 `pr/054-windows11-remediation` 上的 `TShark` 4.6.10 和 `Editcap` 4.6.10 实测满足。
 
 <a id="oi-007"></a>
 
@@ -164,9 +165,9 @@
 
 - 关联需求: [AS-001](STATUS.md) 和计划 008 验收，后者要求 Windows 加载和卸载
 - 来源 PR: 计划 003、008、009、010 和 011。没有构建或加载已签名的 INF/CAT 包。没有执行 Secure Boot 和 HVCI。`CatalogHost` 返回 `image_absent`。
-- 当前状态: 未验收
-- 未完成原因: Linux 链接了计划 003 的探针。Windows 作业拒绝启动缺失映像。那不是已签名加载。
-- 负责 PR: 未完成的计划 008 验收。计划 050 仍要核验完整的 Linux 交叉构建，它本身不关闭 Windows 加载。所有者指定驱动 PR。计划 051 不加载驱动。
+- 当前状态: 本机暂缓（未验收；所有者禁止在本机加载驱动或修改系统配置）
+- 未完成原因: Linux 链接了计划 003 的探针；Windows 11 普通用户测试台禁止安装测试签名驱动或改动 Secure Boot/HVCI。
+- 负责 PR: 未完成的计划 008 验收。计划 050 仍要核验完整的 Linux 交叉构建，它本身不关闭 Windows 加载。
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 启用 Secure Boot 和 HVCI 的 Windows，以及已签名的 INF/CAT 包
 - 验收标准: 一个代表性驱动完成加载和卸载，证据写明包、Windows 版本和保护状态
@@ -192,36 +193,36 @@
 
 - 关联需求: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 2026-11-27 的所有者指定，由计划 051 记录。计划 004 只测量了 Amicro、Glasswork 和 shadcn-admin。指定时读到的上游提交是 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`。
-- 当前状态: 未测试
-- 未完成原因: 计划 016 挂载了修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 的原创 Ink Switch 和 Signal Return。Fluent UI、Astryx 和 Geist 字体文件不是产品文件。该修订仍然没有做过计划 004 那种 WebView2 或性能测量。
+- 当前状态: 已在 Windows 11 Edge WebView2 158.0.4370.45 部分实测
+- 未完成原因: 计划 016 挂载了修订 `c9eece0fe425ee7dfe97d162d39d1665c3bf9368` 的原创 Ink Switch 和 Signal Return。Fluent UI、Astryx 和 Geist 字体文件不是产品文件。计划 054 已在嵌入式 Edge WebView2 `158.0.4370.45`（微软签名 `WebView2Loader.dll` `1.0.2903.40`）离线实测 `packages/ui/vendor/ui-moments/gallery/originals/index.html`（`startupMs: 531`、`blockedExternalRequests: 0`、`beforeChecked: "false"`、`afterChecked: "true"`、`svgCount: 5`、`samples: 30`、`intervalMedianMs: 6.1`、`intervalP95Ms: 54.6`）。所选修订的许可证与版本正式审查关闭仍开放。
 - 负责 PR: 016
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 与三个已测量来源同类的离线 WebView2 测量，加上所选修订的许可证和版本审查
 - 验收标准: 所选 UI Moments 修订的证据被记录，或者所有者撤回指定
-- 关闭条件: 两种结果之一被记录。指定本身不关闭它。GitHub PR #11 留给所有者。见 [OI-033](#oi-033)。
+- 关闭条件: 所有者完成所选修订许可证与版本的审查并结合 WebView2 实测结果一并记录。
 
 <a id="oi-010"></a>
 
 ## OI-010
 
 - 关联需求: [REQ-28.03](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 007 至 013。那些宿主上的 Node.js 是 v22.23.4。固定引擎是 24.22.3。那里没有运行 `cargo dev doctor`。计划 012 和 013 也没有在该宿主上运行 `cargo dev verify`。工作区测试命令是直接运行的。
-- 当前状态: 部分已测试
-- 未完成原因: Linux CI 运行 `.github/scripts/check-workspace.sh`，它调用 `cargo dev verify`，verify 再调用 doctor 检查。Windows CI 运行 `cargo test --locked --workspace`，不运行 `cargo dev doctor`。Node 版本不符的本机运行不是固定 Node 的 doctor 结果。
+- 来源 PR: 计划 007 至 013。计划 054 在 Windows 11 固定 Node.js 24.22.3、pnpm 11.25.0 与 Rust 1.100.0（已安装 `rustfmt`）下实测。
+- 当前状态: 部分已测试（Windows 11 `cargo dev doctor` 与 `cargo dev build` 通过）
+- 未完成原因: `cargo dev doctor` 与 `cargo dev build` 已在 Windows 11 10.0.26200 下通过。待在具备提权与完整条件的环境运行全量 `cargo dev verify`，仍留待 PR 050。
 - 负责 PR: 050
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 安装 Node.js 24.22.3 和固定 Rust 工具链的 Windows
 - 验收标准: 该 Windows 宿主上记录 `cargo dev doctor` 和 `cargo dev verify`
-- 关闭条件: 该记录存在。Linux CI 不关闭 Windows 的 doctor 缺口。
+- 关闭条件: 该记录存在。
 
 <a id="oi-011"></a>
 
 ## OI-011
 
 - 关联需求: [REQ-28.01](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 001。Linux 的 doctor、init、build 和 verify 通过。Windows 宿主执行仍未核验。
-- 当前状态: 未测试
-- 未完成原因: 没有记录开发工具的 Windows 运行
+- 来源 PR: 计划 001。Linux 的 doctor、init、build 和 verify 通过。计划 054 已在 Windows 11 运行 `doctor` 与 `build`。
+- 当前状态: 部分已测试（Windows 11 `cargo dev doctor` 与 `cargo dev build` 通过）
+- 未完成原因: Windows 11 10.0.26200 已通过 `cargo dev doctor` 与 `cargo dev build`。完整 `cargo dev init` 与全部工作区目标的 `cargo dev verify` 仍留待 PR 050。
 - 负责 PR: 050
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: 装有固定工具链的 Windows x64
@@ -233,12 +234,12 @@
 ## OI-012
 
 - 关联需求: 计划 003 验收，链接并检查真实产物
-- 来源 PR: 计划 003。Linux 探针完成链接。没有执行 Windows 程序或驱动。映像留在忽略目录。
-- 当前状态: 未测试
-- 未完成原因: 探针映像没有在 Windows 上执行。签名和加载仍是 [OI-007](#oi-007)。
-- 负责 PR: 050 负责交叉构建证据。OI-007 仍然是加载。
+- 来源 PR: 计划 003。Linux 探针完成链接。`cargo dev cross-probe` 仅在 Linux 运行；当前 Windows 本机 `target/` 无 Linux 交叉编译产物。
+- 当前状态: 本机暂缓（`cross-probe` 仅在 Linux 运行；当前 Windows 宿主无 Linux 产物）
+- 未完成原因: `cargo dev cross-probe` 仅支持在 Linux 运行，当前 Windows 本地仓库无 Linux 驱动产物。签名和加载仍是 [OI-007](#oi-007)。
+- 负责 PR: 050 负责 Linux 交叉构建证据。OI-007 仍然是加载。
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 能够检查已链接 PE 映像、且不把它们当成产品驱动的 Windows 宿主
+- 验证环境: Linux 交叉编译环境及检查真实已链接 PE 映像的 Windows 宿主
 - 验收标准: 映像在 Windows 上被检查，或者所有者记录为何 Linux 检查仍然是唯一证据
 - 关闭条件: 该记录存在。它不表示驱动已加载。
 
@@ -247,14 +248,14 @@
 ## OI-013
 
 - 关联需求: [AS-002](STATUS.md) 和 [E2E-11](#e2e-11)
-- 来源 PR: 计划 008。Windows 作业不是交互式未提升 GUI。
-- 当前状态: 未测试
-- 未完成原因: 计划 016 对 Windows 窗口、托盘和 WebView2 加载器路径做了类型检查。这台 Linux 主机没有运行普通用户的 Windows GUI 会话。E2E-11 未完成。
-- 负责 PR: 016
+- 来源 PR: 计划 008 与计划 016。已由计划 054 在 Windows 11 普通用户下关闭。
+- 当前状态: 已在 Windows 11 普通用户下关闭（`pr/054-windows11-remediation`）
+- 未完成原因: 已在 Windows 11 家庭中文版 x64（10.0.26200）普通未提权用户（`administratorToken: false`、`/service` 为 `windows_ordinary`）满足。实时 Edge WebView2 `158.0.4370.45` 官方界面会话（`startupMs: 685`、主题切换、中文切换、D 盘引导、`480x700` 排版验证）及 `winstrata-desktop` `windows_official_window_attaches_webview2_resizes_hides_to_tray_and_quits` 均在未提权下通过。
+- 负责 PR: 054
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 普通用户的 Windows GUI 会话
+- 验证环境: 普通用户的 Windows 11 10.0.26200 GUI 会话
 - 验收标准: GUI 在未提升用户下运行，并记录权限
-- 关闭条件: 该会话被记录
+- 关闭条件: 已由 [STATUS.md](STATUS.md#pr-054-验证) 中的 Windows 11 普通用户证据满足（不豁免完整 E2E-11 仪表盘与动态组件）。
 
 <a id="oi-014"></a>
 
@@ -262,11 +263,11 @@
 
 - 关联需求: 计划 008 对服务控制面的验收
 - 来源 PR: 计划 008。`winstrata-service` 没有注册到服务控制管理器。
-- 当前状态: 未验收
-- 未完成原因: 管道和令牌测试已运行。服务注册没有运行。
+- 当前状态: 本机暂缓（未验收；所有者禁止修改系统或注册 SCM 服务）
+- 未完成原因: 管道和令牌测试已运行，未提权下的 `CreateServiceW` 返回 Win32 错误 5（[ERR-021](modules/strata-services.md#err-021) 仍未解决）。2026-11-28 所有者明确禁止在本机注册系统服务或修改系统配置。
 - 负责 PR: 未完成的计划 008 验收。所有者安排服务变更。计划 047 不代替本项。
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: Windows Server 2022 服务控制管理器
+- 验证环境: 提权 Windows 服务控制管理器（所有者单机测试台禁止修改）
 - 验收标准: `winstrata-service` 通过服务控制管理器创建、启动和停止，或者所有者在计划 008 可以被称作已验收之前指定另一个负责注册的计划
 - 关闭条件: 两种记录之一存在
 
@@ -331,14 +332,14 @@
 ## OI-019
 
 - 关联需求: 计划 004 的隔离证据和 [REQ-21.02](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 004。平台报告写明，已经打开的句柄的撤销、网络访问、注册表，以及托管完整 Python 或 Node 运行时，仍未核验。
-- 当前状态: Windows 上未测试
-- 未完成原因: Linux 上的计划 015 对真实 Python 和 Node 进程拒绝了套接字、新程序、规则集之外的文件和继承的描述符。脚本在允许的状态目录内打开的句柄随后仍然可读。Windows 的 AppContainer、注册表和网络测试已在套件中，撰写主机没有执行。
-- 负责 PR: 015
+- 来源 PR: 计划 004 与 015；已在计划 054 于 Windows 11 更新。
+- 当前状态: 已在 Windows 11 部分实测（Python 通过；JS/TS 受 [ERR-028](modules/core.md#err-028) 阻断）
+- 未完成原因: Linux 上的计划 015 对真实 Python 和 Node 进程拒绝了套接字、新程序、规则集之外的文件和继承的描述符。在 Windows 11 家庭中文版 x64（10.0.26200）上，计划 054 修复 [ERR-026](modules/core.md#err-026) 后，`winstrata-runtime --test languages_windows` 已通过 Python AppContainer 隔离实测（`fixture.pywin`：本地/目录模块、拒绝宿主读取、拒绝 TCP、拒绝 HKCU、拒绝 `cmd.exe` 子进程、`SE_DACL_PROTECTED` 私有目录与禁用退出）。而零能力 AppContainer 启动 `node.exe`（`JavaScript`/`TypeScript`）在受限桌面 DACL 下于 `USER32.dll` 初始化报 `0xC0000142`（`STATUS_DLL_INIT_FAILED`），见 [ERR-028](modules/core.md#err-028) / [OI-062](#oi-062)。
+- 负责 PR: 015，以及 [OI-062](#oi-062)
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: Windows AppContainer，或计划 015 选择的隔离
-- 验收标准: 每个点名的缺口被测试，或者明确留下不支持并附证据
-- 关闭条件: 该记录存在
+- 验证环境: Windows AppContainer（交互桌面 `WinSta0\Default` 与受限/Session 0 桌面）
+- 验收标准: 在 Python、JavaScript 与 TypeScript 中验证每个点名缺口，或附证据标定明确边界
+- 关闭条件: [ERR-028](modules/core.md#err-028) / [OI-062](#oi-062) 解决或由所有者确认边界。
 
 <a id="oi-020"></a>
 
@@ -359,14 +360,14 @@
 ## OI-021
 
 - 关联需求: [REQ-28.03](../roadmap/REQUIREMENTS.md)
-- 来源 PR: 计划 006。整个工作区的 rustfmt 仍报告未改动的开发工具源码中的旧排版差异。
-- 当前状态: 已知限制
-- 未完成原因: 差异已被记录。没有保存 rustfmt 的失败 CI 检查，因此这不是缺陷。
-- 负责 PR: 050
+- 来源 PR: 计划 006。已在计划 054 的 `pr/054-windows11-remediation` 分支关闭。
+- 当前状态: 已在分支 `pr/054-windows11-remediation` 关闭
+- 未完成原因: 本机已满足。计划 054 已为 `1.100.0-x86_64-pc-windows-msvc` 安装 `rustfmt` 组件，对 `toolchains/dev` 执行格式化，并验证 `cargo fmt --check -p winstrata-dev` 退出码为 0。
+- 负责 PR: 054
 - 交接负责人: 仓库所有者 zemeng5208
-- 验证环境: 固定的 Rust 工具链
-- 验收标准: `cargo fmt --check` 对 `toolchains/dev` 干净，或者所有者接受当前排版
-- 关闭条件: 两种记录之一存在
+- 验证环境: 固定 Rust 1.100.0 工具链（含 `rustfmt`）
+- 验收标准: `cargo fmt --check -p winstrata-dev` 返回 0
+- 关闭条件: 已由 `pr/054-windows11-remediation` 上的 `cargo fmt -p winstrata-dev` 与 `cargo fmt --check -p winstrata-dev` 满足。
 
 <a id="oi-022"></a>
 
@@ -850,8 +851,8 @@
 
 - 关联需求: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) 和 [REQ-16.03](../roadmap/REQUIREMENTS.md)
 - 来源 PR: 计划 027
-- 当前状态: 未测试
-- 未完成原因: 头 `a66da7b749ef5657d55f72cccd2d699783dd4a6f` 的 Windows 工作区作业在插件测试里运行了三种语言。没有 Windows 会话打开官方脚本页。计划 025 占用 OI-040、OI-041 和 OI-042，因此这次页面会话是 OI-044。
+- 当前状态: 已在 Windows 11 部分实测（Edge WebView2 `158.0.4370.45` `/scripts` 空闲检查）
+- 未完成原因: 计划 054 在 Windows 11（`10.0.26200`）真实 Edge WebView2 `158.0.4370.45` 打开 `/scripts`，核验 `presets: 0` 且未创建 `presets` 目录。`strata.script` 运行时的三语言脚本创建、编辑、调试、触发与禁用界面流程仍待交互实测。
 - 负责 PR: 027
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows，已选择存储，`winstrata-strata-script` 位于运行时旁边，使用项目固定的 Python 和 Node.js，并打开官方脚本页
@@ -962,8 +963,8 @@
 
 - 关联需求: [REQ-13.02](../roadmap/REQUIREMENTS.md) 和 [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07)
 - 来源 PR: 计划 028
-- 当前状态: 未测试
-- 未完成原因: 没有 Windows 会话打开官方过滤页。Linux 桥测试在选择存储位置之前返回空闲结果，并且不创建插件目录。该测试没有在 Windows 上打开页面。本项是 OI-053，因为 [OI-044](#oi-044) 是计划 027 的脚本页。
+- 当前状态: 已在 Windows 11 部分实测（Edge WebView2 `158.0.4370.45` `/filters` 空闲检查）
+- 未完成原因: 计划 054 在 Windows 11（`10.0.26200`）真实 Edge WebView2 `158.0.4370.45` 打开 `/filters` 并核验 `kept: 0`。`winstrata-strata-filter` 运行状态下的界面保存规则与计数显示仍待实测。
 - 负责 PR: 028
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows，已选择存储，`winstrata-strata-filter` 位于运行时旁边并且已经运行，以及官方过滤页
@@ -976,13 +977,13 @@
 
 - 关联需求: [REQ-10.01](../roadmap/REQUIREMENTS.md) 和 PL-24
 - 来源 PR: 计划 029，`plugins/strata-tag`
-- 当前状态: 未测试
-- 未完成原因: 没有 Windows 会话打开官方标记页。Linux 桥测试只检查尚未选择存储位置时 `tag-apply` 保持空闲，以及 `enable` 仍然被拒绝。计划 027 持有 [OI-044](#oi-044)。这个页面会话是 OI-054。上面的 OI-052 和 OI-053 仍是计划 028 写下的行。本行不改它们。
-- 负责 PR: 029，在打开 `/tags` 的 Windows 会话上
+- 当前状态: 已在 Windows 11（`10.0.26200` Edge WebView2 `158.0.4370.45`）关闭
+- 未完成原因: 已在 Windows 11 家庭中文版 x64（`10.0.26200`）满足。计划 054 在嵌入式 Edge WebView2 `158.0.4370.45`（`windows_ordinary`）打开 `/tags`，核验空闲状态 `safety: "none"`、只发送 `tag-apply` 且不发送 `enable`/`grant`，且 `tag_page_stays_idle_and_does_not_create_plugins_before_a_location` 在 `winstrata-desktop` 通过。
+- 负责 PR: 029，于 054 实测
 - 交接负责人: 仓库所有者 zemeng5208
 - 验证环境: Windows 10 或 11 x64，官方外壳，页面不启动 `strata.tag`
 - 验收标准: 页面显示空闲状态，只发送 `tag-apply`，并且不发送 `enable` 或 `grant`。Linux 桥测试不关闭它。
-- 关闭条件: 该会话被记录。本行不关闭 [OI-001](#oi-001)、[E2E-04](#e2e-04) 或 [OI-055](#oi-055)。这不是豁免。
+- 关闭条件: 已在 Windows 11（`10.0.26200`）满足。本行不关闭 [OI-001](#oi-001)（Windows 10 本机暂缓）、[E2E-04](#e2e-04)、[OI-055](#oi-055) 或 [OI-056](#oi-056)。
 
 <a id="oi-055"></a>
 
@@ -1017,14 +1018,14 @@
 ## OI-057
 
 - 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md) 和 PL-25
-- 来源 PR: 计划 030，`plugins/strata-storage`
-- 当前状态: 未实现
-- 未完成原因: 官方宿主的托盘提示仍是产品名。计划 030 持久化等待中的阶梯，并在 `/storage` 上显示它。它不改变托盘。等待中的警告不会出现在那里。本项是 OI-057，因为 OI-039 至 OI-056 保持已有记录。
-- 负责 PR: 030
+- 来源 PR: 计划 030，`plugins/strata-storage`；已在计划 054（[ERR-027](modules/desktop.md#err-027)）关闭。
+- 当前状态: 已在分支 `pr/054-windows11-remediation` 关闭
+- 未完成原因: 已在 `apps/desktop` 实现。计划 054 新增 `format_tray_tip`，在 `hide_to_tray` 请求 `/command` `storage-status`，并在 Windows 11（`10.0.26200`）通过 `windows_official_window_attaches_webview2_resizes_hides_to_tray_and_quits` 与 `tray_tip_shows_pending_storage_categories_and_keeps_files` 验证隐藏后托盘显示 `"WinStrata — storage pending: logs"` 且磁盘数据不删除。
+- 负责 PR: 054
 - 交接所有者: 仓库所有者 zemeng5208
-- 验证环境: Windows，已选择存储，捕获或已保存日志有等待中的阈值，并且官方窗口已隐藏到托盘
+- 验证环境: Windows 11 家庭中文版 x64（`10.0.26200`），真实 Win32 宿主与 WebView2 `158.0.4370.45`
 - 验收标准: 托盘显示等待中的类别，隐藏窗口不会删除数据
-- 关闭条件: 该会话被记录在包含托盘改动的那个头上。阶梯 JSON 不关闭它。这不是豁免。它不关闭 [OI-024](#oi-024) 或 [OI-001](#oi-001)。
+- 关闭条件: 已在 `pr/054-windows11-remediation` 满足。本行不关闭 [OI-024](#oi-024) 或 [OI-001](#oi-001) 的 Windows 10 部分。
 
 <a id="oi-058"></a>
 
@@ -1046,8 +1047,8 @@
 
 - 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md) 和 PL-25
 - 来源 PR: 计划 030，`plugins/strata-storage`
-- 当前状态: 未测试
-- 未完成原因: 没有 Windows 会话打开官方存储页。选择存储位置之前的 Linux 桥接测试返回 `enabled` false 和 `storage` `unavailable`，并且不创建插件目录。该测试不关闭本行。页面发送 `storage-status`、`storage-configure`、`storage-decline`、`storage-propose` 和 `storage-confirm`。它不发送 `enable` 或 `grant`。本项是 OI-059，因为 OI-054 仍是计划 029 的页面。
+- 当前状态: 已在 Windows 11 部分实测（`10.0.26200` `/storage` 状态与 `1000000000` 警戒阈值）
+- 未完成原因: 计划 054 在 Windows 11（`10.0.26200`）真实 Edge WebView2 `158.0.4370.45` 打开 `/storage`，核验 `Armed threshold, captures / logs 1000000000` 与 `winstrata-desktop` 真实 `storage-status` 托盘提示。`/storage` 页面内完整保存阈值、拒绝和宿主确认删除的交互流程仍待端到端实测。
 - 负责 PR: 030
 - 交接所有者: 仓库所有者 zemeng5208
 - 验证环境: Windows，已选择存储，并打开官方页面 `/storage`
@@ -1067,6 +1068,20 @@
 - 验证环境: 计划 045 的运行，已安装 `strata.mcp` 并调用存储能力
 - 验收标准: MCP 调用方可以配置和提案，删除仍然需要受信任宿主的确认
 - 关闭条件: 该运行被记录。计划 030 的脚本路径不关闭它。这不是豁免。它不关闭 [OI-056](#oi-056)。
+
+<a id="oi-062"></a>
+
+## OI-062
+
+- 关联需求: [REQ-21.02](../roadmap/REQUIREMENTS.md) 和 [REQ-21.03](../roadmap/REQUIREMENTS.md)
+- 来源 PR: 计划 054（Windows 11 扩展计划 015 AppContainer 测试时发现的 [ERR-028](modules/core.md#err-028)）
+- 当前状态: 未测试 / 开放（[ERR-028](modules/core.md#err-028)）
+- 未完成原因: `node.exe`（`24.22.3` `win-x64`）静态导入 `USER32.dll`、`SHELL32.dll` 与 `ole32.dll`，当继承的桌面 DACL 仅授予 `ALL APPLICATION PACKAGES`（`AC`）`CCDTCRRC` 权限时（例如 `WinSta0\exebox-*` 或 Session 0 服务桌面），零能力 AppContainer 启动 `node.exe` 会以 `0xC0000142`（`STATUS_DLL_INIT_FAILED`）退出。
+- 负责 PR: 未指派的后续计划（需所有者批准合规桌面/窗口站或 Node 隔离方案）
+- 交接所有者: 仓库所有者 zemeng5208
+- 验证环境: Windows 11 x64 上的交互式 `WinSta0\Default` 与受限/Session 0 桌面及 Node.js 24.22.3
+- 验收标准: 在不放松隔离、不篡改宿主桌面 ACL 的前提下运行 Windows AppContainer 中的 JavaScript/TypeScript 语言插件，或正式界定受支持边界
+- 关闭条件: 记录经过验证的测试结果并关闭 [ERR-028](modules/core.md#err-028)。
 
 <a id="e2e-17"></a>
 

@@ -149,3 +149,35 @@
 - 修复计划: 打开锚点前去掉规范化路径上的 `\\?\` 盘符前缀。目录形状检查保留。脉冲观测测试保留。
 - 重测结果: 在 `c827132aa9d072a0239594d12729e53c2ec81eff` 上，Windows Server 2022 的 `cargo test --locked --workspace` 通过，包括 `counters_history_and_unsupported_readings_survive_pause_and_disable`。[Windows 作业](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171555)。该头的 Linux 工作区检查和 Workspace 检查也通过。[Linux](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171180) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738791133)。该头已发布的 `winstrata/merge-policy` 状态失败，说明是 “Plan 022 must merge before plan 024”。[策略运行](https://github.com/zemeng5208/winstrata/actions/runs/46068086984)。该顺序结果是预期的，不是这项缺陷。这份较晚的记录只是写下该重测，所以它自己的四项门禁不是那些结果。
 - 当前状态: 已解决
+
+<a id="err-026"></a>
+
+## ERR-026
+
+- Error ID: ERR-026
+- 发现时间: 2026-11-28，在 main `4f257ae` 之后的 Windows 11 本机实测期间
+- 关联 PR: 计划 054，分支 `pr/054-windows11-remediation`（来源行为源自计划 015）
+- 环境: Windows 11 家庭中文版 x64（10.0.26200，内部版本 26200，普通未提权用户），`PATH` 上带项目 venv 启动器的 Python 3.12，Node.js 24.22.3
+- 复现方法: `. .\.winstrata\env.ps1; cargo test --locked -p winstrata-runtime --test languages_windows`
+- 证据: `windows_language_plugins_enforce_the_container_boundary` 在 Windows AppContainer 启动阶段先因递归遍历宿主运行时目录（宿主 `site-packages` 超过 20,000 项）报 `isolation_unavailable: sandbox grant exceeded the file limit`；收窄运行时授权后，Python 启动时在 `stderr.log` 报 `No pyvenv.cfg file`。此外，对象析构时未撤回已授出的 AppContainer SID ACE，会在共享运行时目录残留权限项。
+- 根因: (1) `grant_tree` 对 Python/Node 安装前缀做全量递归遍历，触发 20,000 文件上限并暴露宿主 `site-packages`；(2) `cfg!(windows)` 下直接启动 `.winstrata/venv/Scripts/python.exe` 会运行 venv 重定向启动器，在仅允许 1 个活动进程的作业对象及无法访问外层 `.winstrata/venv/pyvenv.cfg` 的 AppContainer 内失败；(3) `Profile`/`Guard` 析构时未调用撤权，且 `walk_grant` 未仅针对 `SE_DACL_PROTECTED` 后代节点补授。
+- 影响: 在存在完整宿主扩展树或项目 venv 在 `PATH` 靠前位置的 Windows 11 主机上，Python 语言插件无法在 AppContainer 中启动，且失败测试会在运行时目录残留 AppContainer SID ACE。
+- 修复计划: 在 `core/src/plugins/sandbox.rs` 和 `core/src/plugins/language.rs` 中，于 `Toolchain::bind` 在 `cfg!(windows)` 下解析 `sys._base_executable`；用非继承的顶层/标准库前缀授权替代全量目录树遍历（`grant_python_prefix` 跳过 `site-packages` 和 `__pycache__`，`grant_node_prefix` 跳过 `node_modules` 等子目录）；`walk_grant` 仅对 `SE_DACL_PROTECTED` 节点单独补授；并在析构时调用 `revoke_all` 撤回全部已授出 ACE。已在分支 `pr/054-windows11-remediation` 实现。
+- 重测结果: 在 `RUSTFLAGS="-Dwarnings"` 下 `cargo test --locked -p winstrata-runtime --test languages_windows` 通过 2/2 项测试（`windows_language_plugins_enforce_the_container_boundary` 与 `declared_windows_node_and_python_match_project_pins`），验证了本地与目录模块加载、宿主文件读取拒绝、TCP 拒绝、HKCU 注册表访问拒绝、`cmd.exe` 子进程拒绝、私有文件保留、`tasklist` 确认退出以及 `icacls` 确认无 `S-1-15-2-*` 残留。
+- 当前状态: 已在分支 `pr/054-windows11-remediation` 解决
+
+<a id="err-028"></a>
+
+## ERR-028
+
+- Error ID: ERR-028
+- 发现时间: 2026-11-28，计划 054 扩展 `languages_windows.rs` 期间
+- 关联 PR: 计划 054，分支 `pr/054-windows11-remediation`（来源行为源自计划 015）
+- 环境: Windows 11 家庭中文版 x64（10.0.26200，内部版本 26200，普通未提权用户），线程位于 `WinSta0\exebox-*` 桌面（`(A;;CCDTCRRC;;;AC)`），零能力 AppContainer，Node.js 24.22.3（`win-x64`）
+- 复现方法: 通过 `spawn_windows` 在零能力 AppContainer（`S-1-15-2-*`）内启动 JavaScript/TypeScript 插件（`node.exe` 24.22.3），或在同一容器内执行独立 `node.exe -e "process.exit(42)"` 探针
+- 证据: `host.enable("fixture.jswin")` 在首次 IPC 帧读取失败，报错 `unavailable: failed to fill whole buffer`，`stderr.log` 为 0 字节。独立 PowerShell/C AppContainer 探针显示 `node.exe`、`user32`、`ole32`、`shell32` 均返回退出码 `0xC0000142`（`STATUS_DLL_INIT_FAILED`），而 `kernel32`、`crypt32`、`winmm`、`dbghelp` 正常返回 `42`。`dumpbin /dependents` 确认 `node.exe` 静态导入 `USER32.dll`、`SHELL32.dll` 与 `ole32.dll`，而 `python.exe` / `python312.dll` 仅导入 `KERNEL32.dll`、`ADVAPI32.dll`、`WS2_32.dll`、`bcrypt.dll` 与 `VERSION.dll`。线程桌面 SDDL 显示 `ALL APPLICATION PACKAGES`（`AC`）仅获 `CCDTCRRC`。
+- 根因: `node.exe` 静态链接了 `USER32.dll` / `SHELL32.dll` / `ole32.dll`，当继承的 Window Station / Desktop DACL 未授予 `AC` 所需的桌面创建/写入权限时（在受限执行桌面及非交互式 Session 0 服务桌面均适用），这些 DLL 的初始化会在零能力 AppContainer 内以 `STATUS_DLL_INIT_FAILED`（`0xC0000142`）失败。
+- 影响: 在继承桌面 DACL 未授予 `AC` 完整 `USER32.dll` 初始化权限的 Windows 主机或会话下，JavaScript 和 TypeScript 语言插件无法完成进程初始化。Python 语言插件不受影响并正常通过。
+- 修复计划: 未指派的后续设计事项（需在不削弱隔离、不篡改宿主桌面 ACL 的前提下，研究合规的桌面/窗口站或 Node 运行时隔离方案）。关联 [OI-062](../OPEN_ITEMS.md#oi-062)。
+- 重测结果: 待确定批准方案后测试
+- 当前状态: 未解决

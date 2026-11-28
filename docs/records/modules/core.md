@@ -149,3 +149,35 @@ Authoritative error records for `core`. [AG-63](../../../AGENTS.md#ag-63) requir
 - Fix plan: drop a canonical `\\?\` drive prefix before opening the anchor. The directory-shape check stays. The pulse observe test stays.
 - Retest result: on `c827132aa9d072a0239594d12729e53c2ec81eff`, Windows Server 2022 `cargo test --locked --workspace` passed, including `counters_history_and_unsupported_readings_survive_pause_and_disable`. [Windows job](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171555). Linux workspace checks and Workspace checks on that head also passed. [Linux](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738171180) · [Workspace](https://github.com/zemeng5208/winstrata/actions/runs/46068088739/job/140738791133). The published `winstrata/merge-policy` status on that head failed with “Plan 022 must merge before plan 024”. [Policy run](https://github.com/zemeng5208/winstrata/actions/runs/46068086984). That order result is expected and is not this defect. This later record writes that retest down, so its own four gates are not those results.
 - Current state: resolved
+
+<a id="err-026"></a>
+
+## ERR-026
+
+- Error ID: ERR-026
+- Discovery time: 2026-11-28, during local Windows 11 verification after main `4f257ae`
+- Related PR: plan 054, branch `pr/054-windows11-remediation` (source behavior from plan 015)
+- Environment: Windows 11 Home Chinese x64 (10.0.26200, build 26200, ordinary unelevated user), Python 3.12 with project venv launcher on `PATH`, Node.js 24.22.3
+- Reproduction method: `. .\.winstrata\env.ps1; cargo test --locked -p winstrata-runtime --test languages_windows`
+- Evidence: `windows_language_plugins_enforce_the_container_boundary` failed during Windows AppContainer startup first with `isolation_unavailable: sandbox grant exceeded the file limit` when recursively walking host runtime trees (>20,000 entries under host `site-packages`), and on Python launch after narrowing runtime grants failed with `No pyvenv.cfg file` inside `stderr.log`. Dropping an active grant also left explicit AppContainer SID ACEs on shared runtime paths until revocation was added.
+- Root cause: (1) `grant_tree` recursively visited every descendant of the Python/Node installation prefix, exceeding the 20,000-file grant cap and exposing host `site-packages`; (2) passing `.winstrata/venv/Scripts/python.exe` directly on `cfg!(windows)` invoked the venv redirector binary inside a 1-process Job Object and AppContainer without access to the outer `.winstrata/venv/pyvenv.cfg`; (3) `Profile`/`Guard` did not revoke granted ACEs upon drop, and protected DACLs were touched on non-protected inherited descendants.
+- Impact: Python language plugins could not start inside the Windows AppContainer on a Windows 11 host with populated runtime trees or a project venv on `PATH`, and test cleanup left AppContainer SID ACEs on the runtime directory.
+- Fix plan: in `core/src/plugins/sandbox.rs` and `core/src/plugins/language.rs`, resolve `sys._base_executable` on `cfg!(windows)` in `Toolchain::bind`, replace recursive runtime tree walking with non-inheritable top-level/stdlib-only prefix grants (`grant_python_prefix` skipping `site-packages` and `__pycache__`, `grant_node_prefix` skipping subdirectories such as `node_modules`), only grant `SE_DACL_PROTECTED` descendants inside `walk_grant`, and revoke all recorded ACEs via `revoke_all` on drop. Implemented on branch `pr/054-windows11-remediation`.
+- Retest result: `cargo test --locked -p winstrata-runtime --test languages_windows` passed 2/2 tests with `RUSTFLAGS="-Dwarnings"` (`windows_language_plugins_enforce_the_container_boundary` and `declared_windows_node_and_python_match_project_pins`), verifying local/catalog module load, denied host file read, denied TCP socket, denied HKCU registry access, denied `cmd.exe` spawn, private file preservation, and clean `tasklist` exit plus ACE revocation (`icacls` confirmed no `S-1-15-2-*` residue).
+- Current state: resolved on branch `pr/054-windows11-remediation`
+
+<a id="err-028"></a>
+
+## ERR-028
+
+- Error ID: ERR-028
+- Discovery time: 2026-11-28, during plan 054 expansion of `languages_windows.rs`
+- Related PR: plan 054, branch `pr/054-windows11-remediation` (source behavior from plan 015)
+- Environment: Windows 11 Home Chinese x64 (10.0.26200, build 26200, ordinary unelevated user) under desktop `WinSta0\exebox-*` (`(A;;CCDTCRRC;;;AC)`) with zero-capability AppContainer and Node.js 24.22.3 (`win-x64`)
+- Reproduction method: run JavaScript/TypeScript plugin (`node.exe` 24.22.3) via `spawn_windows` inside a zero-capability AppContainer (`S-1-15-2-*`), or launch an isolated `node.exe -e "process.exit(42)"` probe in the same container
+- Evidence: `host.enable("fixture.jswin")` failed on first IPC frame read with `unavailable: failed to fill whole buffer` and 0-byte `stderr.log`. Standalone PowerShell/C AppContainer probe returned exit code `0xC0000142` (`STATUS_DLL_INIT_FAILED`) for `node.exe`, `user32`, `ole32`, and `shell32` probes, while `kernel32`, `crypt32`, `winmm`, and `dbghelp` returned `42`. `dumpbin /dependents` confirmed `node.exe` statically imports `USER32.dll`, `SHELL32.dll`, and `ole32.dll`, whereas `python.exe` / `python312.dll` import only `KERNEL32.dll`, `ADVAPI32.dll`, `WS2_32.dll`, `bcrypt.dll`, and `VERSION.dll`. Thread desktop SDDL showed `ALL APPLICATION PACKAGES` (`AC`) granted `CCDTCRRC` only.
+- Root cause: `node.exe` statically links `USER32.dll` / `SHELL32.dll` / `ole32.dll`, whose DLL initialization fails with `STATUS_DLL_INIT_FAILED` (`0xC0000142`) inside a zero-capability AppContainer whenever the inherited Window Station / Desktop DACL denies desktop access required by `USER32.dll` (observed on the restricted execution desktop and applicable to non-interactive Session 0 service desktops).
+- Impact: JavaScript and TypeScript language plugins fail to initialize on Windows hosts/sessions whose inherited desktop DACL does not grant `AC` full user32 desktop initialization rights. Python language plugins are unaffected and pass.
+- Fix plan: unassigned follow-up (requires sanctioned Windows Desktop/Window Station isolation or Node/JS runtime boundary design without weakening containment or tampering with host desktop ACLs). Tracked by [OI-062](../OPEN_ITEMS.md#oi-062).
+- Retest result: untested pending approved design
+- Current state: open

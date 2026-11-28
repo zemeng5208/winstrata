@@ -12,27 +12,27 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 | ID | State | Responsible plan |
 |---|---|---|
-| [OI-001](#oi-001) | Untested | 049 |
-| [OI-002](#oi-002) | Untested | 049 |
-| [OI-003](#oi-003) | Untested | 049 |
-| [OI-004](#oi-004) | Untested | 049 |
+| [OI-001](#oi-001) | Windows 11 client tested; Windows 10 deferred locally | 049 |
+| [OI-002](#oi-002) | Deferred locally (no ReFS volume) | 049 |
+| [OI-003](#oi-003) | Deferred locally (no second physical device) | 049 |
+| [OI-004](#oi-004) | Deferred locally (no second OS account allowed) | 049 |
 | [OI-005](#oi-005) | Untested | 042 |
-| [OI-006](#oi-006) | Untested | 031 |
-| [OI-007](#oi-007) | Unaccepted | 008, then 050 for the Linux cross-build |
+| [OI-006](#oi-006) | Closed on branch `pr/054-windows11-remediation` (`TShark`/`Editcap` 4.6.10) | 054 |
+| [OI-007](#oi-007) | Deferred locally (signed driver / HVCI not modified locally) | 008, then 050 for the Linux cross-build |
 | [OI-008](#oi-008) | Known limitation | Later storage plan, not 051 |
-| [OI-009](#oi-009) | Untested | 016 |
-| [OI-010](#oi-010) | Partially tested | 050 |
-| [OI-011](#oi-011) | Untested | 050 |
-| [OI-012](#oi-012) | Untested | 050 |
-| [OI-013](#oi-013) | Untested | 016 |
-| [OI-014](#oi-014) | Unaccepted | 008 follow-up |
+| [OI-009](#oi-009) | Partially tested on Windows 11 Edge WebView2 158.0.4370.45 | 016 |
+| [OI-010](#oi-010) | Partially tested (Windows 11 `doctor` and `build` passed) | 050 |
+| [OI-011](#oi-011) | Partially tested (Windows 11 `doctor` and `build` passed) | 050 |
+| [OI-012](#oi-012) | Deferred locally (Linux-only `cross-probe`; no Linux artifacts) | 050 |
+| [OI-013](#oi-013) | Closed on Windows 11 ordinary user (`pr/054-windows11-remediation`) | 054 |
+| [OI-014](#oi-014) | Deferred locally (no SCM service registration allowed) | 008 follow-up |
 | [OI-015](#oi-015) | Known limitation | 018, 022 |
 | [OI-016](#oi-016) | Closed | 021 |
 | [OI-017](#oi-017) | Untested | 031 |
 | [OI-018](#oi-018) | Closed | 021 |
-| [OI-019](#oi-019) | Partly tested | 015 |
+| [OI-019](#oi-019) | Partially tested on Windows 11 (Python passed; JS/TS hits [ERR-028](modules/core.md#err-028)) | 015, [OI-062](#oi-062) |
 | [OI-020](#oi-020) | Untested | 015, 048 |
-| [OI-021](#oi-021) | Known limitation | 050 |
+| [OI-021](#oi-021) | Closed on branch `pr/054-windows11-remediation` | 054 |
 | [OI-022](#oi-022) | Pending decision | Owner |
 | [OI-023](#oi-023) | Pending decision | 016 |
 | [OI-024](#oi-024) | Pending decision | 030 |
@@ -62,15 +62,16 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-050](#oi-050) | Untested on the authoring host | 026 |
 | [OI-051](#oi-051) | Unimplemented | 030, 031, 032, 016, 042 |
 | [OI-052](#oi-052) | Closed on Windows Server 2022 for head `bc009ea` | 028 |
-| [OI-053](#oi-053) | Untested | 028 |
-| [OI-054](#oi-054) | Untested | 029 |
+| [OI-053](#oi-053) | Partially tested on Windows 11 (idle page verified) | 028 |
+| [OI-054](#oi-054) | Closed on Windows 11 (`10.0.26200` `/tags` idle check) | 029 |
 | [OI-055](#oi-055) | Closed on Windows Server 2022 for head `a4f2edd` | 029 |
 | [OI-056](#oi-056) | Unimplemented | 045 |
-| [OI-057](#oi-057) | Unimplemented | 030 |
+| [OI-057](#oi-057) | Closed on branch `pr/054-windows11-remediation` | 054 |
 | [OI-058](#oi-058) | Closed for head `2b4a202` job 140822369803 | 030 |
-| [OI-059](#oi-059) | Untested | 030 |
+| [OI-059](#oi-059) | Partially tested on Windows 11 (idle thresholds verified) | 030 |
 | [OI-060](#oi-060) | Unimplemented | 045 |
 | [OI-061](#oi-061) | Unimplemented | 050 |
+| [OI-062](#oi-062) | Untested / open ([ERR-028](modules/core.md#err-028)) | Follow-up |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -79,14 +80,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-001
 
 - Related requirement: [REQ-29.03](../roadmap/REQUIREMENTS.md)
-- Source PR: plans 004 and 006 through 013. The recorded Windows jobs are Windows Server 2022.
-- Current state: untested
-- Reason it is incomplete: no Windows 10 or Windows 11 client run is recorded. Server 2022 success is not that run.
-- Responsible PR: 049
+- Source PR: plans 004 and 006 through 013. Earlier Windows jobs were Windows Server 2022. Plan 054 ran local ordinary-user verification on Windows 11 Home Chinese x64 (10.0.26200, build 26200).
+- Current state: Windows 11 client tested (remaining elevated/JS gaps recorded); Windows 10 x64 deferred locally
+- Reason it is incomplete: Plan 054 verified Windows 11 Home Chinese x64 (10.0.26200) across `pr004-windows.ps1`, `pr004-appcontainer.ps1`, `pr004-mcp.test.mjs`, Edge WebView2 `158.0.4370.45` official GUI + `winstrata-desktop` real `run_window`, Python AppContainer (`fixture.pywin`), external `TShark`/`Editcap` 4.6.10, and 17 passing workspace crates; 6 targets failed only with Win32 Error 5 under the ordinary unelevated token, and Node AppContainer hit [ERR-028](modules/core.md#err-028). On 2026-11-28 the owner confirmed no Windows 10 machine is available locally, so Windows 10 x64 is deferred locally.
+- Responsible PR: 049 (Windows 10 x64 if external hardware/VM becomes available, plus elevated-machine regression)
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows 10 x64 and Windows 11 x64 client installations, not Server 2022
 - Acceptance criteria: the workspace tests that exist at that time, and the product flows that exist, run on both client versions and the versions are recorded
-- Close conditions: those records exist, or the owner records a narrower supported range from evidence. Not closed by a Server 2022 job.
+- Close conditions: Windows 11 evidence is recorded in [STATUS.md](STATUS.md#pr-054-verification); full closure waits for Windows 10 or an owner-approved narrowing of [REQ-02.01](../roadmap/REQUIREMENTS.md).
 
 <a id="oi-002"></a>
 
@@ -94,13 +95,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-11.01](../roadmap/REQUIREMENTS.md)
 - Source PR: plans 006, 012, and 013. [Core storage](../architecture/CORE-STORAGE.md) says ReFS has not been exercised.
-- Current state: untested
-- Reason it is incomplete: filesystem testing that was recorded used NTFS on Windows and the Linux host filesystem
+- Current state: deferred locally (host volumes are NTFS/FAT32 only; owner prohibited disk/system changes)
+- Reason it is incomplete: filesystem testing on Windows 11 10.0.26200 and CI used NTFS and Linux host filesystems. All volumes on the owner bench are NTFS or FAT32, with no ReFS partition available.
 - Responsible PR: 049
 - Handoff owner: repository owner zemeng5208
 - Verification environment: a Windows volume formatted ReFS
 - Acceptance criteria: private-directory checks, migration, and hybrid create are exercised on ReFS, or the attempt fails and the limitation is recorded
-- Close conditions: that evidence is in the repository. Not closed by NTFS results.
+- Close conditions: that evidence is in the repository, or the owner excludes ReFS before release. Not closed by NTFS results.
 
 <a id="oi-003"></a>
 
@@ -108,13 +109,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-14.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 013. The plan 013 acceptance text includes cross-device integrity. A second physical device was not run.
-- Current state: untested
-- Reason it is incomplete: Linux cross-location migration keeps the source on the same host. It is not a second machine.
+- Current state: deferred locally (single physical machine only)
+- Reason it is incomplete: Linux cross-location migration keeps the source on the same host, and on 2026-11-28 the owner confirmed only a single physical machine is available locally.
 - Responsible PR: 049. Plan 038 remains plugin and time-range export. Plan 051 does not run the device.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: two physical machines, using the portable vault
 - Acceptance criteria: ciphertext is restored or migrated onto the second machine and decrypts there, and the source remains as the plan 013 rule requires
-- Close conditions: that run is recorded. Not closed by the same-host Linux migration.
+- Close conditions: that run is recorded. Not closed by the same-host migration.
 
 <a id="oi-004"></a>
 
@@ -122,8 +123,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-14.02](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 013
-- Current state: untested
-- Reason it is incomplete: a second OS account was not run. The Linux user-mismatch test is not that account.
+- Current state: deferred locally (owner prohibited creating a second local OS account)
+- Reason it is incomplete: a second OS account was not run. On 2026-11-28 the owner prohibited creating new OS accounts on this computer.
 - Responsible PR: 049
 - Handoff owner: repository owner zemeng5208
 - Verification environment: two OS accounts on one host
@@ -137,7 +138,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Related requirement: [REQ-14.01](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 013. GUI lock display remains plan 042.
 - Current state: untested
-- Reason it is incomplete: no GUI was run
+- Reason it is incomplete: no GUI lock flow was run
 - Responsible PR: 042
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the Windows GUI on a machine that can lock and unlock the vault
@@ -149,14 +150,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-006
 
 - Related requirement: [REQ-11.02](../roadmap/REQUIREMENTS.md)
-- Source PR: plan 012. The host had no `tshark`, `tcpdump`, or `editcap`.
-- Current state: untested
-- Reason it is incomplete: the in-tree parser checked section-header magic `0x0A0D0D0A` and read the packet bytes back. No external PCAPNG tool was run.
-- Responsible PR: 031
+- Source PR: plan 012. Closed locally in plan 054.
+- Current state: closed on branch `pr/054-windows11-remediation`
+- Reason it is incomplete: satisfied locally. Plan 054 installed portable `TShark (Wireshark) 4.6.10 (v4.6.10-0-geac916f07299)` and `Editcap (Wireshark) 4.6.10 (v4.6.10-0-geac916f07299)` under gitignored `.winstrata/toolchain/wireshark/App/Wireshark`, added `hybrid::tests::external_pcapng_tools_read_risk_tagged_capture_segment` in `core/src/hybrid/tests.rs`, read a real risk-tagged PCAPNG capture file (`reason: "risk.connection"`) via `tshark`, and converted/reread it via `editcap -F pcapng` (verifying `0x0A0D0D0A`).
+- Responsible PR: 054
 - Handoff owner: repository owner zemeng5208
-- Verification environment: a host with one of those three tools
-- Acceptance criteria: the tool reads a risk-tagged capture written by the store
-- Close conditions: the tool name, version, and result are recorded. The in-tree parser does not close this item.
+- Verification environment: Windows 11 Home Chinese x64 (10.0.26200) with Wireshark 4.6.10 CLI tools (`WINSTRATA_REQUIRE_PCAP_TOOLS=1`)
+- Acceptance criteria: external tool reads a risk-tagged capture written by the store
+- Close conditions: met by `TShark` 4.6.10 and `Editcap` 4.6.10 run on `pr/054-windows11-remediation`.
 
 <a id="oi-007"></a>
 
@@ -164,9 +165,9 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [AS-001](STATUS.md) and plan 008 acceptance, which requires Windows load and unload
 - Source PR: plans 003, 008, 009, 010, and 011. No signed INF/CAT package was built or loaded. Secure Boot and HVCI were not exercised. `CatalogHost` returns `image_absent`.
-- Current state: unaccepted
-- Reason it is incomplete: Linux linked the plan 003 probes. Windows jobs refused to start a missing image. That is not a signed load.
-- Responsible PR: the unfinished plan 008 acceptance. Plan 050 still has to verify the full Linux cross-build and does not by itself close the Windows load. The owner assigns the driver PR. Plan 051 does not load a driver.
+- Current state: deferred locally (unaccepted; owner prohibited system/driver modifications on this host)
+- Reason it is incomplete: Linux linked the plan 003 probes, and the Windows 11 unelevated bench cannot and must not install test-signed drivers or modify Secure Boot/HVCI.
+- Responsible PR: the unfinished plan 008 acceptance. Plan 050 still has to verify the full Linux cross-build and does not by itself close the Windows load.
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows with Secure Boot and HVCI enabled, and a signed INF/CAT package
 - Acceptance criteria: a representative driver loads and unloads, and the evidence names the package, the Windows edition, and the protection state
@@ -192,36 +193,36 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-19.01](../roadmap/REQUIREMENTS.md)
 - Source PR: owner designation on 2026-11-27, recorded by plan 051. Plan 004 measured Amicro, Glasswork, and shadcn-admin only. Upstream commit read for the designation: `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`.
-- Current state: untested
-- Reason it is incomplete: Plan 016 mounts the original Ink Switch and Signal Return from revision `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`. Fluent UI, Astryx, and the Geist font file are not product files. This revision still has not had the plan 004 WebView2 or performance measurement.
+- Current state: partially tested on Windows 11 Edge WebView2 158.0.4370.45
+- Reason it is incomplete: Plan 016 mounts the original Ink Switch and Signal Return from revision `c9eece0fe425ee7dfe97d162d39d1665c3bf9368`. Fluent UI, Astryx, and the Geist font file are not product files. Plan 054 ran `packages/ui/vendor/ui-moments/gallery/originals/index.html` offline inside embedded Edge WebView2 `158.0.4370.45` with Microsoft-signed `WebView2Loader.dll` `1.0.2903.40` (`startupMs: 531`, `blockedExternalRequests: 0`, `beforeChecked: "false"`, `afterChecked: "true"`, `svgCount: 5`, `samples: 30`, `intervalMedianMs: 6.1`, `intervalP95Ms: 54.6`). The selected revision's formal license and version closure by the owner remains open.
 - Responsible PR: 016
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the same class of offline WebView2 measurement used for the three measured sources, plus the selected revision's license and version review
 - Acceptance criteria: that evidence is recorded for the selected UI Moments revision, or the owner withdraws the designation
-- Close conditions: one of those two outcomes is recorded. Designation does not close it. GitHub PR #11 stays open for the owner. See [OI-033](#oi-033).
+- Close conditions: owner review/closure of the selected revision's license and version is recorded alongside the WebView2 measurement.
 
 <a id="oi-010"></a>
 
 ## OI-010
 
 - Related requirement: [REQ-28.03](../roadmap/REQUIREMENTS.md)
-- Source PR: plans 007 through 013. The active Node.js on those hosts was v22.23.4. The pinned engine is 24.22.3. `cargo dev doctor` was not run there. Plans 012 and 013 also did not run `cargo dev verify` on that host. The workspace test command was run directly.
-- Current state: partially tested
-- Reason it is incomplete: Linux CI runs `.github/scripts/check-workspace.sh`, which calls `cargo dev verify`, and verify calls the doctor check. Windows CI runs `cargo test --locked --workspace` and does not run `cargo dev doctor`. The mismatched local Node runs are not a pinned-Node doctor result.
+- Source PR: plans 007 through 013. Plan 054 ran on Windows 11 with pinned Node.js 24.22.3, pnpm 11.25.0, and Rust 1.100.0 (`rustfmt` installed).
+- Current state: partially tested (Windows 11 `cargo dev doctor` and `cargo dev build` passed)
+- Reason it is incomplete: `cargo dev doctor` and `cargo dev build` passed on Windows 11 10.0.26200 under Node 24.22.3 and `rustc 1.100.0`. Full `cargo dev verify` on an elevated environment without Win32 Error 5 exclusions remains for PR 050.
 - Responsible PR: 050
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows with Node.js 24.22.3 and the pinned Rust toolchain
 - Acceptance criteria: `cargo dev doctor` and `cargo dev verify` are recorded on that Windows host
-- Close conditions: that record exists. Linux CI does not close the Windows doctor gap.
+- Close conditions: that record exists.
 
 <a id="oi-011"></a>
 
 ## OI-011
 
 - Related requirement: [REQ-28.01](../roadmap/REQUIREMENTS.md)
-- Source PR: plan 001. Linux doctor, init, build, and verify passed. Windows host execution remains unverified.
-- Current state: untested
-- Reason it is incomplete: no Windows run of the developer tool was recorded
+- Source PR: plan 001. Linux doctor, init, build, and verify passed. Plan 054 ran `doctor` and `build` on Windows 11.
+- Current state: partially tested (Windows 11 `cargo dev doctor` and `cargo dev build` passed)
+- Reason it is incomplete: Windows 11 10.0.26200 passed `cargo dev doctor` and `cargo dev build`. Full `cargo dev init` and `cargo dev verify` across every workspace target on an elevated host remain for PR 050.
 - Responsible PR: 050
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows x64 with the pinned toolchain
@@ -233,12 +234,12 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-012
 
 - Related requirement: plan 003 acceptance, link and inspect real artifacts
-- Source PR: plan 003. The Linux probes linked. No Windows program or driver was executed. Images stayed in ignored directories.
-- Current state: untested
-- Reason it is incomplete: the probe images were not executed on Windows. Signing and load remain [OI-007](#oi-007).
-- Responsible PR: 050 for the cross-build evidence. OI-007 remains the load.
+- Source PR: plan 003. The Linux probes linked. `cargo dev cross-probe` runs on Linux only; the Windows bench `target/` contains no Linux cross-build outputs.
+- Current state: deferred locally (no Linux cross-build outputs on this Windows bench)
+- Reason it is incomplete: `cargo dev cross-probe` is Linux-only and the Windows local bench holds no Linux `target/` driver artifacts. Signing and load remain [OI-007](#oi-007).
+- Responsible PR: 050 for the cross-build evidence on Linux. OI-007 remains the load.
 - Handoff owner: repository owner zemeng5208
-- Verification environment: a Windows host that can inspect the linked PE images without treating them as a product driver
+- Verification environment: Linux cross-build toolchain plus a Windows host inspecting real linked PE images
 - Acceptance criteria: the images are inspected on Windows, or the owner records why the Linux inspection remains the only evidence
 - Close conditions: that record exists. It does not mark a driver loaded.
 
@@ -247,14 +248,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-013
 
 - Related requirement: [AS-002](STATUS.md) and [E2E-11](#e2e-11)
-- Source PR: plan 008. The Windows job is not an interactive unelevated GUI.
-- Current state: untested
-- Reason it is incomplete: Plan 016 type-checks the Windows window, tray, and WebView2 loader path. This Linux host did not run an ordinary Windows GUI session. E2E-11 is not complete.
-- Responsible PR: 016
+- Source PR: plan 008 and plan 016. Closed locally for Windows 11 ordinary user in plan 054.
+- Current state: closed on Windows 11 ordinary user (`pr/054-windows11-remediation`)
+- Reason it is incomplete: satisfied on Windows 11 Home Chinese x64 (10.0.26200) under ordinary unelevated user (`administratorToken: false`, `windows_ordinary` on `/service`). Both the live official GUI WebView2 158.0.4370.45 session (`startupMs: 685`, theme switching, `zh-CN` toggle, D-drive onboarding, `480x700` layout check) and `winstrata-desktop` `windows_official_window_attaches_webview2_resizes_hides_to_tray_and_quits` passed without elevation.
+- Responsible PR: 054
 - Handoff owner: repository owner zemeng5208
-- Verification environment: an ordinary-user Windows GUI session
+- Verification environment: an ordinary-user Windows 11 10.0.26200 GUI session
 - Acceptance criteria: the GUI runs under an unelevated user and the privilege is recorded
-- Close conditions: that session is recorded
+- Close conditions: met by Windows 11 ordinary-user evidence in [STATUS.md](STATUS.md#pr-054-verification) (does not waive full E2E-11 dashboard/widgets).
 
 <a id="oi-014"></a>
 
@@ -262,11 +263,11 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: plan 008 acceptance for the service control plane
 - Source PR: plan 008. `winstrata-service` is not registered with the Service Control Manager.
-- Current state: unaccepted
-- Reason it is incomplete: pipe and token tests ran. Service registration did not.
+- Current state: deferred locally (unaccepted; owner prohibited modifying system services)
+- Reason it is incomplete: pipe and token tests ran, and unelevated `CreateServiceW` fails with Win32 Error 5 (`ERR-021` open). On 2026-11-28 the owner explicitly prohibited registering system services or modifying OS configuration on this host.
 - Responsible PR: unfinished plan 008 acceptance. The owner schedules the services change. Plan 047 does not replace this item.
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows Server 2022 Service Control Manager
+- Verification environment: elevated Windows Service Control Manager (not permitted on owner's single bench)
 - Acceptance criteria: `winstrata-service` is created, started, and stopped through the Service Control Manager, or the owner names another plan that owns registration before plan 008 can be called accepted
 - Close conditions: one of those two records exists
 
@@ -331,14 +332,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-019
 
 - Related requirement: plan 004 isolation evidence and [REQ-21.02](../roadmap/REQUIREMENTS.md)
-- Source PR: plan 004. The platform report says revocation of already-open handles, network access, the registry, and hosting full Python or Node runtimes remain unverified.
-- Current state: untested on Windows
-- Reason it is incomplete: Linux plan 015 denied sockets, new programs, files outside the ruleset, and inherited descriptors for real Python and Node processes. A handle opened inside the allowed state directory stayed readable after that. The Windows AppContainer, registry, and network test is in the suite and was not executed on the authoring host.
-- Responsible PR: 015
+- Source PR: plan 004 and plan 015; updated in plan 054 on Windows 11.
+- Current state: partially tested on Windows 11 (Python passed; JS/TS hits [ERR-028](modules/core.md#err-028))
+- Reason it is incomplete: Linux plan 015 denied sockets, new programs, files outside the ruleset, and inherited descriptors for real Python and Node processes. On Windows 11 Home Chinese x64 (10.0.26200), after plan 054 fixed [ERR-026](modules/core.md#err-026), `winstrata-runtime --test languages_windows` passed Python AppContainer isolation (`fixture.pywin`: local/catalog modules, denied host read, denied TCP socket, denied HKCU open, denied `cmd.exe` spawn, private storage `SE_DACL_PROTECTED`, and termination on disable). Zero-capability AppContainer launch of `node.exe` (`JavaScript`/`TypeScript`) hits `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on `USER32.dll` init under restricted desktop DACLs ([ERR-028](modules/core.md#err-028) / [OI-062](#oi-062)).
+- Responsible PR: 015, plus [OI-062](#oi-062)
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows AppContainer or the isolation plan 015 selects
-- Acceptance criteria: each named gap is tested or explicitly left unsupported with evidence
-- Close conditions: that record exists
+- Verification environment: Windows AppContainer (both interactive `WinSta0\Default` and restricted/Session 0 desktops)
+- Acceptance criteria: each named gap is tested across Python, JavaScript, and TypeScript or explicitly bounded with evidence
+- Close conditions: [ERR-028](modules/core.md#err-028) / [OI-062](#oi-062) is resolved or explicitly bounded by the owner.
 
 <a id="oi-020"></a>
 
@@ -359,14 +360,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-021
 
 - Related requirement: [REQ-28.03](../roadmap/REQUIREMENTS.md)
-- Source PR: plan 006. Workspace-wide rustfmt still reports legacy layout differences in unchanged developer-tool source.
-- Current state: known limitation
-- Reason it is incomplete: the difference was recorded. No failing CI check for rustfmt was stored, so this is not entered as a defect.
-- Responsible PR: 050
+- Source PR: plan 006. Closed in plan 054 on branch `pr/054-windows11-remediation`.
+- Current state: closed on branch `pr/054-windows11-remediation`
+- Reason it is incomplete: satisfied locally. Plan 054 installed the `rustfmt` component for `1.100.0-x86_64-pc-windows-msvc`, formatted `toolchains/dev`, and verified `cargo fmt --check -p winstrata-dev` exits 0.
+- Responsible PR: 054
 - Handoff owner: repository owner zemeng5208
-- Verification environment: the pinned Rust toolchain
-- Acceptance criteria: `cargo fmt --check` is clean for `toolchains/dev`, or the owner accepts the current layout
-- Close conditions: one of those two records exists
+- Verification environment: pinned Rust 1.100.0 toolchain with `rustfmt`
+- Acceptance criteria: `cargo fmt --check -p winstrata-dev` exits 0 cleanly
+- Close conditions: met by `cargo fmt -p winstrata-dev` and `cargo fmt --check -p winstrata-dev` on `pr/054-windows11-remediation`.
 
 <a id="oi-022"></a>
 
@@ -850,8 +851,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07) and [REQ-16.03](../roadmap/REQUIREMENTS.md)
 - Source PR: plan 027
-- Current state: untested
-- Reason it is incomplete: the Windows workspace job on `a66da7b749ef5657d55f72cccd2d699783dd4a6f` ran the three languages inside the plugin test. No Windows session opened the official scripts page. Plan 025 holds OI-040, OI-041, and OI-042, so this page session is OI-044.
+- Current state: partially tested on Windows 11 (idle `/scripts` check in Edge WebView2 `158.0.4370.45`)
+- Reason it is incomplete: Plan 054 opened `/scripts` in live Edge WebView2 `158.0.4370.45` on Windows 11 (`10.0.26200`) and verified `presets: 0` with no `presets` directory created. Live running-plugin script creation/edit/debug/trigger/disable across Python, JavaScript, and TypeScript in the UI still awaits interactive verification with `strata.script` running.
 - Responsible PR: 027
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with storage selected, `winstrata-strata-script` beside the runtime, the project Python and Node.js pins, and the official scripts page
@@ -962,8 +963,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-13.02](../roadmap/REQUIREMENTS.md) and [E2E-07](../roadmap/ACCEPTANCE.md#e2e-07)
 - Source PR: plan 028
-- Current state: untested
-- Reason it is incomplete: no Windows session opened the official filter page. The Linux bridge test returns the idle body before a storage location and does not create a plugins directory. That test does not open the page on Windows. This item is OI-053 because [OI-044](#oi-044) is the plan 027 scripts page.
+- Current state: partially tested on Windows 11 (idle `/filters` check in Edge WebView2 `158.0.4370.45`)
+- Reason it is incomplete: Plan 054 opened `/filters` in live Edge WebView2 `158.0.4370.45` on Windows 11 (`10.0.26200`) and verified `kept: 0`. Interactive save/show with `winstrata-strata-filter` already running on Windows still remains open.
 - Responsible PR: 028
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with storage selected, `winstrata-strata-filter` beside the runtime and already running, and the official filter page
@@ -976,13 +977,13 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-10.01](../roadmap/REQUIREMENTS.md) and PL-24
 - Source PR: plan 029, `plugins/strata-tag`
-- Current state: untested
-- Reason it is incomplete: no Windows session opened the official tag page. The Linux bridge test only checks that `tag-apply` stays idle before a storage location and that `enable` stays forbidden. Plan 027 holds [OI-044](#oi-044). This page session is OI-054. OI-052 and OI-053 above stay the plan 028 rows. This row does not change them.
-- Responsible PR: 029, on a Windows session that opens `/tags`
+- Current state: closed on Windows 11 (`10.0.26200` Edge WebView2 `158.0.4370.45`)
+- Reason it is incomplete: satisfied on Windows 11 Home Chinese x64 (`10.0.26200`). Plan 054 opened `/tags` in live embedded Edge WebView2 `158.0.4370.45` (`windows_ordinary`), verified idle `safety: "none"`, `tag-apply` without `enable` or `grant`, and `tag_page_stays_idle_and_does_not_create_plugins_before_a_location` passing in `winstrata-desktop`.
+- Responsible PR: 029, verified in 054
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows 10 or 11 x64, the official shell, with `strata.tag` not started by the page
 - Acceptance criteria: the page shows the idle state, sends only `tag-apply`, and does not send `enable` or `grant`. A Linux bridge test does not close it.
-- Close conditions: that session is recorded. This row does not close [OI-001](#oi-001), [E2E-04](#e2e-04), or [OI-055](#oi-055). It is not an exemption.
+- Close conditions: met on Windows 11 (`10.0.26200`). Does not close [OI-001](#oi-001) (Windows 10 deferred), [E2E-04](#e2e-04), [OI-055](#oi-055), or [OI-056](#oi-056).
 
 <a id="oi-055"></a>
 
@@ -1017,14 +1018,14 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 ## OI-057
 
 - Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md) and PL-25
-- Source PR: plan 030, `plugins/strata-storage`
-- Current state: unimplemented
-- Reason it is incomplete: the tray tip in the official host stays the product name. Plan 030 persists the pending ladder and shows it on `/storage`. It does not change the tray. A pending warning is not shown there. This item is OI-057 because OI-039 through OI-056 stay as already recorded.
-- Responsible PR: 030
+- Source PR: plan 030, `plugins/strata-storage`; closed in plan 054 (`ERR-027`).
+- Current state: closed on branch `pr/054-windows11-remediation`
+- Reason it is incomplete: satisfied in `apps/desktop`. Plan 054 added `format_tray_tip`, wired `hide_to_tray` to query `/command` `storage-status`, and verified on Windows 11 (`10.0.26200`) via `windows_official_window_attaches_webview2_resizes_hides_to_tray_and_quits` and `tray_tip_shows_pending_storage_categories_and_keeps_files` that hiding shows `"WinStrata — storage pending: logs"` while keeping data intact on disk.
+- Responsible PR: 054
 - Handoff owner: repository owner zemeng5208
-- Verification environment: Windows, with storage selected, a pending capture or saved-log threshold, and the official window hidden to the tray
+- Verification environment: Windows 11 Home Chinese x64 (`10.0.26200`), real Win32 host + WebView2 `158.0.4370.45`
 - Acceptance criteria: the tray shows the pending category, and hiding the window does not delete data
-- Close conditions: that session is recorded for the head that contains the tray change. Not closed by the ladder JSON. Not an exemption. It does not close [OI-024](#oi-024) or [OI-001](#oi-001).
+- Close conditions: met on `pr/054-windows11-remediation`. Does not close [OI-024](#oi-024) or Windows 10 part of [OI-001](#oi-001).
 
 <a id="oi-058"></a>
 
@@ -1046,8 +1047,8 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 
 - Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md) and PL-25
 - Source PR: plan 030, `plugins/strata-storage`
-- Current state: untested
-- Reason it is incomplete: no Windows session opened the official storage page. The Linux bridge test before a storage location returns `enabled` false and `storage` `unavailable` and does not create a plugins directory. That test does not close this row. The page sends `storage-status`, `storage-configure`, `storage-decline`, `storage-propose`, and `storage-confirm`. It does not send `enable` or `grant`. This item is OI-059 because OI-054 stays the plan 029 page.
+- Current state: partially tested on Windows 11 (`10.0.26200` `/storage` status & armed threshold `1000000000`)
+- Reason it is incomplete: Plan 054 opened `/storage` in live Edge WebView2 `158.0.4370.45` on Windows 11 (`10.0.26200`) and verified `Armed threshold, captures / logs 1000000000` plus real `storage-status` tray tooltip in `winstrata-desktop`. Full interactive threshold save, decline, and confirmed deletion in the `/storage` UI still awaits end-to-end UI execution.
 - Responsible PR: 030
 - Handoff owner: repository owner zemeng5208
 - Verification environment: Windows, with storage selected, and the official page at `/storage`
@@ -1067,6 +1068,20 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the plan 045 run, with `strata.mcp` installed and calling the storage capabilities
 - Acceptance criteria: an MCP caller can configure and propose, and a deletion still requires the trusted host confirmation
 - Close conditions: that run is recorded. Not closed by the script path in plan 030. Not an exemption. It does not close [OI-056](#oi-056).
+
+<a id="oi-062"></a>
+
+## OI-062
+
+- Related requirement: [REQ-21.02](../roadmap/REQUIREMENTS.md) and [REQ-21.03](../roadmap/REQUIREMENTS.md)
+- Source PR: plan 054 (`ERR-028` discovered during Windows 11 expansion of plan 015 AppContainer tests)
+- Current state: untested / open ([ERR-028](modules/core.md#err-028))
+- Reason it is incomplete: `node.exe` (`24.22.3` `win-x64`) statically imports `USER32.dll`, `SHELL32.dll`, and `ole32.dll`, failing with `0xC0000142` (`STATUS_DLL_INIT_FAILED`) inside a zero-capability AppContainer when the inherited desktop DACL grants `ALL APPLICATION PACKAGES` (`AC`) only `CCDTCRRC` (missing `DESKTOP_CREATEWINDOW` / `DESKTOP_WRITEOBJECTS`), such as `WinSta0\exebox-*` or Session 0 service desktops.
+- Responsible PR: unassigned follow-up (requires owner approval of sanctioned desktop/window-station or Node isolation design)
+- Handoff owner: repository owner zemeng5208
+- Verification environment: interactive `WinSta0\Default` desktop and restricted/Session 0 desktop on Windows 11 x64 with Node.js 24.22.3
+- Acceptance criteria: JavaScript and TypeScript language plugins execute inside Windows AppContainer without relaxing containment or tampering with host desktop ACLs, or the host explicitly documents a supported boundary
+- Close conditions: verified test record and updated [ERR-028](modules/core.md#err-028) resolution.
 
 <a id="e2e-17"></a>
 

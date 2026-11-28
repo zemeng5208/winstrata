@@ -36,6 +36,9 @@ ADR-001 still uses STATUS.md as the engineering record for progress and decision
 | ERR-023 | Resolved | [Core](modules/core.md#err-023) |
 | ERR-024 | Resolved | [StrataScript](modules/strata-script.md#err-024) |
 | ERR-025 | Resolved | [StrataStorage](modules/strata-storage.md#err-025) |
+| ERR-026 | Resolved | [Core](modules/core.md#err-026) |
+| ERR-027 | Resolved | [Desktop](modules/desktop.md#err-027) |
+| ERR-028 | Open | [Core](modules/core.md#err-028) |
 
 [`plugins/strata-storage`](modules/strata-storage.md) records [ERR-025](modules/strata-storage.md#err-025), resolved only for head `2b4a20271a626607cdff60f1b97db62de930cda7` and Windows job 140822369803. [OI-058](OPEN_ITEMS.md#oi-058) is closed only for that same head and job. Job 140803723177 does not close it. A later head does not inherit either close. `plugins/strata-script` has [ERR-024](modules/strata-script.md#err-024) resolved for the Windows retest on head `a4f2edd6efd32a504723664f037677f294279592`, job 140790098053. [ERR-022](modules/strata-script.md#err-022) stays resolved. The Windows AppContainer gap is [OI-045](OPEN_ITEMS.md#oi-045), not an error. [ERR-020](modules/strata-services.md#err-020) and [ERR-021](modules/strata-services.md#err-021) belong to `strata.services`.
 

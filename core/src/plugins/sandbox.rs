@@ -191,7 +191,7 @@ mod windows {
     use std::fs::File;
     use std::os::windows::ffi::OsStrExt;
     use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::ptr::{null, null_mut};
 
@@ -200,7 +200,7 @@ mod windows {
         WAIT_TIMEOUT,
     };
     use windows_sys::Win32::Security::Authorization::{
-        EXPLICIT_ACCESS_W, GRANT_ACCESS, GetNamedSecurityInfoW, NO_MULTIPLE_TRUSTEE,
+        EXPLICIT_ACCESS_W, GRANT_ACCESS, GetNamedSecurityInfoW, NO_MULTIPLE_TRUSTEE, REVOKE_ACCESS,
         SE_FILE_OBJECT, SetEntriesInAclW, SetNamedSecurityInfoW, TRUSTEE_IS_SID,
         TRUSTEE_IS_UNKNOWN, TRUSTEE_W,
     };
@@ -244,6 +244,7 @@ mod windows {
         job: OwnedHandle,
         profile: Vec<u16>,
         sid: PSID,
+        granted: Vec<(PathBuf, bool)>,
         pid: u32,
     }
 
@@ -254,6 +255,9 @@ mod windows {
             let _ = raw_handle(&self.thread);
             unsafe {
                 TerminateProcess(self.as_raw_process(), 1);
+            }
+            revoke_all(&self.granted, self.sid);
+            unsafe {
                 DeleteAppContainerProfile(self.profile.as_ptr());
                 FreeSid(self.sid);
             }
@@ -308,11 +312,13 @@ mod windows {
     struct Profile {
         name: Vec<u16>,
         sid: PSID,
+        granted: Vec<(PathBuf, bool)>,
     }
 
     impl Drop for Profile {
         fn drop(&mut self) {
             if !self.sid.is_null() {
+                revoke_all(&self.granted, self.sid);
                 unsafe {
                     DeleteAppContainerProfile(self.name.as_ptr());
                     FreeSid(self.sid);
@@ -323,25 +329,41 @@ mod windows {
     }
 
     impl Profile {
-        fn into_parts(mut self) -> (Vec<u16>, PSID) {
+        fn into_parts(mut self) -> (Vec<u16>, PSID, Vec<(PathBuf, bool)>) {
             let sid = self.sid;
             self.sid = null_mut();
-            (std::mem::take(&mut self.name), sid)
+            (
+                std::mem::take(&mut self.name),
+                sid,
+                std::mem::take(&mut self.granted),
+            )
         }
     }
 
     pub fn spawn_windows(
         command: &Command,
         state: &Path,
+        python_prefix: Option<&Path>,
+        node_prefix: Option<&Path>,
         read: &[impl AsRef<Path>],
         version: PluginVersion,
     ) -> Result<Live, PluginError> {
         let (name, sid) = container_profile()?;
-        let profile = Profile { name, sid };
-        for path in read {
-            grant_tree(path.as_ref(), profile.sid, false)?;
+        let mut profile = Profile {
+            name,
+            sid,
+            granted: Vec::new(),
+        };
+        if let Some(prefix) = python_prefix {
+            grant_python_prefix(prefix, profile.sid, &mut profile.granted)?;
         }
-        grant_tree(state, profile.sid, true)?;
+        if let Some(prefix) = node_prefix {
+            grant_node_prefix(prefix, profile.sid, &mut profile.granted)?;
+        }
+        for path in read {
+            grant_tree(path.as_ref(), profile.sid, false, &mut profile.granted)?;
+        }
+        grant_tree(state, profile.sid, true, &mut profile.granted)?;
         let job = job()?;
         let (stdin, stdout, child_in, child_out, child_err) = pipes(state)?;
         let mut startup = STARTUPINFOEXW::default();
@@ -445,13 +467,14 @@ mod windows {
             unsafe { TerminateProcess(process.as_raw_handle(), 1) };
             return Err(io_error("resume"));
         }
-        let (profile, sid) = profile.into_parts();
+        let (profile, sid, granted) = profile.into_parts();
         let guard = Guard {
             process,
             thread,
             job,
             profile,
             sid,
+            granted,
             pid: info.dwProcessId,
         };
         Live::from_pipes(Box::new(guard), stdin, stdout, version)
@@ -514,7 +537,12 @@ mod windows {
         })
     }
 
-    fn grant_tree(root: &Path, sid: PSID, write: bool) -> Result<(), PluginError> {
+    fn grant_tree(
+        root: &Path,
+        sid: PSID,
+        write: bool,
+        granted: &mut Vec<(PathBuf, bool)>,
+    ) -> Result<(), PluginError> {
         let root = std::fs::canonicalize(root).map_err(|error| {
             PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
         })?;
@@ -525,9 +553,96 @@ mod windows {
             ));
         }
         let mut visited = 0u32;
-        grant_one(&root, sid, write)?;
+        grant_one(&root, sid, write, true, granted)?;
         if root.is_dir() {
-            walk_grant(&root, &root, sid, write, &mut visited)?;
+            walk_grant(&root, &root, sid, write, &mut visited, granted)?;
+        }
+        Ok(())
+    }
+
+    /// 只对前缀根目录及其顶层文件做非继承授权，避免把宿主的第三方扩展或缓存暴露给隔离容器。
+    fn grant_prefix_files(
+        prefix: &Path,
+        sid: PSID,
+        granted: &mut Vec<(PathBuf, bool)>,
+    ) -> Result<PathBuf, PluginError> {
+        let prefix = std::fs::canonicalize(prefix).map_err(|error| {
+            PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+        })?;
+        if is_volume_root(&prefix) {
+            return Err(PluginError::new(
+                "isolation_unavailable",
+                "sandbox grant would cover a volume root",
+            ));
+        }
+        grant_one(&prefix, sid, false, false, granted)?;
+        for entry in std::fs::read_dir(&prefix).map_err(|error| {
+            PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+        })? {
+            let entry = entry.map_err(|error| {
+                PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+            })?;
+            let path = entry.path();
+            let metadata = std::fs::symlink_metadata(&path).map_err(|error| {
+                PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+            })?;
+            if metadata.file_type().is_symlink() || metadata.is_dir() {
+                continue;
+            }
+            grant_one(&path, sid, false, false, granted)?;
+        }
+        Ok(prefix)
+    }
+
+    fn grant_node_prefix(
+        prefix: &Path,
+        sid: PSID,
+        granted: &mut Vec<(PathBuf, bool)>,
+    ) -> Result<(), PluginError> {
+        grant_prefix_files(prefix, sid, granted).map(|_| ())
+    }
+
+    fn grant_python_prefix(
+        prefix: &Path,
+        sid: PSID,
+        granted: &mut Vec<(PathBuf, bool)>,
+    ) -> Result<(), PluginError> {
+        let prefix = grant_prefix_files(prefix, sid, granted)?;
+        let dlls = prefix.join("DLLs");
+        if dlls.is_dir() {
+            grant_tree(&dlls, sid, false, granted)?;
+        }
+        let lib = prefix.join("Lib");
+        if lib.is_dir() {
+            grant_one(&lib, sid, false, false, granted)?;
+            for entry in std::fs::read_dir(&lib).map_err(|error| {
+                PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+            })? {
+                let entry = entry.map_err(|error| {
+                    PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+                })?;
+                let path = entry.path();
+                let metadata = std::fs::symlink_metadata(&path).map_err(|error| {
+                    PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
+                })?;
+                if metadata.file_type().is_symlink() {
+                    continue;
+                }
+                if metadata.is_dir() {
+                    let name = path
+                        .file_name()
+                        .and_then(|value| value.to_str())
+                        .unwrap_or("");
+                    if name.eq_ignore_ascii_case("site-packages")
+                        || name.eq_ignore_ascii_case("__pycache__")
+                    {
+                        continue;
+                    }
+                    grant_tree(&path, sid, false, granted)?;
+                } else {
+                    grant_one(&path, sid, false, false, granted)?;
+                }
+            }
         }
         Ok(())
     }
@@ -538,6 +653,7 @@ mod windows {
         sid: PSID,
         write: bool,
         visited: &mut u32,
+        granted: &mut Vec<(PathBuf, bool)>,
     ) -> Result<(), PluginError> {
         for entry in std::fs::read_dir(dir).map_err(|error| {
             PluginError::new("isolation_unavailable", format!("sandbox path: {error}"))
@@ -565,15 +681,56 @@ mod windows {
                     "sandbox grant exceeded the file limit",
                 ));
             }
-            grant_one(&path, sid, write)?;
+            // 未受保护的后代通过根目录的 OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE 自动继承，仅补授受保护节点。
+            if is_dacl_protected(&path)? {
+                grant_one(&path, sid, write, metadata.is_dir(), granted)?;
+            }
             if metadata.is_dir() {
-                walk_grant(&path, root, sid, write, visited)?;
+                walk_grant(&path, root, sid, write, visited, granted)?;
             }
         }
         Ok(())
     }
 
-    fn grant_one(path: &Path, sid: PSID, write: bool) -> Result<(), PluginError> {
+    fn is_dacl_protected(path: &Path) -> Result<bool, PluginError> {
+        let name = wide(path.as_os_str());
+        let mut descriptor = null_mut();
+        let mut old_acl = null_mut();
+        let status = unsafe {
+            GetNamedSecurityInfoW(
+                name.as_ptr(),
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                null_mut(),
+                null_mut(),
+                &mut old_acl,
+                null_mut(),
+                &mut descriptor,
+            )
+        };
+        if status != 0 {
+            return Err(PluginError::new(
+                "isolation_unavailable",
+                format!("security descriptor was not read: {status}"),
+            ));
+        }
+        let mut control = 0;
+        let mut revision = 0;
+        let protected = unsafe {
+            GetSecurityDescriptorControl(descriptor, &mut control, &mut revision) != 0
+                && control & SE_DACL_PROTECTED != 0
+        };
+        unsafe { LocalFree(descriptor.cast()) };
+        Ok(protected)
+    }
+
+    fn grant_one(
+        path: &Path,
+        sid: PSID,
+        write: bool,
+        inheritable: bool,
+        granted: &mut Vec<(PathBuf, bool)>,
+    ) -> Result<(), PluginError> {
         let directory = path.is_dir();
         let name = wide(path.as_os_str());
         let mut descriptor = null_mut();
@@ -603,7 +760,7 @@ mod windows {
                 FILE_GENERIC_READ | FILE_GENERIC_EXECUTE
             },
             grfAccessMode: GRANT_ACCESS,
-            grfInheritance: if directory {
+            grfInheritance: if inheritable && directory {
                 OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE
             } else {
                 0
@@ -649,12 +806,76 @@ mod windows {
         };
         unsafe { LocalFree(new_acl.cast()) };
         if written == 0 {
+            granted.push((path.to_path_buf(), protected));
             Ok(())
         } else {
             Err(PluginError::new(
                 "isolation_unavailable",
                 format!("sandbox grant was rejected: {written}"),
             ))
+        }
+    }
+
+    fn revoke_all(granted: &[(PathBuf, bool)], sid: PSID) {
+        if sid.is_null() {
+            return;
+        }
+        for (path, protected) in granted.iter().rev() {
+            if !path.exists() {
+                continue;
+            }
+            let name = wide(path.as_os_str());
+            let mut descriptor = null_mut();
+            let mut old_acl = null_mut();
+            let status = unsafe {
+                GetNamedSecurityInfoW(
+                    name.as_ptr(),
+                    SE_FILE_OBJECT,
+                    DACL_SECURITY_INFORMATION,
+                    null_mut(),
+                    null_mut(),
+                    &mut old_acl,
+                    null_mut(),
+                    &mut descriptor,
+                )
+            };
+            if status != 0 {
+                continue;
+            }
+            let entry = EXPLICIT_ACCESS_W {
+                grfAccessPermissions: 0,
+                grfAccessMode: REVOKE_ACCESS,
+                grfInheritance: 0,
+                Trustee: TRUSTEE_W {
+                    pMultipleTrustee: null_mut(),
+                    MultipleTrusteeOperation: NO_MULTIPLE_TRUSTEE,
+                    TrusteeForm: TRUSTEE_IS_SID,
+                    TrusteeType: TRUSTEE_IS_UNKNOWN,
+                    ptstrName: sid.cast(),
+                },
+            };
+            let mut new_acl = null_mut();
+            let merged = unsafe { SetEntriesInAclW(1, &entry, old_acl, &mut new_acl) };
+            unsafe { LocalFree(descriptor.cast()) };
+            if merged != 0 {
+                continue;
+            }
+            let mut information = DACL_SECURITY_INFORMATION;
+            if *protected {
+                information |= PROTECTED_DACL_SECURITY_INFORMATION;
+            }
+            unsafe {
+                SetNamedSecurityInfoW(
+                    name.as_ptr(),
+                    SE_FILE_OBJECT,
+                    information,
+                    null_mut(),
+                    null_mut(),
+                    new_acl,
+                    null(),
+                );
+                LocalFree(new_acl.cast());
+            }
         }
     }
 
