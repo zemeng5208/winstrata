@@ -140,6 +140,43 @@ fn tag_page_stays_idle_and_does_not_create_plugins_before_a_location() {
 }
 
 #[test]
+fn storage_page_stays_idle_and_does_not_create_plugins_before_a_location() {
+    let root = scratch("storage");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("state");
+    std::fs::create_dir_all(&locator).unwrap();
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator.clone(), None).unwrap();
+    let idle = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"storage-status"}"#),
+        true,
+    );
+    assert!(idle.contains("200"), "{idle}");
+    assert!(idle.contains("\"enabled\":false"), "{idle}");
+    assert!(idle.contains("\"storage\":\"unavailable\""), "{idle}");
+    assert!(!locator.join("WinStrata").join("plugins").exists());
+    let source = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/compose/storage-page.tsx"),
+    )
+    .unwrap();
+    assert!(source.contains("storage-status"));
+    assert!(source.contains("storage-configure"));
+    assert!(source.contains("storage-decline"));
+    assert!(source.contains("storage-propose"));
+    assert!(source.contains("storage-confirm"));
+    assert!(!source.contains("\"enable\""));
+    assert!(source.contains("Button"));
+    assert!(source.contains("Input"));
+    assert!(source.contains("Badge"));
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
 fn script_page_stays_idle_and_does_not_create_plugins_before_a_location() {
     let root = scratch("script");
     let _ = std::fs::remove_dir_all(&root);

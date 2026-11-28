@@ -31,6 +31,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Script plugin](architecture/SCRIPT.md)
 - [Filter plugin](architecture/FILTER.md)
 - [Tag plugin](architecture/TAG.md)
+- [Storage plugin](architecture/STORAGE.md)
 - [Network and data](architecture/DATA.md)
 - [Frontend and themes](architecture/FRONTEND.md)
 - [Development](standards/DEVELOPMENT.md)

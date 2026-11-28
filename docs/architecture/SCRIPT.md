@@ -26,7 +26,7 @@ Run, debug, and triggers execute the real interpreters the host passes at spawn,
 
 The workbench uses the five existing permission names: `event.publish`, `event.subscribe`, `history.read`, `plugin.call`, and `storage.private`. `declare` puts a name in pending. `grant` accepts only a pending permission. `revoke` returns it to pending. `event.publish` is required before a run may record an emit. `event.subscribe` is required before an event trigger fires. `storage.private` is required before the child is given write access to its private directory.
 
-The workbench operation `tag` does not execute an interpreter. It requires an enabled script and that script's own `plugin.call` grant. The manifest of `strata.script` does not gain `plugin.call`. With the grant, the operation returns `code` `tag_request` and the host forwards it to `strata.tag` as actor `script`. Without the grant it returns `permission_denied` and writes no tag. See [Tag plugin](TAG.md).
+The workbench operation `tag` does not execute an interpreter. It requires an enabled script and that script's own `plugin.call` grant. The manifest of `strata.script` does not gain `plugin.call`. With the grant, the operation returns `code` `tag_request` and the host forwards it to `strata.tag` as actor `script`. Without the grant it returns `permission_denied` and writes no tag. See [Tag plugin](TAG.md). The workbench operation `storage` has the same grant rule. With the grant, `configure`, `decline`, `propose`, and `status` return `storage_request` and the host forwards them to `strata.storage`. `confirm` returns `confirmation_required` and is not forwarded. See [Storage plugin](STORAGE.md).
 
 ## Triggers
 

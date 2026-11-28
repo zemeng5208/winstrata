@@ -35,8 +35,9 @@ ADR-001 仍然用 STATUS.md 记录进度和决策。该决定不代替本登记�
 | ERR-022 | 已解决 | [StrataScript](modules/strata-script.md#err-022) |
 | ERR-023 | 已解决 | [Core](modules/core.md#err-023) |
 | ERR-024 | 已解决 | [StrataScript](modules/strata-script.md#err-024) |
+| ERR-025 | 已解决 | [StrataStorage](modules/strata-storage.md#err-025) |
 
-`plugins/strata-script` 的 [ERR-024](modules/strata-script.md#err-024) 已对头 `a4f2edd6efd32a504723664f037677f294279592` 的 Windows 复测解决，作业 140790098053。[ERR-022](modules/strata-script.md#err-022) 保持已解决。Windows AppContainer 缺口是 [OI-045](OPEN_ITEMS.md#oi-045)，不是错误。[ERR-020](modules/strata-services.md#err-020) 和 [ERR-021](modules/strata-services.md#err-021) 属于 `strata.services`。
+[`plugins/strata-storage`](modules/strata-storage.md) 记录了 [ERR-025](modules/strata-storage.md#err-025)，只对头 `2b4a20271a626607cdff60f1b97db62de930cda7` 和 Windows 作业 140822369803 解决。[OI-058](OPEN_ITEMS.md#oi-058) 只对同一个头和同一个作业关闭。作业 140803723177 不关闭它。更后的头不沿用这两次关闭。`plugins/strata-script` 的 [ERR-024](modules/strata-script.md#err-024) 已对头 `a4f2edd6efd32a504723664f037677f294279592` 的 Windows 复测解决，作业 140790098053。[ERR-022](modules/strata-script.md#err-022) 保持已解决。Windows AppContainer 缺口是 [OI-045](OPEN_ITEMS.md#oi-045)，不是错误。[ERR-020](modules/strata-services.md#err-020) 和 [ERR-021](modules/strata-services.md#err-021) 属于 `strata.services`。
 
 `plugins/strata-tag` 没有未解决错误。[OI-055](OPEN_ITEMS.md#oi-055) 只对头 `a4f2edd6efd32a504723664f037677f294279592` 和 Windows 作业 140790098053 关闭。这次关闭不是超出该作业的编写主机通过，也不是豁免。[OI-054](OPEN_ITEMS.md#oi-054) 和 [OI-056](OPEN_ITEMS.md#oi-056) 保持开放。计划 028 保留 OI-052 和 OI-053。本文件不改写它们。[ERR-021](modules/strata-services.md#err-021) 仍属于服务。
 

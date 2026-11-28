@@ -25,7 +25,7 @@ PR 006 提供本地 Core 会话、运行设置及重新加载设置所需的存�
 
 ## 混合记录
 
-计划 012 在已经选定的用户目录中保存五类记录和一份索引。`Core::open_hybrid` 打开 `<用户目录>/data/{databases,events,metrics,captures,snapshots,indexes}`。`core.json` 仍与 `data` 同级。调用方用 `Batch` 组装一次变更，再调用 `Core::commit_hybrid`。总线不订阅存储，也不写磁盘；需要保留的事件由调用方放入批次。
+计划 012 在已经选定的用户目录中保存五类记录和一份索引。`Core::open_hybrid` 打开 `<用户目录>/data/{databases,events,metrics,captures,snapshots,indexes}`。`core.json` 仍与 `data` 同级。调用方用 `Batch` 组装一次变更，再调用 `Core::commit_hybrid`。总线不订阅存储，也不写磁盘；需要保留的事件由调用方放入批次。计划 030 在宿主确认删除整个数据分段时，向后续日志提交追加删除尾部。没有删除的提交编码与以前相同。见[存储插件](STORAGE.md)。[OI-024](../records/OPEN_ITEMS.md#oi-024) 保持开放。
 
 每类载荷只写入对应目录的分段 `s{编号}.wsg`。`indexes/journal.wsj` 记录提交序号、分段水位，以及每条记录的位置和 CRC，不复制载荷。默认分段为 1 MiB，允许 256 字节到 16 MiB。单条记录可以独占一个超过该上限的分段。单条载荷上限为 1 MiB，单次提交编码上限为 8 MiB，对象正文上限为 256 KiB。打开时根据日志重建内存索引。不完整的日志尾部会被截断。CRC 完整但载荷校验或结构失败的提交，连同它之后的提交一起回退。查询会重新读取字节，并拒绝损坏的内容。同一次进程中的写入失败会删除新建分段，并把已有分段恢复到写入前的长度。
 

@@ -66,6 +66,10 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-054](#oi-054) | Untested | 029 |
 | [OI-055](#oi-055) | Closed on Windows Server 2022 for head `a4f2edd` | 029 |
 | [OI-056](#oi-056) | Unimplemented | 045 |
+| [OI-057](#oi-057) | Unimplemented | 030 |
+| [OI-058](#oi-058) | Closed for head `2b4a202` job 140822369803 | 030 |
+| [OI-059](#oi-059) | Untested | 030 |
+| [OI-060](#oi-060) | Unimplemented | 045 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -1006,6 +1010,62 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: the plan 045 run, with `strata.mcp` installed and calling `tag.apply`
 - Acceptance criteria: a call from `strata.mcp` records actor `agent`, `actor_id` `strata.mcp`, and `safety` `none`, and it still cannot persist an untagged packet
 - Close conditions: that run is recorded. Not closed by the user, script, or plugin tags in plan 029. Not an exemption. It does not close plan 028's OI-053.
+
+<a id="oi-057"></a>
+
+## OI-057
+
+- Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md) and PL-25
+- Source PR: plan 030, `plugins/strata-storage`
+- Current state: unimplemented
+- Reason it is incomplete: the tray tip in the official host stays the product name. Plan 030 persists the pending ladder and shows it on `/storage`. It does not change the tray. A pending warning is not shown there. This item is OI-057 because OI-039 through OI-056 stay as already recorded.
+- Responsible PR: 030
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, with storage selected, a pending capture or saved-log threshold, and the official window hidden to the tray
+- Acceptance criteria: the tray shows the pending category, and hiding the window does not delete data
+- Close conditions: that session is recorded for the head that contains the tray change. Not closed by the ladder JSON. Not an exemption. It does not close [OI-024](#oi-024) or [OI-001](#oi-001).
+
+<a id="oi-058"></a>
+
+## OI-058
+
+- Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md), [REQ-12.03](../roadmap/REQUIREMENTS.md), and PL-25
+- Source PR: plan 030, `plugins/strata-storage`
+- Current state: closed only for head `2b4a20271a626607cdff60f1b97db62de930cda7` and Windows job 140822369803
+- Reason it is incomplete: the Linux authoring host did not execute `cargo test --locked --workspace` for `winstrata-strata-storage` on Windows. Pid 1 is tini. A Linux pass is not a Windows pass. Attempt 1, job 140801875313, timed out in `plugins/strata-process` before this storage test ran. This plan does not change that package. Attempt 2, job 140803723177, completed 2026-11-28T00:35:38Z on `windows-2022` and panicked in `thresholds_survive_restart_and_confirmed_deletion_updates_indexes`. That defect is [ERR-025](modules/strata-storage.md#err-025). That failed job does not close this row. The close is Windows Server 2022 job 140822369803 in run 46094411828, completed success at 2026-11-28T01:44:07Z on head `2b4a20271a626607cdff60f1b97db62de930cda7`. The log shows `thresholds_survive_restart_and_confirmed_deletion_updates_indexes ... ok`. This item is OI-058 because OI-039 through OI-056 stay as already recorded. [OI-055](#oi-055) stays the plan 029 Windows job.
+- Responsible PR: 030, on the Windows workspace job for this plan's review head
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the Windows workspace job for this plan's review head, `cargo test --locked --workspace`
+- Acceptance criteria: that job passes `thresholds_survive_restart_and_confirmed_deletion_updates_indexes`
+- Close conditions: that job is recorded for the exact head. A Linux pass does not close it. A later head does not inherit the job. This row does not close [OI-001](#oi-001), [E2E-05](#e2e-05), [OI-024](#oi-024), [OI-057](#oi-057), [OI-059](#oi-059), or [OI-060](#oi-060). It is not an exemption.
+
+<a id="oi-059"></a>
+
+## OI-059
+
+- Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md) and PL-25
+- Source PR: plan 030, `plugins/strata-storage`
+- Current state: untested
+- Reason it is incomplete: no Windows session opened the official storage page. The Linux bridge test before a storage location returns `enabled` false and `storage` `unavailable` and does not create a plugins directory. That test does not close this row. The page sends `storage-status`, `storage-configure`, `storage-decline`, `storage-propose`, and `storage-confirm`. It does not send `enable` or `grant`. This item is OI-059 because OI-054 stays the plan 029 page.
+- Responsible PR: 030
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows, with storage selected, and the official page at `/storage`
+- Acceptance criteria: that session shows usage and the pending state, saves a threshold, declines once, and confirms a deletion only through the host command
+- Close conditions: that session is recorded. The Linux idle test does not close it. It does not close [OI-001](#oi-001), [OI-024](#oi-024), or [OI-058](#oi-058). It is not an exemption.
+
+<a id="oi-060"></a>
+
+## OI-060
+
+- Related requirement: [REQ-12.02](../roadmap/REQUIREMENTS.md) and PL-25
+- Source PR: plan 030, `plugins/strata-storage`
+- Current state: unimplemented
+- Reason it is incomplete: scripts and MCP may configure and propose. The script path is implemented. `strata.mcp` is plan 045 and is not installed. Plan 030 does not fake an agent. This item is OI-060 because [OI-056](#oi-056) stays the plan 029 agent tag.
+- Responsible PR: 045
+- Handoff owner: repository owner zemeng5208
+- Verification environment: the plan 045 run, with `strata.mcp` installed and calling the storage capabilities
+- Acceptance criteria: an MCP caller can configure and propose, and a deletion still requires the trusted host confirmation
+- Close conditions: that run is recorded. Not closed by the script path in plan 030. Not an exemption. It does not close [OI-056](#oi-056).
 
 <a id="e2e-17"></a>
 

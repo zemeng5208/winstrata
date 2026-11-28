@@ -178,6 +178,17 @@ pub enum RecordRef {
     Snapshot { id: Id },
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Piece {
+    pub category: u8,
+    pub segment: u32,
+    pub segment_bytes: u64,
+    pub id: String,
+    pub unix_ns: Option<i64>,
+    pub risk_source: Option<String>,
+    pub risk_reason: Option<String>,
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CapacityReport {
     pub structured: u64,
@@ -403,6 +414,8 @@ struct CommitRec {
     seq: u64,
     waters: Vec<(u8, u32, u64)>,
     refs: Vec<RefRec>,
+    drops: Vec<(u8, u32)>,
+    dropped_objects: Vec<String>,
 }
 
 struct Pending {
@@ -558,6 +571,8 @@ impl Hybrid {
             seq: self.index.commit + 1,
             waters,
             refs,
+            drops: Vec::new(),
+            dropped_objects: Vec::new(),
         };
         let encoded = encode_commit(&record)?;
         let framed = commit_frame(&encoded)?;
@@ -589,6 +604,141 @@ impl Hybrid {
         self.index = updated;
         self.recovery.commits = self.index.commit;
         Ok(self.index.commit)
+    }
+
+    /// 删除整个数据分段，并在日志里记下对象编号，便于重放时同步引用。
+    ///
+    /// 只接受五类数据分段。索引目录和日志文件不在这里删除。调用先写日志并同步，再删文件。
+    pub fn drop_segments(&mut self, segments: &[(u8, u32)]) -> io::Result<u64> {
+        self.user_gate()?;
+        if segments.is_empty() || segments.len() > 64 {
+            return Err(input("drop one to 64 whole segments"));
+        }
+        let mut seen = BTreeSet::new();
+        let mut objects = Vec::new();
+        for &(category, segment) in segments {
+            if category >= INDEXES || segment == 0 || !seen.insert((category, segment)) {
+                return Err(input("segment is not a stored data segment"));
+            }
+            let water = self
+                .index
+                .water
+                .get(&(category, segment))
+                .copied()
+                .unwrap_or(0);
+            if water == 0 {
+                return Err(input("segment is not stored"));
+            }
+            if category == STRUCTURED {
+                for (id, (_, loc)) in &self.index.objects {
+                    if loc.segment == segment {
+                        objects.push(id.clone());
+                    }
+                }
+            }
+        }
+        let record = CommitRec {
+            seq: self.index.commit + 1,
+            waters: Vec::new(),
+            refs: Vec::new(),
+            drops: segments.to_vec(),
+            dropped_objects: objects,
+        };
+        let framed = commit_frame(&encode_commit(&record)?)?;
+        let mut updated = self.index.clone();
+        updated.apply_drop(&record.drops, &record.dropped_objects)?;
+        updated.commit = record.seq;
+        append_journal(&self.dirs[INDEXES as usize], &framed)?;
+        sync_dir(&self.dirs[INDEXES as usize])?;
+        self.index = updated;
+        for &(category, segment) in segments {
+            let path = segment_path(&self.dirs[category as usize], segment);
+            if path.is_file() {
+                fs::remove_file(&path)?;
+            }
+            sync_dir(&self.dirs[category as usize])?;
+        }
+        self.index.refresh_tails(&self.dirs)?;
+        self.recovery.commits = self.index.commit;
+        Ok(self.index.commit)
+    }
+
+    pub fn pieces(&self) -> io::Result<Vec<Piece>> {
+        self.user_gate()?;
+        let mut pieces = Vec::new();
+        for (id, (_, loc)) in &self.index.objects {
+            pieces.push(self.piece(STRUCTURED, loc, id, None, None, None)?);
+        }
+        for ((from, kind, to), loc) in &self.index.relations {
+            let id = format!("relation:{from}:{kind}:{to}");
+            pieces.push(self.piece(STRUCTURED, loc, &id, None, None, None)?);
+        }
+        for (key, events) in &self.index.events {
+            for (sequence, loc) in events {
+                let id = format!("event:{}:{}:{}:{sequence}", key.0, key.1, key.2);
+                pieces.push(self.piece(EVENTS, &loc.loc, &id, Some(loc.time), None, None)?);
+            }
+        }
+        for (series, spans) in &self.index.metrics {
+            for span in spans {
+                pieces.push(self.piece(
+                    METRICS,
+                    &span.loc,
+                    series,
+                    Some(span.start),
+                    None,
+                    None,
+                )?);
+            }
+        }
+        for (id, loc) in &self.index.captures {
+            let stored = self.capture_note(loc)?;
+            pieces.push(self.piece(
+                CAPTURES,
+                loc,
+                id,
+                Some(stored.0),
+                Some(stored.1),
+                Some(stored.2),
+            )?);
+        }
+        for (id, meta) in &self.index.snapshots {
+            pieces.push(self.piece(SNAPSHOTS, &meta.loc, id, None, None, None)?);
+        }
+        Ok(pieces)
+    }
+
+    fn piece(
+        &self,
+        category: u8,
+        loc: &Location,
+        id: &str,
+        unix_ns: Option<i64>,
+        risk_source: Option<String>,
+        risk_reason: Option<String>,
+    ) -> io::Result<Piece> {
+        let segment_bytes = self
+            .index
+            .water
+            .get(&(category, loc.segment))
+            .copied()
+            .unwrap_or(0);
+        Ok(Piece {
+            category,
+            segment: loc.segment,
+            segment_bytes,
+            id: id.to_owned(),
+            unix_ns,
+            risk_source,
+            risk_reason,
+        })
+    }
+
+    fn capture_note(&self, loc: &Location) -> io::Result<(i64, String, String)> {
+        let payload = self.read_range(CAPTURES, loc.segment, loc.offset, loc.len, loc.crc)?;
+        let (timestamp, _, comment) = pcap::parse_packet(&payload)?;
+        let note = decode_note(&comment)?;
+        Ok((timestamp as i64, note.source, note.reason))
     }
 
     pub fn get_object(&self, id: &Id) -> io::Result<Option<ObjectRecord>> {
@@ -1289,55 +1439,28 @@ fn recover(
         return Err(input("segment size does not match the existing store"));
     }
     let (frames, _) = read_frames(&bytes, HEADER_LEN);
+    let mut decoded = Vec::new();
+    for (_, payload) in &frames {
+        match decode_commit(payload) {
+            Ok(record) => decoded.push(record),
+            Err(_) => break,
+        }
+    }
     let mut index = Index::default();
     let mut applied = 0usize;
-    let mut rolled_back = 0u64;
-    for (_, payload) in &frames {
-        let record = match decode_commit(payload) {
-            Ok(record) => record,
-            Err(_) => {
-                rolled_back = (frames.len() - applied) as u64;
+    let mut end = decoded.len();
+    while end > 0 {
+        let drops = drop_set(&decoded[..end]);
+        match replay_prefix(dirs, &decoded[..end], &drops, seal) {
+            Ok(next) => {
+                index = next;
+                applied = end;
                 break;
             }
-        };
-        let mut stored_payloads = Vec::new();
-        let mut logical = Vec::new();
-        let mut readable = true;
-        for ref_ in &record.refs {
-            if ref_.category >= 6 {
-                readable = false;
-                break;
-            }
-            match read_ref(&dirs[ref_.category as usize], ref_) {
-                Ok(stored) => match vault::decode_record(
-                    seal,
-                    ref_.category,
-                    ref_.segment,
-                    ref_.offset,
-                    &stored,
-                    true,
-                ) {
-                    Ok(plain) => {
-                        stored_payloads.push(stored);
-                        logical.push(plain);
-                    }
-                    Err(_) => {
-                        readable = false;
-                        break;
-                    }
-                },
-                Err(_) => {
-                    readable = false;
-                    break;
-                }
-            }
+            Err(_) => end -= 1,
         }
-        if !readable || index.accept(&record, &stored_payloads, &logical).is_err() {
-            rolled_back = (frames.len() - applied) as u64;
-            break;
-        }
-        applied += 1;
     }
+    let rolled_back = (frames.len() - applied) as u64;
     let accepted_end = if applied == 0 {
         HEADER_LEN
     } else {
@@ -1359,6 +1482,90 @@ fn recover(
         },
         index,
     ))
+}
+
+fn drop_set(commits: &[CommitRec]) -> BTreeSet<(u8, u32)> {
+    commits
+        .iter()
+        .flat_map(|record| record.drops.iter().copied())
+        .collect()
+}
+
+fn replay_prefix(
+    dirs: &[Anchor; 6],
+    commits: &[CommitRec],
+    drops: &BTreeSet<(u8, u32)>,
+    seal: Option<&Seal>,
+) -> io::Result<Index> {
+    let mut index = Index::default();
+    for record in commits {
+        if record.seq != index.commit + 1 {
+            return Err(invalid("commit sequence is not contiguous"));
+        }
+        let mut updated = index.clone();
+        for &(category, segment, len) in &record.waters {
+            if category >= 6 {
+                return Err(invalid("commit names an unknown segment"));
+            }
+            let previous = updated
+                .water
+                .get(&(category, segment))
+                .copied()
+                .unwrap_or(0);
+            if len < previous {
+                return Err(invalid("commit shortens a segment"));
+            }
+        }
+        for ref_ in &record.refs {
+            if ref_.category >= 6 {
+                return Err(invalid("record category is unknown"));
+            }
+            let dropped = drops.contains(&(ref_.category, ref_.segment));
+            match read_ref(&dirs[ref_.category as usize], ref_) {
+                Ok(stored) => {
+                    let plain = vault::decode_record(
+                        seal,
+                        ref_.category,
+                        ref_.segment,
+                        ref_.offset,
+                        &stored,
+                        true,
+                    )?;
+                    let water = record
+                        .waters
+                        .iter()
+                        .find(|item| item.0 == ref_.category && item.1 == ref_.segment)
+                        .map(|item| item.2)
+                        .ok_or_else(|| invalid("commit omits a segment length"))?;
+                    let end = ref_
+                        .offset
+                        .checked_add(u64::from(ref_.len))
+                        .ok_or_else(|| invalid("record offset overflows"))?;
+                    if stored.len() != ref_.len as usize
+                        || crc32(&stored) != ref_.crc
+                        || end > water
+                    {
+                        return Err(invalid("commit reference does not match its payload"));
+                    }
+                    updated.apply(ref_, &plain)?;
+                }
+                Err(_) if dropped => {}
+                Err(error) => return Err(error),
+            }
+        }
+        for &(category, segment, len) in &record.waters {
+            updated.water.insert((category, segment), len);
+        }
+        if !record.drops.is_empty() || !record.dropped_objects.is_empty() {
+            if !record.refs.is_empty() || !record.waters.is_empty() {
+                return Err(invalid("a drop commit also writes records"));
+            }
+            updated.apply_drop(&record.drops, &record.dropped_objects)?;
+        }
+        updated.commit = record.seq;
+        index = updated;
+    }
+    Ok(index)
 }
 
 fn read_ref(dir: &Anchor, ref_: &RefRec) -> io::Result<Vec<u8>> {
@@ -1463,6 +1670,8 @@ impl Index {
         if record.seq != self.commit + 1
             || stored.len() != record.refs.len()
             || logical.len() != stored.len()
+            || !record.drops.is_empty()
+            || !record.dropped_objects.is_empty()
         {
             return Err(invalid("commit sequence is not contiguous"));
         }
@@ -1617,6 +1826,58 @@ impl Index {
                 }
             }
             self.tail[category as usize] = tail;
+        }
+        Ok(())
+    }
+
+    fn apply_drop(&mut self, drops: &[(u8, u32)], objects: &[String]) -> io::Result<()> {
+        let object_ids: BTreeSet<&str> = objects.iter().map(String::as_str).collect();
+        for &(category, segment) in drops {
+            if category >= INDEXES || segment == 0 {
+                return Err(invalid("drop names an index or an empty segment"));
+            }
+            let previous = self.water.get(&(category, segment)).copied().unwrap_or(0);
+            if previous == 0 {
+                return Err(invalid("drop names a segment that is not stored"));
+            }
+            if category == STRUCTURED {
+                self.objects.retain(|_, (_, loc)| loc.segment != segment);
+            }
+            if category == EVENTS {
+                self.events.retain(|_, events| {
+                    events.retain(|_, loc| loc.loc.segment != segment);
+                    !events.is_empty()
+                });
+            }
+            if category == METRICS {
+                self.metrics.retain(|_, spans| {
+                    spans.retain(|span| span.loc.segment != segment);
+                    !spans.is_empty()
+                });
+            }
+            if category == CAPTURES {
+                self.captures.retain(|_, loc| loc.segment != segment);
+            }
+            if category == SNAPSHOTS {
+                self.snapshots.retain(|_, meta| meta.loc.segment != segment);
+            }
+            self.water.insert((category, segment), 0);
+        }
+        if !object_ids.is_empty() {
+            self.relations.retain(|(from, _, to), loc| {
+                let dropped_segment = drops
+                    .iter()
+                    .any(|&(category, segment)| category == STRUCTURED && loc.segment == segment);
+                !dropped_segment
+                    && !object_ids.contains(from.as_str())
+                    && !object_ids.contains(to.as_str())
+            });
+        } else {
+            self.relations.retain(|_, loc| {
+                !drops
+                    .iter()
+                    .any(|&(category, segment)| category == STRUCTURED && loc.segment == segment)
+            });
         }
         Ok(())
     }
@@ -1984,6 +2245,17 @@ fn encode_commit(record: &CommitRec) -> io::Result<Vec<u8>> {
         put_u32(&mut out, ref_.len);
         put_u32(&mut out, ref_.crc);
     }
+    if !record.drops.is_empty() || !record.dropped_objects.is_empty() {
+        put_u32(&mut out, record.drops.len() as u32);
+        for &(category, segment) in &record.drops {
+            out.push(category);
+            put_u32(&mut out, segment);
+        }
+        put_u32(&mut out, record.dropped_objects.len() as u32);
+        for id in &record.dropped_objects {
+            put_str(&mut out, id);
+        }
+    }
     Ok(out)
 }
 
@@ -2012,8 +2284,36 @@ fn decode_commit(payload: &[u8]) -> io::Result<CommitRec> {
             crc: reader.u32()?,
         });
     }
-    reader.finish()?;
-    Ok(CommitRec { seq, waters, refs })
+    let mut drops = Vec::new();
+    let mut dropped_objects = Vec::new();
+    if reader.remaining() > 0 {
+        let drops_len = reader.u32()? as usize;
+        if drops_len == 0 || drops_len > 64 {
+            return Err(invalid("drop commit lists an invalid segment count"));
+        }
+        for _ in 0..drops_len {
+            drops.push((reader.u8()?, reader.u32()?));
+        }
+        let objects_len = reader.u32()? as usize;
+        if objects_len > 8_192 {
+            return Err(invalid("drop commit lists too many objects"));
+        }
+        for _ in 0..objects_len {
+            let id = reader.str(256)?;
+            if id.is_empty() || id.chars().any(char::is_control) {
+                return Err(invalid("dropped object id is invalid"));
+            }
+            dropped_objects.push(id);
+        }
+        reader.finish()?;
+    }
+    Ok(CommitRec {
+        seq,
+        waters,
+        refs,
+        drops,
+        dropped_objects,
+    })
 }
 
 #[derive(Serialize, Deserialize)]

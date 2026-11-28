@@ -41,6 +41,31 @@ export type Copy = {
   tagsApply: string
   tagsIdle: string
   tagsSafety: string
+  storageNav: string
+  storageTitle: string
+  storageBody: string
+  storageIdle: string
+  storagePending: string
+  storageQuiet: string
+  storagePlugin: string
+  storageUsage: string
+  storageArmed: string
+  storageCrossed: string
+  storageNext: string
+  storageProposal: string
+  storageDeletable: string
+  storageHeld: string
+  storageCaptureFirst: string
+  storageCaptureRepeat: string
+  storageLogFirst: string
+  storageLogRepeat: string
+  storageSave: string
+  storageDeclineCapture: string
+  storageDeclineLogs: string
+  storageRefresh: string
+  storageSelection: string
+  storagePropose: string
+  storageConfirm: string
   service: string
   settings: string
   navigation: string
@@ -153,6 +178,31 @@ const en: Copy = {
   tagsApply: 'Apply tag',
   tagsIdle: 'StrataTag is not running.',
   tagsSafety: 'safety none',
+  storageNav: 'Storage',
+  storageTitle: 'StrataStorage',
+  storageBody: 'This page does not start the plugin and does not grant a permission. Thresholds, a decline, a proposal, and a confirmed deletion stay on the trusted host. A proposal is not a deletion.',
+  storageIdle: 'Storage is not selected.',
+  storagePending: 'A threshold is pending.',
+  storageQuiet: 'No threshold is pending.',
+  storagePlugin: 'The storage program is not running.',
+  storageUsage: 'Usage, captures / logs',
+  storageArmed: 'Armed threshold, captures / logs',
+  storageCrossed: 'Thresholds crossed, captures / logs',
+  storageNext: 'Next warning, captures / logs',
+  storageProposal: 'Proposal',
+  storageDeletable: 'deletable',
+  storageHeld: 'held',
+  storageCaptureFirst: 'Capture first threshold, bytes',
+  storageCaptureRepeat: 'Capture repeat, bytes',
+  storageLogFirst: 'Saved-log first threshold, bytes',
+  storageLogRepeat: 'Saved-log repeat, bytes',
+  storageSave: 'Save thresholds',
+  storageDeclineCapture: 'Decline captures',
+  storageDeclineLogs: 'Decline saved logs',
+  storageRefresh: 'Refresh',
+  storageSelection: 'Selected ids, separated by commas',
+  storagePropose: 'Propose selection',
+  storageConfirm: 'Confirm deletion',
   service: 'Service',
   settings: 'Settings',
   navigation: 'Navigation',
@@ -265,6 +315,31 @@ const zh: Copy = {
   tagsApply: '提交标记',
   tagsIdle: 'StrataTag 没有在运行。',
   tagsSafety: 'safety none',
+  storageNav: '存储',
+  storageTitle: 'StrataStorage',
+  storageBody: '此页不启动插件，也不授予权限。阈值、拒绝、提案和确认后的删除都留在受信任宿主。提案不是删除。',
+  storageIdle: '尚未选择存储。',
+  storagePending: '有阈值正在等待。',
+  storageQuiet: '没有阈值正在等待。',
+  storagePlugin: '存储程序没有在运行。',
+  storageUsage: '用量，捕获 / 日志',
+  storageArmed: '当前阈值，捕获 / 日志',
+  storageCrossed: '已越过的阈值数，捕获 / 日志',
+  storageNext: '下次警告，捕获 / 日志',
+  storageProposal: '提案',
+  storageDeletable: '可删除',
+  storageHeld: '保留',
+  storageCaptureFirst: '捕获首次阈值，字节',
+  storageCaptureRepeat: '捕获重复步长，字节',
+  storageLogFirst: '已保存日志首次阈值，字节',
+  storageLogRepeat: '已保存日志重复步长，字节',
+  storageSave: '保存阈值',
+  storageDeclineCapture: '拒绝捕获警告',
+  storageDeclineLogs: '拒绝日志警告',
+  storageRefresh: '刷新',
+  storageSelection: '选中的编号，用逗号分隔',
+  storagePropose: '提出所选范围',
+  storageConfirm: '确认删除',
   service: '服务',
   settings: '设置',
   navigation: '导航',

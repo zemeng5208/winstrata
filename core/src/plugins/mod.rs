@@ -5,6 +5,7 @@
 //! `strata.script` 只在同目录存在 `winstrata-strata-script` 时登记，并且在启用前保持禁用。
 //! `strata.filter` 只在同目录存在 `winstrata-strata-filter` 时登记，并且在启用前保持禁用。
 //! `strata.tag` 只在同目录存在 `winstrata-strata-tag` 时登记，并且在启用前保持禁用。
+//! `strata.storage` 只在同目录存在 `winstrata-strata-storage` 时登记，并且在启用前保持禁用。
 //! `strata.registry` 由计划 019 在进程内启动，没有包。
 //! `strata.env` 由计划 020 在进程内启动，没有包。
 //! `strata.trace` 由计划 021 在进程内启动，没有包。
@@ -18,6 +19,7 @@ mod language;
 mod process;
 mod registry;
 mod sandbox;
+mod storage;
 mod tag;
 mod trace;
 
@@ -39,7 +41,7 @@ use winstrata_strata_trace::PLUGIN_ID as TRACE_ID;
 
 use crate::bus::{EventBus, Filter};
 use crate::files;
-use crate::network::{PacketLedger, DEFAULT_PACKET_CAP};
+use crate::network::{DEFAULT_PACKET_CAP, PacketLedger};
 use crate::platform::Anchor;
 use crate::schedule::SchedulerHandle;
 
@@ -512,6 +514,7 @@ impl PluginHost {
         host.seed_health_collector()?;
         host.seed_budget_collector()?;
         host.seed_tag_collector()?;
+        host.seed_storage_collector()?;
         Ok(host)
     }
 
@@ -523,7 +526,9 @@ impl PluginHost {
                 "packet bytes are empty or too large",
             ));
         }
-        Ok(self.packets.stage(crate::network::PacketClass::Plain, bytes))
+        Ok(self
+            .packets
+            .stage(crate::network::PacketClass::Plain, bytes))
     }
 
     pub fn attach_bus(&mut self, bus: EventBus) {
@@ -1017,6 +1022,9 @@ impl PluginHost {
             if let Some(done) = self.forward_script_tag(&detail)? {
                 return Ok(done);
             }
+            if let Some(done) = self.forward_script_storage(&detail)? {
+                return Ok(done);
+            }
         }
         Ok(detail)
     }
@@ -1460,6 +1468,13 @@ impl PluginHost {
                     PluginError::new(
                         "runtime_missing",
                         "tag program is not beside the plugin runtime",
+                    )
+                })?
+            } else if manifest.id.as_str() == storage::PLUGIN {
+                storage::beside(&self.runtime).ok_or_else(|| {
+                    PluginError::new(
+                        "runtime_missing",
+                        "storage program is not beside the plugin runtime",
                     )
                 })?
             } else {
@@ -2284,6 +2299,15 @@ impl PluginHost {
         )
     }
 
+    fn seed_storage_collector(&mut self) -> Result<(), PluginError> {
+        self.seed_builtin(
+            storage::PLUGIN,
+            storage::MANIFEST,
+            "winstrata-strata-storage",
+            "storage manifest is not the official plugin",
+        )
+    }
+
     fn seed_tag_collector(&mut self) -> Result<(), PluginError> {
         self.seed_builtin(
             tag::PLUGIN,
@@ -2293,12 +2317,14 @@ impl PluginHost {
         )
     }
 
-    fn tag_apply(&mut self, actor: &str, actor_id: &str, payload: &str) -> Result<String, PluginError> {
+    fn tag_apply(
+        &mut self,
+        actor: &str,
+        actor_id: &str,
+        payload: &str,
+    ) -> Result<String, PluginError> {
         self.running(tag::PLUGIN)?;
-        let paused = self
-            .live
-            .get(tag::PLUGIN)
-            .is_some_and(|live| live.paused);
+        let paused = self.live.get(tag::PLUGIN).is_some_and(|live| live.paused);
         let capture = tag_capture(payload)
             .map(|id| self.capture_path(id))
             .transpose()?;
@@ -2316,7 +2342,12 @@ impl PluginHost {
         Ok(detail)
     }
 
-    fn tag_policy(&mut self, actor: &str, actor_id: &str, payload: &str) -> Result<String, PluginError> {
+    fn tag_policy(
+        &mut self,
+        actor: &str,
+        actor_id: &str,
+        payload: &str,
+    ) -> Result<String, PluginError> {
         self.running(tag::PLUGIN)?;
         let prepared = tag::prepare_policy(actor, actor_id, payload, unix_ns(), self.packet_cap)?;
         let detail = self.invoke_tag("tag.policy", &prepared.request, None)?;
@@ -2372,7 +2403,10 @@ impl PluginHost {
         if value.get("code").and_then(serde_json::Value::as_str) != Some("tag_request") {
             return Ok(None);
         }
-        let script = value.get("id").and_then(serde_json::Value::as_str).unwrap_or("");
+        let script = value
+            .get("id")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
         if !self.live.contains_key(tag::PLUGIN) {
             return Ok(Some(
                 serde_json::json!({
@@ -2404,26 +2438,101 @@ impl PluginHost {
         Ok(Some(self.tag_apply("script", script, &payload)?))
     }
 
+    fn forward_script_storage(&mut self, detail: &str) -> Result<Option<String>, PluginError> {
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(detail) else {
+            return Ok(None);
+        };
+        if value.get("code").and_then(serde_json::Value::as_str) != Some("storage_request") {
+            return Ok(None);
+        }
+        if value.get("confirm").and_then(serde_json::Value::as_bool) == Some(true) {
+            return Ok(Some(
+                serde_json::json!({"ok": true, "code": "confirmation_required", "deleted": false})
+                    .to_string(),
+            ));
+        }
+        let action = value
+            .get("action")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        let capability = match action {
+            "configure" => "storage.configure",
+            "decline" => "storage.decline",
+            "propose" => "storage.propose",
+            "status" => "storage.status",
+            _ => {
+                return Ok(Some(
+                    serde_json::json!({"ok": false, "code": "rejected", "deleted": false})
+                        .to_string(),
+                ));
+            }
+        };
+        if !self.live.contains_key(storage::PLUGIN) {
+            return Ok(Some(
+                serde_json::json!({"ok": false, "code": "not_running", "deleted": false})
+                    .to_string(),
+            ));
+        }
+        let payload = serde_json::json!({
+            "op": action,
+            "capture_first": value.get("capture_first").cloned().unwrap_or(serde_json::Value::Null),
+            "capture_repeat": value.get("capture_repeat").cloned().unwrap_or(serde_json::Value::Null),
+            "log_first": value.get("log_first").cloned().unwrap_or(serde_json::Value::Null),
+            "log_repeat": value.get("log_repeat").cloned().unwrap_or(serde_json::Value::Null),
+            "category": value.get("category").cloned().unwrap_or(serde_json::Value::Null),
+            "scope": value.get("scope").cloned().unwrap_or(serde_json::Value::Null),
+            "confirm": false
+        })
+        .to_string();
+        if payload.len() > 1024 || payload.chars().any(char::is_control) {
+            return Err(PluginError::new(
+                "invalid_record",
+                "script storage request does not fit a plugin frame",
+            ));
+        }
+        let mut frame = PluginFrame::request("invoke");
+        frame.capability = Some(capability.to_owned());
+        frame.payload = Some(payload);
+        let reply = self.exchange(storage::PLUGIN, &frame)?;
+        let pid = self.live.get(storage::PLUGIN).map(Live::pid).unwrap_or(0);
+        if reply.pid != Some(pid) || reply.ok != Some(true) {
+            return Err(PluginError::new(
+                static_code(reply.code.as_deref()),
+                reply
+                    .detail
+                    .unwrap_or_else(|| "storage plugin rejected the call".to_owned()),
+            ));
+        }
+        reply
+            .detail
+            .map(Some)
+            .ok_or_else(|| PluginError::new("invalid_record", "storage plugin returned no result"))
+    }
+
     fn publish_tag(&mut self, detail: &str) -> Result<(), PluginError> {
         let value: serde_json::Value = serde_json::from_str(detail)
             .map_err(|_| PluginError::new("invalid_record", "tag result is not json"))?;
-        let code = value.get("code").and_then(serde_json::Value::as_str).unwrap_or("");
+        let code = value
+            .get("code")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
         let Some(event_type) = tag::event_type(code) else {
             return Ok(());
         };
         let Some(bus) = self.bus.clone() else {
             return Ok(());
         };
-        let sequence = {
-            let live = self.live.get_mut(tag::PLUGIN).ok_or_else(|| {
-                PluginError::new("not_running", "plugin process is not running")
-            })?;
-            let next = live.sequence.checked_add(1).ok_or_else(|| {
-                PluginError::new("resource_limit", "tag sequence is exhausted")
-            })?;
-            live.sequence = next;
-            next
-        };
+        let sequence =
+            {
+                let live = self.live.get_mut(tag::PLUGIN).ok_or_else(|| {
+                    PluginError::new("not_running", "plugin process is not running")
+                })?;
+                let next = live.sequence.checked_add(1).ok_or_else(|| {
+                    PluginError::new("resource_limit", "tag sequence is exhausted")
+                })?;
+                live.sequence = next;
+                next
+            };
         let event = tag::observation(&self.epoch, sequence, event_type, &value)?;
         bus.publish(event)
             .map_err(|error| PluginError::new(error.error.code(), error.error.detail()))?;
