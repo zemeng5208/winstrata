@@ -14,12 +14,15 @@ mod host;
 pub use bridge::Bridge;
 pub use observe::{Observation, PluginView, observe_at, observe_service};
 pub use prefs::{
-    ClosePreference, Language, Preferences, Theme, preference_directory, uninstall_official_gui,
-    OFFICIAL_GUI,
+    ClosePreference, Language, Preferences, Theme, format_tray_tip, preference_directory,
+    uninstall_official_gui, OFFICIAL_GUI,
 };
 
 #[cfg(windows)]
-pub use host::run_window;
+pub use host::{
+    close_current_window, current_window_visible, last_window_snapshot, loader_present,
+    resize_current_window, restore_current_window, run_window,
+};
 
 pub fn asset_directory() -> std::path::PathBuf {
     let shipped = std::env::current_exe()

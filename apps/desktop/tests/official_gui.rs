@@ -4,7 +4,8 @@ use std::path::Path;
 
 use winstrata_core::OFFICIAL;
 use winstrata_desktop::{
-    Bridge, ClosePreference, Language, Preferences, Theme, observe_at, uninstall_official_gui,
+    Bridge, ClosePreference, Language, Preferences, Theme, format_tray_tip, observe_at,
+    uninstall_official_gui,
 };
 use winstrata_service::{Endpoint, Service};
 
@@ -618,4 +619,144 @@ fn cookie_value(page: &str) -> String {
         .next()
         .unwrap()
         .to_owned()
+}
+
+#[test]
+fn tray_tip_shows_pending_storage_categories_and_keeps_files() {
+    assert_eq!(format_tray_tip("not-json"), "WinStrata");
+    assert_eq!(
+        format_tray_tip(r#"{"capture":{"pending":false},"logs":{"pending":false}}"#),
+        "WinStrata"
+    );
+    assert_eq!(
+        format_tray_tip(r#"{"capture":{"pending":true},"logs":{"pending":false}}"#),
+        "WinStrata — storage pending: capture"
+    );
+    assert_eq!(
+        format_tray_tip(r#"{"capture":{"pending":false},"logs":{"pending":true}}"#),
+        "WinStrata — storage pending: logs"
+    );
+
+    let root = scratch("tray-tip");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("locator");
+    let storage = root.join("storage");
+    std::fs::create_dir_all(&locator).unwrap();
+    std::fs::create_dir_all(&storage).unwrap();
+    let user = {
+        let mut core = winstrata_core::Core::open_at(&locator, None).unwrap();
+        core.select_directory(&storage).unwrap();
+        core.append_saved_log("probe.log", b"retained-log-bytes\n")
+            .unwrap();
+        core.configure_storage(1, 1, 1, 1).unwrap();
+        core.current_user().to_owned()
+    };
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator, None).unwrap();
+    let status = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"storage-status"}"#),
+        true,
+    );
+    let body = status.split("\r\n\r\n").nth(1).unwrap_or("");
+    assert_eq!(format_tray_tip(body), "WinStrata — storage pending: logs");
+    assert!(storage.join(user).join("logs/probe.log").is_file());
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_official_window_attaches_webview2_resizes_hides_to_tray_and_quits() {
+    use winstrata_desktop::{
+        close_current_window, current_window_visible, last_window_snapshot, loader_present,
+        resize_current_window, restore_current_window, run_window,
+    };
+
+    assert!(loader_present(), "WebView2Loader.dll was not discovered");
+    let root = scratch("win-host");
+    let _ = std::fs::remove_dir_all(&root);
+    let preferences = root.join("prefs");
+    let locator = root.join("locator");
+    let storage = root.join("storage");
+    std::fs::create_dir_all(&locator).unwrap();
+    std::fs::create_dir_all(&storage).unwrap();
+    let user = {
+        let mut core = winstrata_core::Core::open_at(&locator, None).unwrap();
+        core.select_directory(&storage).unwrap();
+        core.append_saved_log("probe.log", b"tray-keeps-this-log\n")
+            .unwrap();
+        core.configure_storage(1, 1, 1, 1).unwrap();
+        core.current_user().to_owned()
+    };
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/ui/dist");
+    let bridge = Bridge::start(preferences, assets, locator, None).unwrap();
+    let set_tray = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"set-close","close":"tray"}"#),
+        true,
+    );
+    assert!(set_tray.contains("200"), "{set_tray}");
+
+    let url = format!("http://{}/?token={}", bridge.address(), bridge.token());
+    let token = bridge.token().to_owned();
+    let action = bridge.action();
+    let thread = std::thread::spawn(move || {
+        run_window(&url, &token, action);
+    });
+
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while std::time::Instant::now() < deadline {
+        if last_window_snapshot().0 {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    assert!(
+        last_window_snapshot().0,
+        "WebView2 controller did not attach within 10s"
+    );
+    assert!(resize_current_window(480, 700));
+    assert!(close_current_window());
+    let hide_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while std::time::Instant::now() < hide_deadline {
+        if current_window_visible() == Some(false) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    assert_eq!(current_window_visible(), Some(false));
+    assert_eq!(
+        last_window_snapshot().1,
+        "WinStrata — storage pending: logs"
+    );
+    assert!(storage.join(user).join("logs/probe.log").is_file());
+
+    assert!(restore_current_window());
+    let show_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while std::time::Instant::now() < show_deadline {
+        if current_window_visible() == Some(true) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    assert_eq!(current_window_visible(), Some(true));
+
+    let set_exit = http(
+        &bridge,
+        "POST",
+        "/command",
+        Some(r#"{"command":"set-close","close":"exit"}"#),
+        true,
+    );
+    assert!(set_exit.contains("200"), "{set_exit}");
+    assert!(close_current_window());
+    thread.join().unwrap();
+    drop(bridge);
+    let _ = std::fs::remove_dir_all(&root);
 }

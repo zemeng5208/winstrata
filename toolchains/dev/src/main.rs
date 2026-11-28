@@ -162,7 +162,11 @@ fn pnpm_program() -> OsString {
     "pnpm".into()
 }
 
-fn command(root: &Path, program: &OsStr, args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Command {
+fn command(
+    root: &Path,
+    program: &OsStr,
+    args: impl IntoIterator<Item = impl AsRef<OsStr>>,
+) -> Command {
     let mut command = Command::new(program);
     command.current_dir(root).args(args);
     command
@@ -203,6 +207,9 @@ fn run(
     if status.success() {
         Ok(())
     } else {
-        Err(format!("{} exited with {status}", program.to_string_lossy()))
+        Err(format!(
+            "{} exited with {status}",
+            program.to_string_lossy()
+        ))
     }
 }

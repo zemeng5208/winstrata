@@ -38,14 +38,15 @@ const input = {
 
 test('real roadmap has ordered plan IDs and detects duplicate IDs', () => {
   assert.deepEqual(repoPlan.slice(0, 4), ['000', '001', '002', '003']);
-  assert.equal(repoPlan.length, 55);
+  assert.equal(repoPlan.length, 56);
   const at = (id) => repoPlan.indexOf(id);
   assert.deepEqual(repoPlan.slice(at('013'), at('013') + 4), ['013', '052', '051', '014']);
   const from014 = repoPlan.slice(at('014'));
   assert.deepEqual(from014.slice(0, 2), ['014', '053']);
   assert.deepEqual(from014.slice(2, 18), Array.from({ length: 16 }, (_, index) => String(index + 15).padStart(3, '0')));
   assert.equal(from014[18], '055');
-  assert.deepEqual(from014.slice(19), Array.from({ length: 20 }, (_, index) => String(index + 31).padStart(3, '0')));
+  assert.equal(from014[19], '054');
+  assert.deepEqual(from014.slice(20), Array.from({ length: 20 }, (_, index) => String(index + 31).padStart(3, '0')));
   assert.throws(() => roadmapOrder('| <a id="pr-002"></a>002 |\n| <a id="pr-002"></a>002 |'));
 });
 
@@ -82,24 +83,24 @@ test('governance changes need owner approval for the current commit', () => {
 
 test('an added plan is accepted only as an insertion into the main order', () => {
   const headOrder = roadmapOrder(readFileSync('docs/roadmap/PLAN.md', 'utf8'));
-  const baseOrder = headOrder.filter((id) => id !== '055');
+  const baseOrder = headOrder.filter((id) => id !== '054');
   assert.deepEqual(
     baseOrder.slice(baseOrder.indexOf('013'), baseOrder.indexOf('015') + 1),
     ['013', '052', '051', '014', '053', '015'],
   );
   assert.equal(roadmapExtension(baseOrder, headOrder), null);
-  assert.equal(headOrder[headOrder.indexOf('030') + 1], '055');
+  assert.equal(headOrder[headOrder.indexOf('055') + 1], '054');
 
   const planFiles = [{ filename: 'docs/roadmap/PLAN.md' }];
   const comment = { user: { id: 42 }, body: approvalText(head) };
-  const merged = headOrder.slice(0, headOrder.indexOf('055')).map(accepted);
-  const pull055 = {
+  const merged = headOrder.slice(0, headOrder.indexOf('054')).map(accepted);
+  const pull054 = {
     ...pull,
-    title: 'PR 055: Platform isolation standard and implementation record',
-    head: { ref: 'pr/055-platform-isolation', sha: head },
+    title: 'PR 054: Windows 11 local verification and fixes',
+    head: { ref: 'pr/054-windows11-remediation', sha: head },
   };
   const added = {
-    pull: pull055,
+    pull: pull054,
     order: headOrder,
     merged,
     blockedIssues: [],
@@ -110,26 +111,26 @@ test('an added plan is accepted only as an insertion into the main order', () =>
   };
   assert.match(policyDecision({ ...added, comments: [] }), /require owner confirmation/);
   assert.match(policyDecision({ ...added, upToDate: false }), /current main commit/);
-  assert.match(policyDecision({ ...added, pull: { ...pull055, draft: true } }), /draft/);
+  assert.match(policyDecision({ ...added, pull: { ...pull054, draft: true } }), /draft/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull055, labels: [{ name: 'merge-blocked' }] },
+    pull: { ...pull054, labels: [{ name: 'merge-blocked' }] },
   }), /merge blocker/);
   assert.match(policyDecision({ ...added, blockedIssues: [{ number: 17 }] }), /#17/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull055, title: 'PR 014: Wrong title' },
+    pull: { ...pull054, title: 'PR 014: Wrong title' },
   }), /identify a plan ID/);
   assert.equal(policyDecision(added), null);
   assert.match(policyDecision({ ...added, order: baseOrder }), /identify a plan ID/);
   assert.match(policyDecision({
     ...added,
     merged: baseOrder.slice(0, baseOrder.indexOf('013') + 1).map(accepted),
-    pull: { ...pull055, title: 'PR 014: Plugins', head: { ref: 'pr/014-plugins', sha: head } },
+    pull: { ...pull054, title: 'PR 014: Plugins', head: { ref: 'pr/014-plugins', sha: head } },
   }), /052 must merge before plan 014/);
   assert.match(policyDecision({
     ...added,
-    pull: { ...pull055, title: 'PR 013: Again', head: { ref: 'pr/013-again', sha: head } },
+    pull: { ...pull054, title: 'PR 013: Again', head: { ref: 'pr/013-again', sha: head } },
     merged: baseOrder.map(accepted),
   }), /Plan 013 already merged/);
   assert.match(roadmapExtension(baseOrder, headOrder.filter((id) => id !== '014')), /drops plan 014/);

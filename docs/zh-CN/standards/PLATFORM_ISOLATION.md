@@ -3,7 +3,7 @@
 [English](../../standards/PLATFORM_ISOLATION.md) · [文档索引](../INDEX.md) · [AG-65](../AGENTS.md#ag-65)
 
 - **文档地位**：[AG-65](../AGENTS.md#ag-65) 对应的权威强制规范，经所有者批准并合并计划 055 后生效。
-- **当前代码核对基线**：`4f257aee948d10af41e7fbddb96d8cfaa46697af`（PR 030 合并后的 `main`）。后续任何修改平台代码、`cfg` 条件编译、平台依赖、构建/打包脚本或平台测试范围的 PR，必须在本 PR 内同步更新本文档。
+- **当前代码核对基线**：最初按 `4f257aee948d10af41e7fbddb96d8cfaa46697af`（PR 030 合并后的 `main`）记录；计划 054 在合并计划 055 后同步补充了 Windows 11 AppContainer 运行时隔离、WebView2/托盘修复与实测状态。后续任何修改平台代码、`cfg` 条件编译、平台依赖、构建/打包脚本或平台测试范围的 PR，必须在本 PR 内同步更新本文档。
 - **非运行资源边界**：本文档及所有 `docs/` 规范均属于**源码仓库工程规范**，**严禁作为运行资源打入任何最终软件安装包、便携包或运行时交付目录**。
 - **当前产品范围**：WinStrata V1.0 产品目标仍为 **Windows 10 与 Windows 11 x64**。仓库中现有的 Linux 实现属于**开发阶段的技术储备**（用于落实 [AG-35](DEPENDENCIES.md#ag-35) 与 [AG-49](GIT_AND_PR.md#ag-49) 要求的双环境构建与验证能力），**不代表正式支持 Linux 产品**；在当前阶段不需要删除，也不需要为此启动额外重构或扩大范围。
 
@@ -13,7 +13,7 @@
 
 ## 1. 当前开发阶段的平台实现记录
 
-本节依据基线提交 `4f257ae` 的实际源码，完整记录目前已经存在的 Windows 与 Linux 专属实现。
+本节依据基线提交 `4f257ae` 与计划 054 的实测修复结果，完整记录目前已经存在的 Windows 与 Linux 专属实现。
 
 ### 1.1 公共基础设施、内核、受控服务与协议层
 
@@ -48,8 +48,8 @@
 
 | 领域 | 核对路径 | Windows 实现 | Linux 技术储备 | 未来 Linux 复用价值 | 已验证事项与未完成事项 |
 |---|---|---|---|---|---|
-| 语言运行时隔离与垫片 (`winstrata-core`、`winstrata-runtime`、`winstrata-shim`) | `core/src/plugins/language.rs`、`sandbox.rs`、`runtimes/Cargo.toml`、`runtimes/shim/src/lib.rs`、`runtimes/tests/languages*.rs` | AppContainer 配置文件 + Job Object（`kill-on-close`、单活动进程、DACL 授权）；`winstrata-shim` 仅在 Linux 有实现（`#[cfg(target_os = "linux")]`），Windows 不加载。 | Landlock 规则集 + `LD_PRELOAD` `libwinstrata_shim.so` + seccomp-bpf（`AUDIT_ARCH_X86_64`，拒绝套接字/`execve`/`fork`/挂载/命名空间）+ `close_range`。 | **高**：x86_64 Linux 隔离已通过 `languages.rs` 真实限制验证。 | Linux 隔离已验证；非 x86_64 Linux 架构未实现（`fail(b'x')`）；Windows 容器测试（[OI-019](../records/OPEN_ITEMS.md#oi-019)、[OI-020](../records/OPEN_ITEMS.md#oi-020)）及 `runtimes/Cargo.toml` 无条件 `dev-dependencies` `libc` 已记账。 |
-| 官方默认桌面宿主 (`winstrata-desktop`、`packages/ui`) | `apps/desktop/src/main.rs`、`lib.rs`、`host.rs`、`bridge.rs`、`prefs.rs`、`packages/ui/*` | Win32 窗口 + 系统托盘 + WebView2（`1.0.2903.40` ABI）+ `BCryptGenRandom` + `LocalAppData` 偏好。 | 仅本地 HTTP 桥接 + `XDG_STATE_HOME` + `/dev/urandom`；`main.rs` 在标准输入阻塞，**无 Linux 原生窗口或 WebView 宿主**。 | **中**：HTTP 桥接、偏好配置与 `packages/ui/dist` 前端包可复用；Linux 桌面窗口与托盘宿主未实现。 | Linux 无头 Chrome 桥接检查通过；真实 Windows WebView2 与托盘交互未验证（[OI-009](../records/OPEN_ITEMS.md#oi-009)、[OI-013](../records/OPEN_ITEMS.md#oi-013)、[E2E-11](../roadmap/ACCEPTANCE.md#e2e-11)）。 |
+| 语言运行时隔离与垫片 (`winstrata-core`、`winstrata-runtime`、`winstrata-shim`) | `core/src/plugins/language.rs`、`sandbox.rs`、`runtimes/Cargo.toml`、`runtimes/shim/src/lib.rs`、`runtimes/tests/languages*.rs` | AppContainer 配置文件 + Job Object（`kill-on-close`、单活动进程）；`Toolchain::bind` 解析 `sys._base_executable`；非继承顶层/标准库前缀 DACL 授权（`grant_python_prefix`、`grant_node_prefix`）、`SE_DACL_PROTECTED` 节点单独补授及 `revoke_all` 撤回；`winstrata-shim` 仅在 Linux 有实现（`#[cfg(target_os = "linux")]`），Windows 不加载。 | Landlock 规则集 + `LD_PRELOAD` `libwinstrata_shim.so` + seccomp-bpf（`AUDIT_ARCH_X86_64`，拒绝套接字/`execve`/`fork`/挂载/命名空间）+ `close_range`。 | **高**：x86_64 Linux 隔离已通过 `languages.rs` 真实限制验证。 | Linux 隔离已验证；非 x86_64 Linux 架构未实现（`fail(b'x')`）；计划 054 修复 [ERR-026](../records/modules/core.md#err-026) 并在 Windows 11 通过 `fixture.pywin` 与固定版本校验（`languages_windows` 2/2）；`node.exe` 在受限桌面 DACL 下报 `0xC0000142`（[ERR-028](../records/modules/core.md#err-028)、[OI-019](../records/OPEN_ITEMS.md#oi-019)、[OI-062](../records/OPEN_ITEMS.md#oi-062)）；[OI-020](../records/OPEN_ITEMS.md#oi-020) 与 `runtimes/Cargo.toml` 无条件 `dev-dependencies` `libc` 已记账。 |
+| 官方默认桌面宿主 (`winstrata-desktop`、`packages/ui`) | `apps/desktop/src/main.rs`、`lib.rs`、`host.rs`、`bridge.rs`、`prefs.rs`、`tests/official_gui.rs`、`packages/ui/*` | Win32 窗口 + 系统托盘 + WebView2（`1.0.2903.40` ABI、AMD64 PE 头校验 + `vswhere.exe` `CREATE_NO_WINDOW` 查找、`ICoreWebView2Controller` COM 生命周期 + `WM_SIZE` + `WM_PAINT` 回退地址绘制 + 待确认存储托盘提示）+ `BCryptGenRandom` + `LocalAppData` 偏好。 | 仅本地 HTTP 桥接 + `XDG_STATE_HOME` + `/dev/urandom`；`main.rs` 在标准输入阻塞，**无 Linux 原生窗口或 WebView 宿主**。 | **中**：HTTP 桥接、偏好配置与 `packages/ui/dist` 前端包可复用；Linux 桌面窗口与托盘宿主未实现。 | Linux 无头 Chrome 桥接检查通过；计划 054 修复 [ERR-027](../records/modules/desktop.md#err-027) 并在 Windows 11 普通用户下关闭 [OI-013](../records/OPEN_ITEMS.md#oi-013) 与 [OI-057](../records/OPEN_ITEMS.md#oi-057)（`winstrata-desktop` 11/11 与 Edge WebView2 `158.0.4370.45`）；Windows 10（[OI-001](../records/OPEN_ITEMS.md#oi-001)）、[OI-009](../records/OPEN_ITEMS.md#oi-009) 与 [E2E-11](../roadmap/ACCEPTANCE.md#e2e-11) 仍开放。 |
 | 开发工具与交叉构建 (`winstrata-dev`、`.github/`) | `toolchains/dev/src/main.rs`、`cross_probe.rs`、`toolchains/windows/*`、`.github/scripts/*`、`.github/workflows/*` | Windows CI 运行 `cargo test --locked --workspace`；Windows 上执行 `cargo dev build` 会因正在运行的 `winstrata-dev.exe` 自锁报 `os error 5`。 | `cargo dev cross-probe` 在 Linux 用 `rust-lld` + `objdump` 验证 PE32+ 控制台与 `.sys` 驱动链接；Linux CI 运行 `check-workspace.sh`。 | **高**：已统一工具链版本锁定（`Rust 1.100.0`、`Node 24.22.3`、`pnpm 11.25.0`）。 | Linux `cross-probe` 与 CI 通过；Linux 完整构建 Windows 应用/驱动及 Windows 宿主执行 `cargo dev` 仍待完成（[OI-010](../records/OPEN_ITEMS.md#oi-010)、[OI-011](../records/OPEN_ITEMS.md#oi-011)、[OI-012](../records/OPEN_ITEMS.md#oi-012)）。 |
 
 ### 1.4 平台门控依赖汇总 (`Cargo.toml`)

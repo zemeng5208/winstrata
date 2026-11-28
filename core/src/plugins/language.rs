@@ -78,9 +78,19 @@ impl Toolchain {
                 ),
             ));
         }
-        let prefix =
-            command_text(Command::new(&python).args(["-c", "import sys; print(sys.base_prefix)"]))?;
+        let info = command_text(Command::new(&python).args([
+            "-c",
+            "import sys; print(sys.base_prefix); print(getattr(sys, '_base_executable', sys.executable))",
+        ]))?;
+        let mut lines = info.lines();
+        let prefix = lines.next().unwrap_or("");
         let python_prefix = canonicalize_dir(Path::new(prefix.trim()), "Python prefix")?;
+        let python = if cfg!(windows) {
+            let base = lines.next().unwrap_or("");
+            canonicalize_file(Path::new(base.trim()), "Python")?
+        } else {
+            python
+        };
         let node_root = command_text(Command::new(&node).args([
             "-e",
             "const path=require('path'); const dir=path.dirname(process.execPath); console.log(path.basename(dir)==='bin'?path.dirname(dir):dir)",
@@ -270,7 +280,11 @@ pub(super) fn launch(
         command.stderr(Stdio::from(log));
     }
 
-    let mut read = vec![prefix, tools.sdk.clone(), package.to_path_buf()];
+    let mut read = if cfg!(windows) {
+        vec![tools.sdk.clone(), package.to_path_buf()]
+    } else {
+        vec![prefix.clone(), tools.sdk.clone(), package.to_path_buf()]
+    };
     for optional in [
         "/lib",
         "/lib64",
@@ -304,7 +318,14 @@ pub(super) fn launch(
     #[cfg(windows)]
     {
         let _ = &tools.shim;
-        super::sandbox::spawn_windows(&command, state, &read, manifest.plugin_version)
+        super::sandbox::spawn_windows(
+            &command,
+            state,
+            python.then_some(prefix.as_path()),
+            (!python).then_some(prefix.as_path()),
+            &read,
+            manifest.plugin_version,
+        )
     }
 }
 

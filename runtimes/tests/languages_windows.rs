@@ -238,3 +238,27 @@ fn windows_language_plugins_enforce_the_container_boundary() {
         .status();
     let _ = fs::remove_dir_all(root);
 }
+
+#[test]
+fn declared_windows_node_and_python_match_project_pins() {
+    let requirement = requirement();
+    let node_out = Command::new(on_path(&["node.exe"]))
+        .arg("--version")
+        .output()
+        .unwrap();
+    assert!(node_out.status.success());
+    let node_text = String::from_utf8(node_out.stdout).unwrap();
+    assert_eq!(version(node_text.trim()), requirement.node_exact);
+
+    let py_out = Command::new(on_path(&["python.exe", "python3.exe"]))
+        .arg("--version")
+        .output()
+        .unwrap();
+    assert!(py_out.status.success());
+    let py_text = String::from_utf8(py_out.stdout).unwrap();
+    let py_ver = version(py_text.trim());
+    assert!(
+        py_ver.0 == requirement.python_minimum.0 && py_ver >= requirement.python_minimum,
+        "unexpected python version: {py_ver:?}"
+    );
+}
