@@ -70,6 +70,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 | [OI-058](#oi-058) | Closed for head `2b4a202` job 140822369803 | 030 |
 | [OI-059](#oi-059) | Untested | 030 |
 | [OI-060](#oi-060) | Unimplemented | 045 |
+| [OI-061](#oi-061) | Unimplemented | 050 |
 | [E2E-01](#e2e-01) through [E2E-16](#e2e-16) | Not done | See each row |
 | [E2E-17](#e2e-17) through [E2E-19](#e2e-19) | Not done | No roadmap row |
 
@@ -784,7 +785,7 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Responsible PR: 050
 - Handoff owner: repository owner zemeng5208
 - Verification environment: the exact merge candidate and actual main
-- Acceptance criteria: the scenario text, including 64 rules after AG-64 is in effect
+- Acceptance criteria: the scenario text, including 65 rules after AG-64 and AG-65 are in effect
 - Close conditions: that run is recorded on a main commit whose required checks are green
 
 <a id="oi-036"></a>
@@ -1150,3 +1151,17 @@ Plan 052 is merged and is the process-exit fix. Plan 051 writes this register an
 - Verification environment: Windows Server 2022, job 140734668243, `cargo test --locked --workspace`
 - Acceptance criteria: that job passes the `winstrata-strata-health` tests, including the live fault, queue, latency and loss test
 - Close conditions: met for that job. A Linux pass did not close it. This Server 2022 pass does not close OI-001.
+
+<a id="oi-061"></a>
+
+## OI-061
+
+- Related requirement: [REQ-02.02](../roadmap/REQUIREMENTS.md), [REQ-02.03](../roadmap/REQUIREMENTS.md), and [AG-65](../../AGENTS.md#ag-65)
+- Source PR: plan 055, [PLATFORM_ISOLATION.md](../standards/PLATFORM_ISOLATION.md#section-2)
+- Current state: unimplemented
+- Reason it is incomplete: plan 055 establishes the standard, implementation record, and mandatory active reading mechanism without editing build/packaging scripts. Automated `cargo tree` target-dependency assertions, deliverable file allowlist scans, PE/ELF foreign-binary/import checks, and non-runtime `docs/` exclusion checks are not yet implemented in `toolchains/dev` or CI packaging pipelines.
+- Responsible PR: 050
+- Handoff owner: repository owner zemeng5208
+- Verification environment: Windows x64 and Linux x86_64 build/packaging runs on the PR 050 delivery candidate
+- Acceptance criteria: machine-verifiable build and packaging checks pass and verify zero foreign-platform binaries, dependencies, assets, or non-runtime documentation in the deliverable, together with [ACCEPTANCE.md §10](../roadmap/ACCEPTANCE.md#section-10) performance and size measurements
+- Close conditions: those automated checks and artifact inspection records exist on main before release acceptance. Not closed by reading `PLATFORM_ISOLATION.md`.

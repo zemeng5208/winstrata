@@ -42,6 +42,7 @@
 - [安全工程](standards/SECURITY.md)
 - [文档与记录](standards/DOCUMENTATION.md)
 - [依赖与配置](standards/DEPENDENCIES.md)
+- [平台实现记录与构建隔离规范](standards/PLATFORM_ISOLATION.md)
 - [Agent 工作流与检查清单](standards/AGENT_WORKFLOW.md)
 - [PR 计划与未决事项](roadmap/PLAN.md)
 - [性能与端到端验收](roadmap/ACCEPTANCE.md)

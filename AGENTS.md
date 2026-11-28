@@ -8,6 +8,7 @@ These rules take effect when the owner approves and merges PR 000. Before work, 
 - Use development branches and pull requests. Direct pushes to main, force pushes, protection bypass, and agent merges are prohibited.
 - Verify real environments and full workflows on the actual merge candidate. Fix confirmed defects and rerun checks. Record incomplete verification.
 - Preserve least privilege and local data boundaries. Follow the [specified component sources, three themes, and layout rules](docs/architecture/FRONTEND.md) under [AG-30](docs/standards/ARCHITECTURE.md#ag-30), and the replaceable-GUI rule [AG-64](#ag-64).
+- **Mandatory active reading ([AG-65](#ag-65))**: Before starting ANY task involving (1) platform-specific features, (2) platform, public, or dependency interface changes, (3) compilation, cross-compilation, or builds, (4) packaging, release, or delivery, (5) future Linux development, or (6) platform compatibility or performance optimization, every coordinator Agent, dev Agent, and subagent MUST actively read the latest [PLATFORM_ISOLATION.md](docs/standards/PLATFORM_ISOLATION.md) without waiting for an owner reminder, MUST NOT rely on chat history or temporary memory instead, and MUST cite the document revision read in engineering records.
 - Follow the [preflight, documentation, PR, self-review, and handover checklist](docs/standards/AGENT_WORKFLOW.md#execution-checklist).
 
 <a id="ag-24"></a>
@@ -20,7 +21,7 @@ Project rules rank in order from P0, the owner's latest explicit approved decisi
 
 ## AG-58 Layered standards
 
-Keep project red lines and the index at the root. Maintain detailed rules for development, architecture, Git and PRs, testing, security, documentation, dependencies, and agent workflow. Module instructions add specific requirements. Read every applicable layer. Preserve all 64 rules, each with one authoritative definition and links from related documents. Audit direct and indirect references when changing a rule.
+Keep project red lines and the index at the root. Maintain detailed rules for development, architecture, Git and PRs, testing, security, documentation, dependencies, and agent workflow. Module instructions add specific requirements. Read every applicable layer. Preserve all 65 rules, each with one authoritative definition and links from related documents. Audit direct and indirect references when changing a rule.
 
 <a id="ag-59"></a>
 
@@ -57,6 +58,16 @@ The official default GUI is built in, cannot be uninstalled, and is both the def
 The GUI is decoupled from Core, business plugins, storage, collection services, and kernel drivers. Replacing the GUI must not stop background monitoring, restart unrelated services, or lose data. A third-party GUI must not bypass permissions, security isolation, rescue authorization, or deletion confirmation. The trusted host performs those interactions. A third-party GUI must not forge authorization. Authorized business capabilities, data, and events are obtained through one frontend SDK and API.
 
 This rule does not select a technical stack. A later plan researches, verifies, and proposes the approach for owner approval before implementation. Every component and layout reused by the official GUI or an official plugin is entered in the [GUI source register](docs/records/GUI_SOURCES.md) with the upstream repository, version, source path, license, reuse method, and modifications. The register describes files present in that same commit. Schedule pressure is not a reason to drop a requirement. An empty interface, a fake plugin, a fake theme switch, or a static demonstration is not completion. New capabilities stay in the requirements matrix and in real acceptance scenarios.
+
+<a id="ag-65"></a>
+
+## AG-65 Platform implementation record, build isolation, and mandatory reading
+
+Maintain the bilingual [Platform Implementation Record and Build Isolation Standard](docs/standards/PLATFORM_ISOLATION.md) ([简体中文](docs/zh-CN/standards/PLATFORM_ISOLATION.md)) as the authoritative source for platform-specific reserves, target build/packaging isolation, and future Linux bootstrap. Existing Linux implementations are development-phase technical reserves only: do NOT delete them, do NOT initiate extra refactoring for them, and do NOT change the Windows 10/11 x64 V1.0 product goal without approval.
+
+Windows and Linux MUST be compiled, linked, dependency-resolved, and packaged separately by target platform. Final deliverables for any platform MUST NOT contain another platform's unused code, binaries, libraries, dependencies, or assets, and MUST NOT bundle `PLATFORM_ISOLATION.md` or other `docs/` standards as runtime resources. Shared logic MUST NOT introduce extra runtime overhead, unnecessary abstraction layers, or extra background services. Delivery MUST verify isolation via real artifact manifests, dependency trees, binary/import checks, and performance tests, and machine-verifiable checks MUST be automated in build and delivery tooling rather than relying solely on Agent memory.
+
+Before starting any task involving platform-specific implementation, platform/public/dependency interface edits, compiling/cross-compiling/building, packaging/release/delivery, future Linux development, or platform compatibility/performance work, every Agent and subagent MUST actively read the latest `PLATFORM_ISOLATION.md` (never waiting for an owner prompt and never substituting chat history or memory), cite the document commit/version read in engineering records, and update `PLATFORM_ISOLATION.md` in the same PR whenever platform code or dependencies change.
 
 ## Complete rule index
 
@@ -126,3 +137,4 @@ This rule does not select a technical stack. A later plan researches, verifies, 
 | AG-62 | [AGENTS.md](#ag-62) |
 | AG-63 | [AGENTS.md](#ag-63) |
 | AG-64 | [AGENTS.md](#ag-64) |
+| AG-65 | [AGENTS.md](#ag-65) |

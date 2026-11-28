@@ -24,7 +24,7 @@ Investigate the root cause and scan the repository for related faults, shared co
 
 ## AG-18 Performance and resource use
 
-Measure applicable CPU, memory, I/O, storage growth, driver work, throughput and latency, GUI and plugin overhead, startup, and size against comparable prior environments and workloads. Maintain benchmarks. Diagnose and correct material regressions or request approval. Preserve collection coverage, precision, event integrity, and measurement definitions. Prioritize real workloads and limit wasteful microbenchmarks, I/O, and device write amplification. Use the [performance targets](../roadmap/ACCEPTANCE.md#section-10) and record unimplemented areas.
+Measure applicable CPU, memory, I/O, storage growth, driver work, throughput and latency, GUI and plugin overhead, startup, and size against comparable prior environments and workloads. Maintain benchmarks. Diagnose and correct material regressions or request approval. Preserve collection coverage, precision, event integrity, and measurement definitions. Prioritize real workloads and limit wasteful microbenchmarks, I/O, and device write amplification. Use the [performance targets](../roadmap/ACCEPTANCE.md#section-10), verify platform build/packaging isolation under [AG-65](../../AGENTS.md#ag-65) and [PLATFORM_ISOLATION.md](PLATFORM_ISOLATION.md#section-2), and record unimplemented areas.
 
 <a id="ag-37"></a>
 

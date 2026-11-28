@@ -45,6 +45,7 @@ Report actual progress, findings, verification, defects, blockers, and decisions
 ### Before work
 
 - Recover instructions, architecture, requirements, previous PRs and handover. Confirm plan ID and approved scope. Read every still-open item in the [open-item register](../records/OPEN_ITEMS.md) and every unresolved error in the [error register](../records/ERRORS.md).
+- Before any task involving platform-specific implementation, platform/public/dependency interface edits, compiling/cross-compiling/building, packaging/release/delivery, future Linux development, or platform compatibility/performance work, actively read the latest [PLATFORM_ISOLATION.md](PLATFORM_ISOLATION.md) under [AG-65](../../AGENTS.md#ag-65) without waiting for an owner reminder, and record the cited document revision.
 - Verify branch, base, worktree, concurrency, merge sequence and dependencies. Preserve existing edits.
 - Check tools, permissions, environment, network and available assistance. Record constraints.
 - Verify approved project dependencies, versions, lockfiles and resolved paths. Correct real gaps.
@@ -57,7 +58,7 @@ Proceed within approvals. Reproduce assumptions and interfaces. Maintain issue, 
 
 ### Before requesting review
 
-Check approved scope and completeness, real build and Windows/GUI where applicable, integrated regression, performance and security. Record unrun checks in the open-item register with the [AG-62](../../AGENTS.md#ag-62) fields. Put confirmed defects in the error register. Do not record a defect as a limitation. When official GUI or official plugin presentation changes, update the [GUI source register](../records/GUI_SOURCES.md) under [AG-64](../../AGENTS.md#ag-64) for files in that change. Inspect architecture, dependencies, reuse, settings, docs and tree, and remove obsolete temporary artifacts. Verify actual latest-base merge, semantic conflicts, avoidance of reintroduced behaviors, and corrected defects. Update tracking, evidence and linked documents. Request order and let the owner merge.
+Check approved scope and completeness, real build and Windows/GUI where applicable, integrated regression, performance and security. Record unrun checks in the open-item register with the [AG-62](../../AGENTS.md#ag-62) fields. Put confirmed defects in the error register. Do not record a defect as a limitation. When official GUI or official plugin presentation changes, update the [GUI source register](../records/GUI_SOURCES.md) under [AG-64](../../AGENTS.md#ag-64) for files in that change. When platform code, `cfg` gates, target dependencies, or build/packaging isolation change, update [PLATFORM_ISOLATION.md](PLATFORM_ISOLATION.md) under [AG-65](../../AGENTS.md#ag-65) and verify no non-runtime docs or foreign-platform artifacts enter runtime packages. Inspect architecture, dependencies, reuse, settings, docs and tree, and remove obsolete temporary artifacts. Verify actual latest-base merge, semantic conflicts, avoidance of reintroduced behaviors, and corrected defects. Update tracking, evidence and linked documents. Request order and let the owner merge.
 
 ### After merge or session close
 

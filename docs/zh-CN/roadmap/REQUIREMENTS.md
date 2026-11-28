@@ -12,8 +12,8 @@
 | REQ-01.02 | 公开单仓库、main 和 Apache-2.0 基线 | [PRODUCT](../architecture/PRODUCT.md#section-2) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | [基线已核验](../records/STATUS.md#baseline) |
 | REQ-01.03 | 交付源码、SDK、调试资料与开发版 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-20) | [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
 | REQ-02.01 | 在真实 Windows 10 和 11 x64 运行 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [004](PLAN.md#pr-004), [049](PLAN.md#pr-049) | [14](ACCEPTANCE.md#e2e-14), [16](ACCEPTANCE.md#e2e-16) | Windows Server 2022 x64 已实测，Windows 10/11 客户端验收待办。 |
-| REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 控制台与内核链接已验证，完整产物链待验证。 |
-| REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收待完成。 |
+| REQ-02.02 | 纯 Linux 构建完整 Windows x64 产物 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [003](PLAN.md#pr-003), [050](PLAN.md#pr-050), [055](PLAN.md#pr-055) | [16](ACCEPTANCE.md#e2e-16) | Linux 控制台与内核链接已验证，完整产物链及目标隔离核验（[PLATFORM_ISOLATION.md](../standards/PLATFORM_ISOLATION.md)、[OI-061](../records/OPEN_ITEMS.md#oi-061)）待验证。 |
+| REQ-02.03 | 保留双环境构建能力，实际验证当前环境 | [DEPENDENCIES](../standards/DEPENDENCIES.md#ag-35) | [001](PLAN.md#pr-001), [050](PLAN.md#pr-050), [055](PLAN.md#pr-055) | [16](ACCEPTANCE.md#e2e-16) | Linux 工具链已核验，双环境构建验收及目标隔离（[AG-65](../AGENTS.md#ag-65)）待完成。 |
 | REQ-03.01 | GUI 与 Core 普通权限，受控服务与内核权限分离 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | 已实现[服务权限分离](../architecture/SERVICE-KERNEL.md)。Linux 不能订阅，`GuiClient` 没有变更接口。Windows Server 2022 上，受限令牌被拒绝 SCM 创建权限和服务管道。E2E-14 与 E2E-15 未完成。 |
 | REQ-03.02 | 版本化 IPC、验证身份与参数并审计 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [005](PLAN.md#pr-005), [008](PLAN.md#pr-008) | [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [版本与错误契约](../architecture/PROTOCOLS.md)仍然有效。[服务 IPC](../architecture/SERVICE-KERNEL.md)已在 Linux 和 Windows 命名管道上检查对端身份、角色、参数和审计。E2E-14 与 E2E-15 仍待完成。 |
 | REQ-03.03 | 官方接口优先的混合采集与驱动独立按需生命周期 | [SYSTEM](../architecture/SYSTEM.md#section-3) | [008–011](PLAN.md#pr-008) | [02](ACCEPTANCE.md#e2e-02), [04](ACCEPTANCE.md#e2e-04), [14](ACCEPTANCE.md#e2e-14), [15](ACCEPTANCE.md#e2e-15) | [订阅管理](../architecture/SERVICE-KERNEL.md)跟踪独立引用计数和被限制的故障。由于没有已签名映像，目录宿主拒绝全部模块。[文件与注册表采集](../architecture/FILE-REGISTRY.md)在订阅时为单个目录和单个 HKCU 子键启动用户态监视，并在订阅归零时停止。[进程采样](../architecture/PROCESS.md)使用 procfs 或 Toolhelp，不加载 `strata-proc`。用户态网络观测属于 [PR 011](../architecture/NETWORK-SOURCES.md)。尚未加载或卸载已签名驱动。 |
@@ -108,7 +108,7 @@
 | REQ-29.02 | 验证强制门禁、缺陷阻断、最新合并候选和合并后回归 | [GIT_AND_PR](../standards/GIT_AND_PR.md#ag-48) | [002](PLAN.md#pr-002), [050](PLAN.md#pr-050) | [16](ACCEPTANCE.md#e2e-16) | PR 004 通过两项强制检查及三个合并后工作流，ERR-004 已解决。PR 050 仍需执行交付回归。[工程记录](../records/STATUS.md) |
 | REQ-29.03 | 完成真实 Windows、安全、性能与端到端验收 | [ACCEPTANCE](../roadmap/ACCEPTANCE.md#section-15) | [049](PLAN.md#pr-049), [050](PLAN.md#pr-050) | [01–16](ACCEPTANCE.md#e2e-01) | 规划中 |
 | REQ-30.01 | 维护相互引用的双语规范与可追溯记录 | [DOCUMENTATION](../standards/DOCUMENTATION.md#section-12) | [000](PLAN.md#pr-000) | [16](ACCEPTANCE.md#e2e-16) | 规划中 |
-| REQ-30.02 | 逐项追踪需求、25 个插件和 64 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051), [053](PLAN.md#pr-053) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 由计划 051 提出，尚未验收。AG-64 是计划 053，紧接 014 之后，尚未验收。 |
+| REQ-30.02 | 逐项追踪需求、25 个插件和 65 项规范及证据 | [DOCUMENTATION](../standards/DOCUMENTATION.md#ag-61) | [000](PLAN.md#pr-000), [050](PLAN.md#pr-050), [051](PLAN.md#pr-051), [053](PLAN.md#pr-053), [055](PLAN.md#pr-055) | [16](ACCEPTANCE.md#e2e-16) | 计划 000 核对的是当时的 61 项规范。AG-62 和 AG-63 属于计划 051，AG-64 属于计划 053，AG-65 属于计划 055（紧接 030 之后提案，待所有者批准）。 |
 
 ## 原生插件
 
@@ -142,6 +142,6 @@
 | PL-24 | StrataTag | [029](PLAN.md#pr-029) | [04](ACCEPTANCE.md#e2e-04), [05](ACCEPTANCE.md#e2e-05) |
 | PL-25 | StrataStorage | [030](PLAN.md#pr-030) | [05](ACCEPTANCE.md#e2e-05)。进程外程序属于计划 030，说明见[存储插件](../architecture/STORAGE.md)。[E2E-05](ACCEPTANCE.md#e2e-05) 未完成。[OI-024](../records/OPEN_ITEMS.md#oi-024) 未关闭。 |
 
-## 64 项 Agent 规范
+## 65 项 Agent 规范
 
-每条独立编号和权威位置见 [AG-01 至 AG-64 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。计划 [053](PLAN.md#pr-053) 增加 AG-64，并紧接在 014 之后。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。
+每条独立编号和权威位置见 [AG-01 至 AG-65 索引](../AGENTS.md)。PR [000](PLAN.md#pr-000) 核对的是当时的双语映射。计划 [051](PLAN.md#pr-051) 增加 AG-62 和 AG-63。计划 [053](PLAN.md#pr-053) 增加 AG-64，并紧接在 014 之后。计划 [055](PLAN.md#pr-055) 增加 AG-65，并紧接在 030 之后。后续 PR 按 [E2E-16](ACCEPTANCE.md#e2e-16) 逐项核查实际证据并维护规范。

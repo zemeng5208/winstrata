@@ -42,6 +42,7 @@ Use these sources for governing requirements, the proposed plan, and actual evid
 - [Security engineering](standards/SECURITY.md)
 - [Documentation and records](standards/DOCUMENTATION.md)
 - [Dependencies and configuration](standards/DEPENDENCIES.md)
+- [Platform implementation record and build isolation](standards/PLATFORM_ISOLATION.md)
 - [Agent workflow and checklist](standards/AGENT_WORKFLOW.md)
 - [PR plan and open decisions](roadmap/PLAN.md)
 - [Performance and end-to-end acceptance](roadmap/ACCEPTANCE.md)
