@@ -638,6 +638,63 @@ fn directory_contains(dir: &std::path::Path, token: &str) -> bool {
     false
 }
 
+#[test]
+fn confirmed_segment_drop_updates_the_index_after_reopen() {
+    let temp = Temp::new();
+    let mut store = Hybrid::create(&temp.user(), 256).unwrap();
+    let token = "k".repeat(180);
+    let mut batch = Batch::new();
+    batch.put_object(object("kept-app", &token)).unwrap();
+    batch
+        .put_relation(Relation {
+            from: id("kept-app"),
+            kind: id("uses"),
+            to: id("gone-app"),
+        })
+        .unwrap();
+    store.commit(batch).unwrap();
+    let mut batch = Batch::new();
+    batch.put_object(object("gone-app", "drop")).unwrap();
+    store.commit(batch).unwrap();
+    let gone = store
+        .pieces()
+        .unwrap()
+        .into_iter()
+        .find(|piece| piece.id == "gone-app")
+        .unwrap();
+    let kept = store
+        .pieces()
+        .unwrap()
+        .into_iter()
+        .find(|piece| piece.id == "kept-app")
+        .unwrap();
+    assert_ne!(
+        (gone.category, gone.segment),
+        (kept.category, kept.segment),
+        "the two objects share a segment, so this fixture does not isolate deletion"
+    );
+    store
+        .drop_segments(&[(gone.category, gone.segment)])
+        .unwrap();
+    assert!(store.get_object(&id("gone-app")).unwrap().is_none());
+    assert!(store.get_object(&id("kept-app")).unwrap().is_some());
+    assert!(store.relations_from(&id("kept-app")).unwrap().is_empty());
+    let reopened = Hybrid::open(&temp.user()).unwrap();
+    assert!(reopened.get_object(&id("gone-app")).unwrap().is_none());
+    assert_eq!(
+        reopened.get_object(&id("kept-app")).unwrap().unwrap().body["token"],
+        token
+    );
+    assert!(reopened.relations_from(&id("kept-app")).unwrap().is_empty());
+    assert!(
+        !reopened
+            .pieces()
+            .unwrap()
+            .iter()
+            .any(|piece| piece.id == "gone-app")
+    );
+}
+
 fn flip_token(dir: &std::path::Path, token: &str) -> PathBuf {
     for entry in fs::read_dir(dir).unwrap() {
         let path = entry.unwrap().path();

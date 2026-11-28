@@ -14,6 +14,7 @@ mod runtime;
 mod schedule;
 mod scope;
 mod storage;
+mod storage_policy;
 mod vault;
 
 use platform::Anchor;
@@ -416,6 +417,66 @@ impl Core {
     }
 
     // 在当前用户目录打开混合存储。卷错误会暂停会话；记录内容错误不会。
+    pub fn storage_notice(&mut self) -> io::Result<String> {
+        self.storage_view(storage_policy::notice)
+    }
+
+    pub fn configure_storage(
+        &mut self,
+        capture_first: u64,
+        capture_repeat: u64,
+        log_first: u64,
+        log_repeat: u64,
+    ) -> io::Result<String> {
+        self.storage_view(|user| {
+            storage_policy::configure(user, capture_first, capture_repeat, log_first, log_repeat)
+        })
+    }
+
+    pub fn decline_storage(&mut self, category: &str) -> io::Result<String> {
+        self.storage_view(|user| storage_policy::decline(user, category))
+    }
+
+    pub fn append_saved_log(&mut self, name: &str, bytes: &[u8]) -> io::Result<u64> {
+        if matches!(self.state, StorageState::NeedsDirectory { .. }) {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "select a storage directory",
+            ));
+        }
+        let (dir, _) = self.active(0)?;
+        storage_policy::append_log(&dir, name, bytes)
+    }
+
+    pub fn propose_storage(&mut self, request: &str) -> io::Result<String> {
+        if matches!(self.state, StorageState::NeedsDirectory { .. }) {
+            return Ok(storage_policy::unavailable());
+        }
+        let store = self.open_hybrid()?;
+        let (dir, _) = self.active(0)?;
+        storage_policy::propose(&dir, &store, request)
+    }
+
+    pub fn confirm_storage(&mut self, proposal: &str, confirm: bool) -> io::Result<String> {
+        if matches!(self.state, StorageState::NeedsDirectory { .. }) {
+            return Ok(storage_policy::unavailable());
+        }
+        let mut store = self.open_hybrid()?;
+        let (dir, _) = self.active(0)?;
+        storage_policy::confirm(&dir, &mut store, proposal, confirm)
+    }
+
+    fn storage_view(
+        &mut self,
+        call: impl FnOnce(&Anchor) -> io::Result<String>,
+    ) -> io::Result<String> {
+        if matches!(self.state, StorageState::NeedsDirectory { .. }) {
+            return Ok(storage_policy::unavailable());
+        }
+        let (dir, _) = self.active(0)?;
+        call(&dir)
+    }
+
     pub fn open_hybrid(&mut self) -> io::Result<Hybrid> {
         let (dir, config) = self.active(1)?;
         let opened = if vault::exists(&dir)? {

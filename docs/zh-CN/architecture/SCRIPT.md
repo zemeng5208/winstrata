@@ -26,7 +26,7 @@
 
 工作台使用五个既有权限名：`event.publish`、`event.subscribe`、`history.read`、`plugin.call` 和 `storage.private`。`declare` 把一个名称放入待授权。`grant` 只接受仍在待授权中的权限。`revoke` 把它放回待授权。一次运行要记录 `emit` 之前必须已有 `event.publish`。事件触发执行之前必须已有 `event.subscribe`。子进程获得其私有目录的写访问之前必须已有 `storage.private`。
 
-工作台操作 `tag` 不执行解释器。它要求脚本已启用，并且该脚本自己拥有 `plugin.call` 授权。`strata.script` 的清单不获得 `plugin.call`。有该授权时，操作返回 `code` `tag_request`，宿主以 actor `script` 把它转给 `strata.tag`。没有该授权时返回 `permission_denied`，并且不写标记。见[标记插件](TAG.md)。
+工作台操作 `tag` 不执行解释器。它要求脚本已启用，并且该脚本自己拥有 `plugin.call` 授权。`strata.script` 的清单不获得 `plugin.call`。有该授权时，操作返回 `code` `tag_request`，宿主以 actor `script` 把它转给 `strata.tag`。没有该授权时返回 `permission_denied`，并且不写标记。见[标记插件](TAG.md)。工作台操作 `storage` 使用同一条授权规则。有该授权时，`configure`、`decline`、`propose` 和 `status` 返回 `storage_request`，宿主把它们转给 `strata.storage`。`confirm` 返回 `confirmation_required`，并且不转发。见[存储插件](STORAGE.md)。
 
 ## 触发
 

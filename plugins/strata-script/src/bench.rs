@@ -166,6 +166,7 @@ impl Bench {
             "import" => self.import_script(&value),
             "ingest" => self.ingest(&value),
             "tag" => self.request_tag(&value),
+            "storage" => self.request_storage(&value),
             _ => self.fail("rejected"),
         }
     }
@@ -610,6 +611,49 @@ impl Bench {
         })
     }
 
+    fn request_storage(&mut self, value: &Value) -> Value {
+        let id = value["id"].as_str().unwrap_or("").to_owned();
+        let Some(index) = self.index(&id) else {
+            return self.fail("missing");
+        };
+        if !self.scripts[index].enabled || self.scripts[index].paused {
+            return self.fail("disabled");
+        }
+        if !self.scripts[index]
+            .grants
+            .iter()
+            .any(|item| item == "plugin.call")
+        {
+            return self.fail("permission_denied");
+        }
+        let action = value["action"].as_str().unwrap_or("");
+        if action == "confirm" || value["confirm"].as_bool() == Some(true) {
+            return json!({
+                "ok": true,
+                "code": "confirmation_required",
+                "deleted": false,
+                "presets": self.preset_files()
+            });
+        }
+        if !matches!(action, "configure" | "decline" | "propose" | "status") {
+            return self.fail("rejected");
+        }
+        json!({
+            "ok": true,
+            "code": "storage_request",
+            "id": id,
+            "action": action,
+            "capture_first": value.get("capture_first").cloned().unwrap_or(Value::Null),
+            "capture_repeat": value.get("capture_repeat").cloned().unwrap_or(Value::Null),
+            "log_first": value.get("log_first").cloned().unwrap_or(Value::Null),
+            "log_repeat": value.get("log_repeat").cloned().unwrap_or(Value::Null),
+            "category": value.get("category").cloned().unwrap_or(Value::Null),
+            "scope": value.get("scope").cloned().unwrap_or(Value::Null),
+            "deleted": false,
+            "presets": self.preset_files()
+        })
+    }
+
     fn run_manual(&mut self, value: &Value) -> Value {
         let id = value["id"].as_str().unwrap_or("").to_owned();
         let emit = value["emit"].as_str().unwrap_or("");
@@ -627,7 +671,11 @@ impl Bench {
         if self.paused {
             return self.fail("paused");
         }
-        let ids: Vec<String> = self.scripts.iter().map(|script| script.id.clone()).collect();
+        let ids: Vec<String> = self
+            .scripts
+            .iter()
+            .map(|script| script.id.clone())
+            .collect();
         let mut ran = 0;
         for id in ids {
             let Some(index) = self.index(&id) else {
@@ -637,7 +685,10 @@ impl Bench {
             if !script.enabled || script.paused {
                 continue;
             }
-            let condition = script.triggers.iter().any(|trigger| trigger.kind == "condition");
+            let condition = script
+                .triggers
+                .iter()
+                .any(|trigger| trigger.kind == "condition");
             if condition {
                 script.count += 1;
             }
@@ -691,7 +742,11 @@ impl Bench {
         if self.scripts[index].paused {
             return self.fail("paused");
         }
-        if !emit.is_empty() && !self.scripts[index].grants.iter().any(|item| item == "event.publish")
+        if !emit.is_empty()
+            && !self.scripts[index]
+                .grants
+                .iter()
+                .any(|item| item == "event.publish")
         {
             self.log(id, trigger, "permission_denied", "");
             return self.fail("permission_denied");
@@ -715,7 +770,9 @@ impl Bench {
             allow_private,
         );
         let (status, output) = match result {
-            Ok(captured) if captured.code == 0 => ("ok", text_of(&captured.stdout, &captured.stderr)),
+            Ok(captured) if captured.code == 0 => {
+                ("ok", text_of(&captured.stdout, &captured.stderr))
+            }
             Ok(captured) => ("faulted", text_of(&captured.stdout, &captured.stderr)),
             Err(code) => {
                 self.log(id, trigger, &code, "");
@@ -784,7 +841,12 @@ impl Bench {
             Ok(Pause::Exited(code)) => {
                 let captured = execute::read_captured(&child, code);
                 let output = text_of(&captured.stdout, &captured.stderr);
-                self.log(&id, "debug", if code == 0 { "ok" } else { "faulted" }, &output);
+                self.log(
+                    &id,
+                    "debug",
+                    if code == 0 { "ok" } else { "faulted" },
+                    &output,
+                );
                 let _ = self.save();
                 json!({
                     "ok": code == 0,
@@ -1093,9 +1155,9 @@ fn name_token(name: &str) -> bool {
     let bytes = name.as_bytes();
     (1..=32).contains(&bytes.len())
         && bytes[0].is_ascii_lowercase()
-        && bytes
-            .iter()
-            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(*byte, b'_' | b'-'))
+        && bytes.iter().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(*byte, b'_' | b'-')
+        })
 }
 
 fn tag_field(value: &str, max: usize) -> bool {

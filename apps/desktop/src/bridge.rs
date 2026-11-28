@@ -370,6 +370,19 @@ fn command_response(
                 .map_err(|error| io::Error::other(error.to_string()))?;
             return write_status(stream, 200, "application/json", &bytes);
         }
+        "storage-status" | "storage-configure" | "storage-decline" | "storage-propose"
+        | "storage-confirm" => {
+            // 页面不能启用插件。未选择存储时只回答不可用，并且不创建插件目录。
+            let locator = guard.locator.clone();
+            let core = match session::ensure(&mut guard.core, &locator) {
+                Ok(core) => core,
+                Err(error) => return error_status(stream, &error),
+            };
+            let body = storage_command(core, name, &command)?;
+            let bytes = serde_json::to_vec(&body)
+                .map_err(|error| io::Error::other(error.to_string()))?;
+            return write_status(stream, 200, "application/json", &bytes);
+        }
         _ => return write_status(stream, 404, "application/json", b"{\"error\":\"not_found\"}"),
     }
     if let Err(error) = guard.preferences.save(&guard.directory) {
@@ -434,6 +447,39 @@ fn tag_apply(core: &mut Core, payload: &str) -> io::Result<Value> {
         }
     };
     Ok(serde_json::from_str(&detail).unwrap_or(idle))
+}
+
+fn storage_command(core: &mut Core, name: &str, command: &Value) -> io::Result<Value> {
+    let text = match name {
+        "storage-status" => core.storage_notice()?,
+        "storage-configure" => core.configure_storage(
+            command.get("capture_first").and_then(Value::as_u64).unwrap_or(0),
+            command.get("capture_repeat").and_then(Value::as_u64).unwrap_or(0),
+            command.get("log_first").and_then(Value::as_u64).unwrap_or(0),
+            command.get("log_repeat").and_then(Value::as_u64).unwrap_or(0),
+        )?,
+        "storage-decline" => {
+            core.decline_storage(command.get("category").and_then(Value::as_str).unwrap_or(""))?
+        }
+        "storage-propose" => {
+            let payload = command.get("payload").and_then(Value::as_str).unwrap_or("");
+            if payload.len() > 1024 || payload.chars().any(char::is_control) {
+                return Err(io::Error::new(ErrorKind::InvalidInput, "invalid_record"));
+            }
+            core.propose_storage(payload)?
+        }
+        "storage-confirm" => core.confirm_storage(
+            command.get("proposal").and_then(Value::as_str).unwrap_or(""),
+            command.get("confirm").and_then(Value::as_bool) == Some(true),
+        )?,
+        _ => return Err(io::Error::new(ErrorKind::InvalidInput, "not_found")),
+    };
+    let mut body: Value =
+        serde_json::from_str(&text).map_err(|error| io::Error::other(error.to_string()))?;
+    if let Some(object) = body.as_object_mut() {
+        object.entry("enabled").or_insert(json!(false));
+    }
+    Ok(body)
 }
 
 fn script_workbench(core: &mut Core, payload: &str) -> io::Result<Value> {

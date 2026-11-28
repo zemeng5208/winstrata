@@ -66,6 +66,10 @@
 | [OI-054](#oi-054) | 未测试 | 029 |
 | [OI-055](#oi-055) | 头 `a4f2edd` 的 Windows Server 2022 已关闭 | 029 |
 | [OI-056](#oi-056) | 未实现 | 045 |
+| [OI-057](#oi-057) | 未实现 | 030 |
+| [OI-058](#oi-058) | 编写主机上未测试 | 030 |
+| [OI-059](#oi-059) | 未测试 | 030 |
+| [OI-060](#oi-060) | 未实现 | 045 |
 | [E2E-01](#e2e-01) 至 [E2E-16](#e2e-16) | 未完成 | 见各行 |
 | [E2E-17](#e2e-17) 至 [E2E-19](#e2e-19) | 未完成 | 无路线图行 |
 
@@ -1006,6 +1010,62 @@
 - 验证环境: 计划 045 的运行，`strata.mcp` 已安装并调用 `tag.apply`
 - 验收标准: 来自 `strata.mcp` 的调用记录 actor `agent`、`actor_id` `strata.mcp` 和 `safety` `none`，并且仍然不能持久化未标记报文
 - 关闭条件: 该运行被记录。计划 029 的用户、脚本或插件标记不关闭它。这不是豁免。它不关闭计划 028 的 OI-053。
+
+<a id="oi-057"></a>
+
+## OI-057
+
+- 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md) 和 PL-25
+- 来源 PR: 计划 030，`plugins/strata-storage`
+- 当前状态: 未实现
+- 未完成原因: 官方宿主的托盘提示仍是产品名。计划 030 持久化等待中的阶梯，并在 `/storage` 上显示它。它不改变托盘。等待中的警告不会出现在那里。本项是 OI-057，因为 OI-039 至 OI-056 保持已有记录。
+- 负责 PR: 030
+- 交接所有者: 仓库所有者 zemeng5208
+- 验证环境: Windows，已选择存储，捕获或已保存日志有等待中的阈值，并且官方窗口已隐藏到托盘
+- 验收标准: 托盘显示等待中的类别，隐藏窗口不会删除数据
+- 关闭条件: 该会话被记录在包含托盘改动的那个头上。阶梯 JSON 不关闭它。这不是豁免。它不关闭 [OI-024](#oi-024) 或 [OI-001](#oi-001)。
+
+<a id="oi-058"></a>
+
+## OI-058
+
+- 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md)、[REQ-12.03](../roadmap/REQUIREMENTS.md) 和 PL-25
+- 来源 PR: 计划 030，`plugins/strata-storage`
+- 当前状态: 编写主机上未测试
+- 未完成原因: Linux 编写主机没有在 Windows 上执行 `winstrata-strata-storage` 的 `cargo test --locked --workspace`。pid 1 是 tini。Linux 通过不是 Windows 通过。这台主机没有安装 `x86_64-pc-windows-msvc` 目标，因此本行也不是类型检查结果。本项是 OI-058，因为 OI-039 至 OI-056 保持已有记录。[OI-055](#oi-055) 仍是计划 029 的 Windows 作业。
+- 负责 PR: 030，本计划审查头上的 Windows 工作区作业
+- 交接所有者: 仓库所有者 zemeng5208
+- 验证环境: 本计划审查头上的 Windows 工作区作业，`cargo test --locked --workspace`
+- 验收标准: 该作业通过 `thresholds_survive_restart_and_confirmed_deletion_updates_indexes`
+- 关闭条件: 该作业被记录在确切的头上。Linux 通过不关闭它。更后的头不沿用这个作业。本行不关闭 [OI-001](#oi-001)、[E2E-05](#e2e-05)、[OI-024](#oi-024)、[OI-057](#oi-057)、[OI-059](#oi-059) 或 [OI-060](#oi-060)。这不是豁免。
+
+<a id="oi-059"></a>
+
+## OI-059
+
+- 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md) 和 PL-25
+- 来源 PR: 计划 030，`plugins/strata-storage`
+- 当前状态: 未测试
+- 未完成原因: 没有 Windows 会话打开官方存储页。选择存储位置之前的 Linux 桥接测试返回 `enabled` false 和 `storage` `unavailable`，并且不创建插件目录。该测试不关闭本行。页面发送 `storage-status`、`storage-configure`、`storage-decline`、`storage-propose` 和 `storage-confirm`。它不发送 `enable` 或 `grant`。本项是 OI-059，因为 OI-054 仍是计划 029 的页面。
+- 负责 PR: 030
+- 交接所有者: 仓库所有者 zemeng5208
+- 验证环境: Windows，已选择存储，并打开官方页面 `/storage`
+- 验收标准: 该会话显示用量和等待状态，保存一次阈值，拒绝一次，并且只通过宿主命令确认删除
+- 关闭条件: 该会话被记录。Linux 空闲测试不关闭它。它不关闭 [OI-001](#oi-001)、[OI-024](#oi-024) 或 [OI-058](#oi-058)。这不是豁免。
+
+<a id="oi-060"></a>
+
+## OI-060
+
+- 关联需求: [REQ-12.02](../roadmap/REQUIREMENTS.md) 和 PL-25
+- 来源 PR: 计划 030，`plugins/strata-storage`
+- 当前状态: 未实现
+- 未完成原因: 脚本和 MCP 可以配置和提案。脚本路径已经实现。`strata.mcp` 属于计划 045，并且没有安装。计划 030 不编造一个 Agent。本项是 OI-060，因为 [OI-056](#oi-056) 仍是计划 029 的 Agent 标记。
+- 负责 PR: 045
+- 交接所有者: 仓库所有者 zemeng5208
+- 验证环境: 计划 045 的运行，已安装 `strata.mcp` 并调用存储能力
+- 验收标准: MCP 调用方可以配置和提案，删除仍然需要受信任宿主的确认
+- 关闭条件: 该运行被记录。计划 030 的脚本路径不关闭它。这不是豁免。它不关闭 [OI-056](#oi-056)。
 
 <a id="e2e-17"></a>
 

@@ -2,11 +2,11 @@
   "files": [
     {
       "path": "compose/copy.ts",
-      "sha256": "1e0beb2c7959528d2e6330b5596522b0e96bfb2eadc81cc799a361c218db0012"
+      "sha256": "12a0ab90b13c8d290f81a78426bba86882787a4a8869b9789c0303c7d24584d0"
     },
     {
       "path": "compose/entry.tsx",
-      "sha256": "128efecfcb79e35dbd8014a602a9523df647cb8d3d312511b729abfd50330190"
+      "sha256": "cd103302f3f484bbcdc9e2d3493dc11ef4efa1d315f21589ffaa2d1e090e90d8"
     },
     {
       "path": "compose/filter-page.tsx",
@@ -26,7 +26,11 @@
     },
     {
       "path": "compose/shell.tsx",
-      "sha256": "6ab5d7ef3d9e01eabe978947138bf72b2b577b95af2f0bbe3eb68509eaaff7ca"
+      "sha256": "06d73450d1cca8e327c878543ad87f213655e9dc4fb19867091053518bd27e6c"
+    },
+    {
+      "path": "compose/storage-page.tsx",
+      "sha256": "a47e6c8a0e8429033a540eb6344f9d703302fb19282744093f6f51ee0b944659"
     },
     {
       "path": "compose/tag-page.tsx",

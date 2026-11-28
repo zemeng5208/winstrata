@@ -126,6 +126,7 @@ dependencies = [
  "winstrata-strata-env",
  "winstrata-strata-filter",
  "winstrata-strata-registry",
+ "winstrata-strata-storage",
  "winstrata-strata-trace",
 ]
 
@@ -277,6 +278,15 @@ dependencies = [
  "libc",
  "serde_json",
  "windows-sys",
+ "winstrata-core",
+ "winstrata-protocols",
+]
+
+[[package]]
+name = "winstrata-strata-storage"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
  "winstrata-core",
  "winstrata-protocols",
 ]
